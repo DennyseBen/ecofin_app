@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoCRM Pro — Gestão de Licenças</title>
+    <meta name="description"
+        content="Gerencie licenças ambientais, condicionantes e prazos de vencimento no EcoCRM Pro.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: { primary: "#4ade80", "background-dark": "#0f1712" },
+                    fontFamily: { display: ["Outfit"] },
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-animated min-h-screen text-slate-100 font-display flex overflow-hidden">
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar"
+        class="sidebar w-64 glass-panel border-r border-primary/10 flex flex-col h-screen shrink-0 z-50">
+        <div class="p-6 flex items-center gap-3">
+            <div
+                class="size-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary shadow-[0_0_15px_rgba(74,222,128,0.2)]">
+                <span class="material-symbols-outlined font-bold">eco</span>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold leading-tight tracking-tight">EcoCRM</h1>
+                <p class="text-[10px] uppercase tracking-widest text-primary/60 font-semibold">Pro Edition</p>
+            </div>
+        </div>
+        <nav class="flex-1 px-4 py-4 space-y-1.5 overflow-y-auto custom-scrollbar">
+            <a href="dashboard.html"
+                class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-white/5 hover:text-slate-100 transition-colors">
+                <span class="material-symbols-outlined">dashboard</span><span>Visão Geral</span>
+            </a>
+            <a href="#"
+                class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-white/5 hover:text-slate-100 transition-colors">
+                <span class="material-symbols-outlined">group</span><span>Clientes</span>
+            </a>
+            <a href="licencas.html"
+                class="nav-item active flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-primary/20 to-transparent text-primary font-medium border-l-2 border-primary">
+                <span class="material-symbols-outlined">description</span><span>Licenças</span>
+            </a>
+            <a href="#"
+                class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-white/5 hover:text-slate-100 transition-colors">
+                <span class="material-symbols-outlined">account_balance_wallet</span><span>Financeiro</span>
+            </a>
+            <a href="#"
+                class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-white/5 hover:text-slate-100 transition-colors">
+                <span class="material-symbols-outlined">view_kanban</span><span>Kanban</span>
+            </a>
+            <div class="divider my-4"></div>
+            <a href="perfil.html"
+                class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-white/5 hover:text-slate-100 transition-colors">
+                <span class="material-symbols-outlined">person</span><span>Meu Perfil</span>
+            </a>
+        </nav>
+        <div class="p-4 border-t border-white/5">
+            <div class="flex items-center gap-3 p-3 glass-panel rounded-xl">
+                <div
+                    class="size-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30">
+                    <span class="material-symbols-outlined text-primary scale-110">account_circle</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold truncate text-slate-100" id="user-name">Usuário</p>
+                    <p class="text-xs text-slate-500 truncate" id="user-email">—</p>
+                </div>
+                <button id="btn-logout" class="text-slate-500 hover:text-red-400 transition-colors" title="Sair">
+                    <span class="material-symbols-outlined text-[20px]">logout</span>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative z-10">
+
+        <!-- Header -->
+        <header
+            class="h-[72px] glass-panel border-b border-primary/10 px-6 lg:px-8 flex items-center justify-between shrink-0">
+            <div class="hamburger" id="hamburger-btn"><span></span><span></span><span></span></div>
+            <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-primary">description</span>
+                <h2 class="text-lg font-bold">Gestão de Licenças</h2>
+            </div>
+            <button id="btn-nova-licenca" class="btn-primary text-sm px-5 py-2.5 hidden sm:flex">
+                <span class="material-symbols-outlined text-[16px]">add</span>
+                Nova Licença
+            </button>
+        </header>
+
+        <!-- Content -->
+        <div class="flex-1 overflow-y-auto p-6 lg:p-8 custom-scrollbar">
+
+            <!-- KPIs de Licenças -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-up fade-up-1">
+                <div class="glass-panel rounded-xl p-4 card-glow">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="p-1.5 rounded-lg bg-emerald-500/15"><span
+                                class="material-symbols-outlined text-[16px] text-emerald-400">verified</span></span>
+                        <span class="text-xs text-slate-400 font-semibold">Vigentes</span>
+                    </div>
+                    <p class="text-2xl font-bold text-white" id="kpi-vigentes">—</p>
+                </div>
+                <div class="glass-panel rounded-xl p-4 card-glow">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="p-1.5 rounded-lg bg-red-500/15"><span
+                                class="material-symbols-outlined text-[16px] text-red-400">event_busy</span></span>
+                        <span class="text-xs text-slate-400 font-semibold">Vencidas</span>
+                    </div>
+                    <p class="text-2xl font-bold text-white" id="kpi-vencidas">—</p>
+                </div>
+                <div class="glass-panel rounded-xl p-4 card-glow">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="p-1.5 rounded-lg bg-yellow-500/15"><span
+                                class="material-symbols-outlined text-[16px] text-yellow-400">autorenew</span></span>
+                        <span class="text-xs text-slate-400 font-semibold">Renovando</span>
+                    </div>
+                    <p class="text-2xl font-bold text-white" id="kpi-renovando">—</p>
+                </div>
+                <div class="glass-panel rounded-xl p-4 card-glow">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="p-1.5 rounded-lg bg-blue-500/15"><span
+                                class="material-symbols-outlined text-[16px] text-blue-400">pending</span></span>
+                        <span class="text-xs text-slate-400 font-semibold">Em Exigência</span>
+                    </div>
+                    <p class="text-2xl font-bold text-white" id="kpi-exigencia">—</p>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="flex flex-wrap gap-3 mb-6 fade-up fade-up-2">
+                <button class="filter-btn active text-xs font-bold px-4 py-2 rounded-lg transition-all"
+                    data-filter="todos">Todos</button>
+                <button class="filter-btn text-xs font-bold px-4 py-2 rounded-lg transition-all"
+                    data-filter="vigente">Vigentes</button>
+                <button class="filter-btn text-xs font-bold px-4 py-2 rounded-lg transition-all"
+                    data-filter="vencida">Vencidas</button>
+                <button class="filter-btn text-xs font-bold px-4 py-2 rounded-lg transition-all"
+                    data-filter="renovando">Renovando</button>
+                <button class="filter-btn text-xs font-bold px-4 py-2 rounded-lg transition-all"
+                    data-filter="exigencia">Em Exigência</button>
+            </div>
+
+            <!-- Lista de Licenças -->
+            <div class="space-y-4 fade-up fade-up-3" id="licencas-list">
+                <!-- Preenchido pelo JS -->
+            </div>
+
+            <!-- FAB Mobile -->
+            <button id="btn-nova-licenca-mobile"
+                class="sm:hidden fixed bottom-6 right-6 z-40 size-14 bg-primary rounded-2xl shadow-[0_0_25px_rgba(74,222,128,0.3)] flex items-center justify-center text-black hover:scale-110 transition-transform">
+                <span class="material-symbols-outlined text-2xl font-bold">add</span>
+            </button>
+        </div>
+    </main>
+
+    <!-- ============================================ -->
+    <!-- MODAL: Nova/Editar Licença + Condicionantes  -->
+    <!-- ============================================ -->
+    <div id="modal-licenca" class="fixed inset-0 z-[100] hidden">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" id="modal-overlay"></div>
+        <div class="absolute inset-0 flex items-start justify-center p-4 pt-12 overflow-y-auto">
+            <div
+                class="glass-panel rounded-2xl w-full max-w-3xl relative animate-[slideUp_0.3s_ease] shadow-[0_0_60px_rgba(0,0,0,0.5)]">
+
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between p-6 border-b border-white/5">
+                    <h3 class="text-xl font-bold flex items-center gap-3" id="modal-titulo">
+                        <span class="p-2 rounded-xl bg-primary/15">
+                            <span class="material-symbols-outlined text-primary">add_circle</span>
+                        </span>
+                        Nova Licença
+                    </h3>
+                    <button id="modal-close"
+                        class="size-9 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
+                        <span class="material-symbols-outlined text-slate-400">close</span>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-6 space-y-6">
+
+                    <!-- TABS: Dados / Condicionantes -->
+                    <div class="flex border-b border-white/5">
+                        <button class="modal-tab active text-sm font-bold px-5 py-3 transition-all border-b-2"
+                            data-mtab="dados">
+                            <span class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[16px]">description</span>
+                                Dados da Licença
+                            </span>
+                        </button>
+                        <button
+                            class="modal-tab text-sm font-bold px-5 py-3 transition-all border-b-2 border-transparent"
+                            data-mtab="condicionantes">
+                            <span class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[16px]">checklist</span>
+                                Condicionantes
+                                <span
+                                    class="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold"
+                                    id="condicionantes-count">0</span>
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- TAB: Dados da Licença -->
+                    <div id="mtab-dados" class="modal-tab-content">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="md:col-span-2">
+                                <label
+                                    class="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5 block">Título
+                                    da Licença *</label>
+                                <input type="text" id="lic-titulo"
+                                    class="w-full glass-input rounded-xl px-4 py-3 text-sm"
+                                    placeholder="Ex: LO - Licença de Operação">
+                            </div>
+                            <div>
+                                <label
+                                    class="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5 block">Nº
+                                    do Processo *</label>
+                                <input type="text" id="lic-processo"
+                                    class="w-full glass-input rounded-xl px-4 py-3 text-sm"
+                                    placeholder="Ex: 12345/2024">
+                            </div>
+                            <div>
+                                <label
+                                    class="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5 block">Tipo</label>
+                                <select id="lic-tipo"
+                                    class="w-full glass-input rounded-xl px-4 py-3 text-sm cursor-pointer">
+                                    <option value="LO">LO - Licença de Operação</option>
+                                    <option value="LI">LI - Licença de Instalação</option>
+                                    <option value="LP">LP - Licença Prévia</option>
+                                    <option value="ASV">ASV - Autorização de Supressão</option>
+                                    <option value="EIA">EIA/RIMA</option>
+                                    <option value="OUT">Outorga de Água</option>
+                                    <option value="ISO">Certificação ISO</option>
+                                    <option value="LAT">Licença Ambiental de Transporte</option>
+                                    <option value="OUTRO">Outro</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label
+                                    class="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5 block">Cliente
+                                    *</label>
+                                <select id="lic-cliente"
+                                    class="w-full glass-input rounded-xl px-4 py-3 text-sm cursor-pointer">
+                                    <option value="">Selecione o cliente...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label
+                                    class="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5 block">Órgão
+                                    Emissor *</label>
+                                <select id="lic-orgao"
+                                    class="w-full glass-input rounded-xl px-4 py-3 text-sm cursor-pointer">
+                                    <option value="IBAMA">IBAMA</option>
+                                    <option value="CETESB">CETESB</option>
+                                    <option value="SEMAD">SEMAD</option>
+                                    <option value="IAT">IAT</option>
+                                    <option value="INMETRO">INMETRO</option>
+                                    <option value="OUTRO">Outro</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label
+                                    class="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5 block">Data
+                                    de Vencimento *</label>
+                                <input type="date" id="lic-vencimento"
+                                    class="w-full glass-input rounded-xl px-4 py-3 text-sm">
+                            </div>
+                            <div>
+                                <label
+                                    class="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5 block">Valor
+                                    da Taxa (R$)</label>
+                                <input type="number" id="lic-taxa"
+                                    class="w-full glass-input rounded-xl px-4 py-3 text-sm" placeholder="0,00"
+                                    step="0.01">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label
+                                    class="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5 block">Observações</label>
+                                <textarea id="lic-observacao"
+                                    class="w-full glass-input rounded-xl px-4 py-3 text-sm h-20 resize-none"
+                                    placeholder="Anotações sobre a licença..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: Condicionantes -->
+                    <div id="mtab-condicionantes" class="modal-tab-content hidden">
+
+                        <!-- Resumo de Condicionantes -->
+                        <div class="glass-panel rounded-xl p-4 mb-5 flex items-center gap-4">
+                            <div class="flex-1">
+                                <p class="text-sm font-bold text-slate-200 mb-1">Compliance de Condicionantes</p>
+                                <div class="flex items-center gap-3">
+                                    <div class="flex-1 h-2 rounded-full bg-white/5 overflow-hidden">
+                                        <div id="cond-progress-bar"
+                                            class="h-full rounded-full bg-primary transition-all duration-700"
+                                            style="width: 0%"></div>
+                                    </div>
+                                    <span class="text-sm font-bold text-primary" id="cond-progress-pct">0%</span>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-white" id="cond-total">0</p>
+                                <p class="text-[10px] text-slate-500 uppercase font-bold">Total</p>
+                            </div>
+                        </div>
+
+                        <!-- Adicionar Condicionante -->
+                        <div class="glass-panel rounded-xl p-5 mb-5 border border-dashed border-primary/20">
+                            <h4 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary text-[18px]">playlist_add</span>
+                                Adicionar Condicionante
+                            </h4>
+
+                            <!-- Seleção de condicionante padrão -->
+                            <div class="mb-4">
+                                <label
+                                    class="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5 block">Selecione
+                                    da lista padrão</label>
+                                <select id="cond-padrao-select"
+                                    class="w-full glass-input rounded-xl px-4 py-3 text-sm cursor-pointer">
+                                    <option value="">— Escolha uma condicionante —</option>
+                                </select>
+                            </div>
+
+                            <!-- OU descrição customizada -->
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="flex-1 h-px bg-white/5"></div>
+                                <span class="text-[10px] text-slate-500 font-bold uppercase">Ou adicione uma nova</span>
+                                <div class="flex-1 h-px bg-white/5"></div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label
+                                    class="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5 block">Descrição
+                                    personalizada</label>
+                                <input type="text" id="cond-custom-desc"
+                                    class="w-full glass-input rounded-xl px-4 py-3 text-sm"
+                                    placeholder="Descreva a condicionante...">
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label
+                                        class="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5 block">Prazo
+                                        de Vencimento *</label>
+                                    <input type="date" id="cond-prazo"
+                                        class="w-full glass-input rounded-xl px-4 py-3 text-sm">
+                                </div>
+                                <div>
+                                    <label
+                                        class="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5 block">Observação</label>
+                                    <input type="text" id="cond-obs"
+                                        class="w-full glass-input rounded-xl px-4 py-3 text-sm"
+                                        placeholder="Detalhes adicionais...">
+                                </div>
+                            </div>
+
+                            <div class="flex gap-3">
+                                <button id="btn-add-cond" class="btn-primary text-xs px-5 py-2.5">
+                                    <span class="material-symbols-outlined text-[14px]">add</span>
+                                    Adicionar Condicionante
+                                </button>
+                                <button id="btn-add-custom-cond" class="btn-ghost text-xs px-5 py-2.5">
+                                    <span class="material-symbols-outlined text-[14px]">bookmark_add</span>
+                                    Salvar como Padrão
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Lista de condicionantes adicionadas -->
+                        <div id="condicionantes-lista" class="space-y-3">
+                            <p class="text-center text-slate-500 text-sm py-6" id="cond-empty">
+                                <span
+                                    class="material-symbols-outlined text-3xl text-slate-600 mb-2 block">checklist</span>
+                                Nenhuma condicionante adicionada ainda.<br>
+                                <span class="text-xs">Selecione uma da lista padrão ou crie uma nova.</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="flex items-center justify-end gap-3 p-6 border-t border-white/5">
+                    <button id="btn-cancel-modal" class="btn-ghost text-sm px-6 py-3">Cancelar</button>
+                    <button id="btn-save-licenca" class="btn-primary text-sm px-8 py-3">
+                        <span class="material-symbols-outlined text-[16px]">save</span>
+                        Salvar Licença
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- MODAL: Detalhes da Licença (Ver/Condicionantes) -->
+    <!-- ============================================ -->
+    <div id="modal-detalhes" class="fixed inset-0 z-[100] hidden">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" id="detalhes-overlay"></div>
+        <div class="absolute inset-0 flex items-start justify-center p-4 pt-12 overflow-y-auto">
+            <div
+                class="glass-panel rounded-2xl w-full max-w-3xl relative animate-[slideUp_0.3s_ease] shadow-[0_0_60px_rgba(0,0,0,0.5)]">
+                <div class="flex items-center justify-between p-6 border-b border-white/5">
+                    <h3 class="text-xl font-bold flex items-center gap-3" id="detalhes-titulo">
+                        <span class="p-2 rounded-xl bg-primary/15">
+                            <span class="material-symbols-outlined text-primary">description</span>
+                        </span>
+                        <span id="det-titulo-text">Detalhes da Licença</span>
+                    </h3>
+                    <button id="detalhes-close"
+                        class="size-9 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
+                        <span class="material-symbols-outlined text-slate-400">close</span>
+                    </button>
+                </div>
+                <div class="p-6" id="detalhes-body">
+                    <!-- Preenchido pelo JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/supabase.js"></script>
+    <script src="js/queries.js"></script>
+    <script src="js/intelligence.js"></script>
+    <script src="js/licencas.js"></script>
+
+    <style>
+        .filter-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+            cursor: pointer;
+        }
+
+        .filter-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #e2e8f0;
+        }
+
+        .filter-btn.active {
+            background: rgba(74, 222, 128, 0.12);
+            border-color: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+        }
+
+        .modal-tab {
+            color: #94a3b8;
+            border-color: transparent;
+            cursor: pointer;
+            background: transparent;
+        }
+
+        .modal-tab:hover {
+            color: #e2e8f0;
+        }
+
+        .modal-tab.active {
+            color: #4ade80;
+            border-color: #4ade80;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .cond-card {
+            transition: all 0.3s ease;
+        }
+
+        .cond-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .cond-urgencia-bar {
+            height: 3px;
+            border-radius: 999px;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+    </style>
+</body>
+
+</html>
