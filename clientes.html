@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EcoFin Manager — Licenças</title>
-    <meta name="description" content="EcoFin Manager - Gerencie licenças ambientais.">
+    <title>EcoFin Manager — Gestão de Clientes</title>
+    <meta name="description" content="EcoFin Manager - Gestão de clientes com visão 360°.">
     <link rel="stylesheet" href="css/styles.css">
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
@@ -25,11 +25,10 @@
             </div>
             <nav class="sidebar-nav">
                 <a href="dashboard.html"><span class="material-symbols-outlined">space_dashboard</span>Visão Geral</a>
-                <a href="licencas.html" class="active"><span
-                        class="material-symbols-outlined">verified</span>Licenças</a>
+                <a href="licencas.html"><span class="material-symbols-outlined">verified</span>Licenças</a>
                 <a href="financeiro.html"><span
                         class="material-symbols-outlined">account_balance_wallet</span>Financeiro</a>
-                <a href="clientes.html"><span class="material-symbols-outlined">group</span>Clientes</a>
+                <a href="clientes.html" class="active"><span class="material-symbols-outlined">group</span>Clientes</a>
                 <a href="processos.html"><span class="material-symbols-outlined">view_kanban</span>Processos</a>
                 <a href="perfil.html"><span class="material-symbols-outlined">person</span>Meu Perfil</a>
             </nav>
@@ -50,27 +49,42 @@
                     <button class="hamburger-btn" id="hamburger-btn"><span
                             class="material-symbols-outlined">menu</span></button>
                     <div>
-                        <h2 class="text-lg font-bold">Licenças Ambientais</h2>
-                        <p class="text-xs text-muted hide-mobile">Gestão de licenças e condicionantes</p>
+                        <h2 class="text-lg font-bold">Gestão de Clientes</h2>
+                        <p class="text-xs text-muted hide-mobile">Visão 360° de todos os clientes</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
                     <button class="theme-toggle" id="theme-toggle" title="Alternar tema"><span
                             class="material-symbols-outlined" id="theme-icon">dark_mode</span></button>
-                    <button class="btn btn-primary btn-sm" id="btn-nova-licenca"><span class="material-symbols-outlined"
-                            style="font-size:16px">add</span><span class="hide-mobile">Nova Licença</span></button>
+                    <div class="hide-mobile" style="position:relative"><span class="material-symbols-outlined"
+                            style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--text-muted)">search</span><input
+                            type="text" id="search-clientes" class="form-input" placeholder="Buscar cliente..."
+                            style="padding-left:34px;width:200px"></div>
+                    <button class="btn btn-primary btn-sm" id="btn-novo-cliente"><span class="material-symbols-outlined"
+                            style="font-size:16px">person_add</span><span class="hide-mobile">Novo
+                            Cliente</span></button>
                 </div>
             </header>
 
             <div class="app-content">
+                <!-- KPIs -->
                 <div class="kpi-grid mb-6 fade-in">
+                    <div class="kpi-card">
+                        <div class="flex items-center gap-3">
+                            <div class="kpi-icon green"><span class="material-symbols-outlined">groups</span></div>
+                            <div>
+                                <div class="kpi-label">Total</div>
+                                <div class="kpi-value" id="kpi-total">—</div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="kpi-card">
                         <div class="flex items-center gap-3">
                             <div class="kpi-icon green"><span class="material-symbols-outlined">check_circle</span>
                             </div>
                             <div>
-                                <div class="kpi-label">Vigentes</div>
-                                <div class="kpi-value" id="kpi-vigentes">—</div>
+                                <div class="kpi-label">Ativos</div>
+                                <div class="kpi-value" id="kpi-ativos">—</div>
                             </div>
                         </div>
                     </div>
@@ -78,57 +92,25 @@
                         <div class="flex items-center gap-3">
                             <div class="kpi-icon red"><span class="material-symbols-outlined">cancel</span></div>
                             <div>
-                                <div class="kpi-label">Vencidas</div>
-                                <div class="kpi-value" id="kpi-vencidas">—</div>
+                                <div class="kpi-label">Inativos</div>
+                                <div class="kpi-value" id="kpi-inativos">—</div>
                             </div>
                         </div>
                     </div>
                     <div class="kpi-card">
                         <div class="flex items-center gap-3">
-                            <div class="kpi-icon yellow"><span class="material-symbols-outlined">autorenew</span></div>
+                            <div class="kpi-icon blue"><span class="material-symbols-outlined">verified</span></div>
                             <div>
-                                <div class="kpi-label">Renovando</div>
-                                <div class="kpi-value" id="kpi-renovando">—</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="kpi-card">
-                        <div class="flex items-center gap-3">
-                            <div class="kpi-icon blue"><span class="material-symbols-outlined">warning</span></div>
-                            <div>
-                                <div class="kpi-label">Em Exigência</div>
-                                <div class="kpi-value" id="kpi-exigencia">—</div>
+                                <div class="kpi-label">Com Licenças</div>
+                                <div class="kpi-value" id="kpi-com-licencas">—</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="card fade-in">
-                    <div class="card-header flex items-center justify-between">
-                        <div>
-                            <h3 class="font-bold text-sm">Todas as Licenças</h3>
-                        </div>
-                        <div style="position:relative"><span class="material-symbols-outlined"
-                                style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--text-muted)">search</span><input
-                                type="text" id="search-licencas" class="form-input" placeholder="Buscar..."
-                                style="padding-left:34px;width:200px"></div>
-                    </div>
-                    <div style="overflow-x:auto">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Licença</th>
-                                    <th>Processo</th>
-                                    <th>Órgão</th>
-                                    <th>Vencimento</th>
-                                    <th>Status</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="licencas-tbody"></tbody>
-                        </table>
-                    </div>
-                </div>
+                <!-- Client Grid -->
+                <div class="grid gap-4 fade-in" id="clientes-grid"
+                    style="grid-template-columns:repeat(auto-fill,minmax(320px,1fr))"></div>
             </div>
         </main>
     </div>
@@ -136,7 +118,7 @@
     <script src="js/supabase.js"></script>
     <script src="js/queries.js"></script>
     <script src="js/shared.js"></script>
-    <script src="js/licencas.js"></script>
+    <script src="js/clientes.js"></script>
 </body>
 
 </html>

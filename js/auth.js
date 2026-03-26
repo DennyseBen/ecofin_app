@@ -171,7 +171,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 9. Animação de entrada dos campos
-    const formElements = document.querySelectorAll('.glass-input, .btn-primary, .btn-ghost');
+    const formElements = document.querySelectorAll('.form-input, .form-select, .btn-primary, .btn-outline');
     formElements.forEach((el, index) => {
         el.style.opacity = '0';
         el.style.transform = 'translateY(10px)';
@@ -185,20 +185,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ---- Helpers ----
     function showToast(msg, type = 'info') {
         if (typeof Swal !== 'undefined') {
-            const icons = { success: 'success', error: 'error', warning: 'warning', info: 'info' };
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             Swal.fire({
                 toast: true,
                 position: 'top-end',
-                icon: icons[type] || 'info',
+                icon: type,
                 title: msg,
                 showConfirmButton: false,
                 timer: 3000,
                 timerProgressBar: true,
-                background: '#0f1712',
-                color: '#e2e8f0',
-                customClass: {
-                    popup: 'rounded-xl border border-white/10',
-                },
+                background: isDark ? '#1e293b' : '#ffffff',
+                color: isDark ? '#f1f5f9' : '#0f172a',
             });
         }
     }

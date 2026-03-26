@@ -5,17 +5,20 @@
 
 // ⚠️ INSTRUÇÕES: Substitua pelos seus dados reais do Supabase
 // Acesse: supabase.com → Seu Projeto → Settings → API
-const SUPABASE_URL = 'https://sua-url-do-supabase.supabase.co';
-const SUPABASE_ANON_KEY = 'sua-chave-anon-key';
+const SUPABASE_URL = 'https://yhpopgxhqtfhghqzswbn.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlocG9wZ3hocXRmaGdocXpzd2JuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5Nzk4OTUsImV4cCI6MjA4NzU1NTg5NX0.B5YmYkoUicQnU9fezCgKu0XkJAc12egJtirXu9pznMM';
 
-const IS_MOCK = SUPABASE_URL.includes('sua-url');
+let IS_MOCK = SUPABASE_URL.includes('sua-url');
 
 let supabase = null;
 try {
     if (!IS_MOCK && window.supabase) {
         supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } else if (!window.supabase) {
+        IS_MOCK = true; // Auto-fallback to mock if CDN is missing
     }
 } catch (e) {
+    IS_MOCK = true;
     console.warn('Supabase init failed, running in mock mode:', e.message);
 }
 
@@ -32,7 +35,7 @@ const MOCK_DB = {
         telefone: '(11) 99999-8888',
         cargo: 'Administrador',
         departamento: 'Gestão Ambiental',
-        empresa: 'EcoCRM Pro',
+        empresa: 'EcoFin Manager',
         bio: 'Especialista em licenciamento ambiental e compliance corporativo. +10 anos de experiência em consultoria ambiental.',
         avatar_url: null,
         tema: 'dark',

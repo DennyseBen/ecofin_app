@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoFin Manager — Processos</title>
+    <meta name="description" content="EcoFin Manager - Gestão de processos de licenciamento ambiental com Kanban.">
+    <link rel="stylesheet" href="css/styles.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+    <div class="app-layout">
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+        <!-- Sidebar -->
+        <aside class="app-sidebar" id="sidebar">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-icon">E</div>
+                <div>
+                    <h1>EcoFin</h1><small>Manager</small>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html"><span class="material-symbols-outlined">space_dashboard</span>Visão Geral</a>
+                <a href="licencas.html"><span class="material-symbols-outlined">verified</span>Licenças</a>
+                <a href="financeiro.html"><span
+                        class="material-symbols-outlined">account_balance_wallet</span>Financeiro</a>
+                <a href="clientes.html"><span class="material-symbols-outlined">group</span>Clientes</a>
+                <a href="processos.html" class="active"><span
+                        class="material-symbols-outlined">view_kanban</span>Processos</a>
+                <a href="perfil.html"><span class="material-symbols-outlined">person</span>Meu Perfil</a>
+            </nav>
+            <div class="sidebar-user">
+                <div class="sidebar-user-card">
+                    <div class="sidebar-avatar" id="sidebar-avatar">U</div>
+                    <div class="sidebar-user-info">
+                        <p id="sidebar-user-name">Usuário</p>
+                        <small id="sidebar-user-email">—</small>
+                    </div>
+                    <button id="btn-logout" title="Sair"><span class="material-symbols-outlined"
+                            style="font-size:18px;color:var(--text-muted)">logout</span></button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <main class="app-main">
+            <header class="app-header">
+                <div class="flex items-center gap-3">
+                    <button class="hamburger-btn" id="hamburger-btn"><span
+                            class="material-symbols-outlined">menu</span></button>
+                    <div>
+                        <h2 class="text-lg font-bold">Processos</h2>
+                        <p class="text-xs text-muted hide-mobile">Kanban de licenciamento ambiental</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button class="theme-toggle" id="theme-toggle" title="Alternar tema"><span
+                            class="material-symbols-outlined" id="theme-icon">dark_mode</span></button>
+                    <button class="btn btn-primary btn-sm" id="btn-novo-processo">
+                        <span class="material-symbols-outlined" style="font-size:16px">add</span>
+                        <span class="hide-mobile">Novo Processo</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="app-content">
+                <!-- AI Banner -->
+                <div class="ai-banner mb-6 fade-in" id="ai-banner" style="display:none">
+                    <span class="material-symbols-outlined ai-banner-icon">auto_awesome</span>
+                    <div class="ai-banner-text">
+                        <h4>Insight de IA</h4>
+                        <p id="ai-banner-text">Analisando seus processos...</p>
+                    </div>
+                    <button onclick="this.parentElement.style.display='none'"
+                        style="margin-left:auto;color:var(--text-muted)"><span class="material-symbols-outlined"
+                            style="font-size:18px">close</span></button>
+                </div>
+
+                <!-- Kanban Board -->
+                <div class="kanban-board" id="kanban-board"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Slide-Over Modal -->
+    <div class="modal-overlay" id="processo-modal">
+        <div class="slide-over">
+            <div class="slide-over-header">
+                <div>
+                    <h3 class="text-lg font-bold" id="modal-title">Novo Processo</h3>
+                    <p class="text-xs text-muted" id="modal-subtitle">Preencha os dados do processo</p>
+                </div>
+                <button id="modal-close" class="btn-ghost" style="padding:8px"><span
+                        class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="tabs" id="modal-tabs">
+                <button class="tab active" data-tab="dados">Dados</button>
+                <button class="tab" data-tab="formulario">Formulário</button>
+                <button class="tab" data-tab="anexos">Anexos</button>
+            </div>
+            <div class="slide-over-body">
+                <!-- Tab: Dados -->
+                <div class="tab-content active" id="tab-dados">
+                    <div style="display:flex;flex-direction:column;gap:16px">
+                        <div>
+                            <label class="form-label">Cliente / Empresa *</label>
+                            <select class="form-select" id="proc-cliente"></select>
+                        </div>
+                        <div>
+                            <label class="form-label">Tipo de Licença *</label>
+                            <select class="form-select" id="proc-tipo">
+                                <option value="">Selecione...</option>
+                                <option value="LP">LP — Licença Prévia</option>
+                                <option value="LI">LI — Licença de Instalação</option>
+                                <option value="LO">LO — Licença de Operação</option>
+                                <option value="LAU">LAU — Lic. Ambiental Única</option>
+                                <option value="CADRI">CADRI — Resíduos</option>
+                                <option value="OUT">Outorga de Água</option>
+                                <option value="ASV">ASV — Supressão Vegetal</option>
+                                <option value="EIA">EIA/RIMA</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Responsável</label>
+                            <input type="text" class="form-input" id="proc-responsavel"
+                                placeholder="Nome do responsável">
+                        </div>
+                        <div>
+                            <label class="form-label">Prioridade</label>
+                            <select class="form-select" id="proc-prioridade">
+                                <option value="media">Média</option>
+                                <option value="alta">Alta</option>
+                                <option value="baixa">Baixa</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Etapa</label>
+                            <select class="form-select" id="proc-etapa"></select>
+                        </div>
+                        <div>
+                            <label class="form-label">Observações</label>
+                            <textarea class="form-textarea" id="proc-obs"
+                                placeholder="Notas sobre o processo..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <!-- Tab: Formulário dinâmico -->
+                <div class="tab-content" id="tab-formulario">
+                    <div style="display:flex;flex-direction:column;gap:16px">
+                        <div>
+                            <label class="form-label">Nº do Protocolo</label>
+                            <input type="text" class="form-input" id="proc-protocolo" placeholder="Ex: 2026/001234">
+                        </div>
+                        <div>
+                            <label class="form-label">Órgão Ambiental</label>
+                            <select class="form-select" id="proc-orgao">
+                                <option value="">Selecione...</option>
+                                <option value="IBAMA">IBAMA</option>
+                                <option value="CETESB">CETESB</option>
+                                <option value="IAT">IAT</option>
+                                <option value="SEMAD">SEMAD</option>
+                                <option value="INEA">INEA</option>
+                                <option value="Outro">Outro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Data de Protocolo</label>
+                            <input type="date" class="form-input" id="proc-data-protocolo">
+                        </div>
+                        <div>
+                            <label class="form-label">Prazo / Vencimento da Taxa</label>
+                            <input type="date" class="form-input" id="proc-prazo">
+                        </div>
+                        <div>
+                            <label class="form-label">Valor da Taxa (R$)</label>
+                            <input type="number" class="form-input" id="proc-valor" placeholder="0,00" step="0.01">
+                        </div>
+                        <div>
+                            <label class="form-label">CNAE Principal</label>
+                            <input type="text" class="form-input" id="proc-cnae" placeholder="Ex: 01.11-3">
+                        </div>
+                    </div>
+                </div>
+                <!-- Tab: Anexos -->
+                <div class="tab-content" id="tab-anexos">
+                    <div class="file-drop-zone" id="file-drop-zone">
+                        <span class="material-symbols-outlined">cloud_upload</span>
+                        <p class="font-semibold" style="color:var(--text-secondary)">Arraste arquivos aqui ou clique
+                            para selecionar</p>
+                        <p class="text-xs text-muted mt-2">Apenas .pdf, .xlsx e .csv (máx. 10MB)</p>
+                        <input type="file" id="file-input" accept=".pdf,.xlsx,.csv" multiple style="display:none">
+                    </div>
+                    <div class="file-list" id="file-list"></div>
+                </div>
+            </div>
+            <div class="slide-over-footer">
+                <button class="btn btn-outline" id="btn-cancel-processo">Cancelar</button>
+                <button class="btn btn-primary" id="btn-save-processo">Salvar Processo</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/supabase.js"></script>
+    <script src="js/queries.js"></script>
+    <script src="js/shared.js"></script>
+    <script src="js/processos.js"></script>
+</body>
+
+</html>

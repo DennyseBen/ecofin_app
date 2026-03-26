@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find c:UsersAdministratorDownloadsecofin-manager -type f \\\\\\(-name *.js -o -name *.ts -o -name *.tsx -o -name *.html \\\\\\) -not -path */.git/*)",
+      "Bash(vercel env:*)",
+      "Bash(vercel link:*)"
+    ]
+  }
+}
