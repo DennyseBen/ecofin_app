@@ -1,15 +1,32 @@
 -- =============================================
 -- EcoCRM — Schema de Banco de Dados (Supabase/PostgreSQL)
 -- Execute este SQL no Editor SQL do Supabase
+-- VERSÃO LIMPA: apaga tabelas antigas e recria tudo
 -- =============================================
 
 -- Habilitar extensões necessárias
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- =============================================
+-- LIMPEZA: Remove tudo antes de recriar
+-- =============================================
+DROP VIEW IF EXISTS vw_dashboard_stats CASCADE;
+DROP VIEW IF EXISTS vw_resumo_financeiro CASCADE;
+DROP VIEW IF EXISTS vw_licencas_completas CASCADE;
+
+DROP TABLE IF EXISTS atividades CASCADE;
+DROP TABLE IF EXISTS documentos CASCADE;
+DROP TABLE IF EXISTS kanban_cards CASCADE;
+DROP TABLE IF EXISTS financeiro CASCADE;
+DROP TABLE IF EXISTS licencas CASCADE;
+DROP TABLE IF EXISTS clientes CASCADE;
+DROP TABLE IF EXISTS configuracoes CASCADE;
+DROP TABLE IF EXISTS perfis CASCADE;
+
+-- =============================================
 -- TABELA: perfis (vinculada ao auth.users do Supabase)
 -- =============================================
-CREATE TABLE IF NOT EXISTS perfis (
+CREATE TABLE perfis (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     nome_completo TEXT,
     email TEXT UNIQUE NOT NULL,
@@ -43,7 +60,7 @@ CREATE TRIGGER on_auth_user_created
 -- =============================================
 -- TABELA: clientes
 -- =============================================
-CREATE TABLE IF NOT EXISTS clientes (
+CREATE TABLE clientes (
     id SERIAL PRIMARY KEY,
     razao_social TEXT NOT NULL,
     cnpj VARCHAR(20) UNIQUE,
@@ -51,8 +68,8 @@ CREATE TABLE IF NOT EXISTS clientes (
     bairro TEXT,
     uf VARCHAR(2) DEFAULT 'SP',
     departamento TEXT,
-    tipo TEXT DEFAULT 'Licenciamento',  -- Licenciamento, Consultoria, Jurídico
-    status VARCHAR(20) DEFAULT 'ativo', -- ativo, pendente, inativo
+    tipo TEXT DEFAULT 'Licenciamento',
+    status VARCHAR(20) DEFAULT 'ativo',
     responsavel_id UUID REFERENCES perfis(id) ON DELETE SET NULL,
     notas TEXT,
     criado_em TIMESTAMPTZ DEFAULT NOW(),
@@ -63,20 +80,20 @@ CREATE INDEX idx_clientes_status ON clientes(status);
 CREATE INDEX idx_clientes_razao ON clientes(razao_social);
 
 -- =============================================
--- TABELA: licencas (relacionada com clientes)
+-- TABELA: licencas
 -- =============================================
-CREATE TABLE IF NOT EXISTS licencas (
+CREATE TABLE licencas (
     id SERIAL PRIMARY KEY,
     titulo TEXT NOT NULL,
-    tipo VARCHAR(10) NOT NULL,          -- LP, LI, LO, ASV, EIA, OUT, ISO
+    tipo VARCHAR(10) NOT NULL,
     processo VARCHAR(50),
     cliente_id INTEGER NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
-    orgao TEXT NOT NULL,                 -- IBAMA, CETESB, SEMAD, IAT, etc.
+    orgao TEXT NOT NULL,
     data_emissao DATE,
     data_vencimento DATE NOT NULL,
-    status VARCHAR(20) DEFAULT 'vigente', -- vigente, vencida, renovando, exigencia, suspensa
+    status VARCHAR(20) DEFAULT 'vigente',
     observacoes TEXT,
-    documento_url TEXT,                  -- link para PDF no Supabase Storage
+    documento_url TEXT,
     responsavel_id UUID REFERENCES perfis(id) ON DELETE SET NULL,
     criado_em TIMESTAMPTZ DEFAULT NOW(),
     atualizado_em TIMESTAMPTZ DEFAULT NOW()
@@ -88,18 +105,18 @@ CREATE INDEX idx_licencas_cliente ON licencas(cliente_id);
 CREATE INDEX idx_licencas_orgao ON licencas(orgao);
 
 -- =============================================
--- TABELA: financeiro (relacionada com clientes)
+-- TABELA: financeiro
 -- =============================================
-CREATE TABLE IF NOT EXISTS financeiro (
+CREATE TABLE financeiro (
     id SERIAL PRIMARY KEY,
     data DATE NOT NULL DEFAULT CURRENT_DATE,
     cliente_id INTEGER REFERENCES clientes(id) ON DELETE SET NULL,
-    cliente_nome TEXT,                   -- cache do nome para buscas rápidas
-    tipo VARCHAR(10) NOT NULL,           -- receita, despesa
-    categoria TEXT NOT NULL,             -- Consultoria, Taxa Ambiental, Multa, Licenciamento
+    cliente_nome TEXT,
+    tipo VARCHAR(10) NOT NULL,
+    categoria TEXT NOT NULL,
     descricao TEXT,
     valor DECIMAL(12,2) NOT NULL DEFAULT 0,
-    status VARCHAR(20) DEFAULT 'pendente', -- pago, pendente, atrasado, cancelado
+    status VARCHAR(20) DEFAULT 'pendente',
     licenca_id INTEGER REFERENCES licencas(id) ON DELETE SET NULL,
     comprovante_url TEXT,
     criado_em TIMESTAMPTZ DEFAULT NOW()
@@ -111,18 +128,18 @@ CREATE INDEX idx_fin_data ON financeiro(data);
 CREATE INDEX idx_fin_cliente ON financeiro(cliente_id);
 
 -- =============================================
--- TABELA: kanban_cards (pipeline de processos)
+-- TABELA: kanban_cards
 -- =============================================
-CREATE TABLE IF NOT EXISTS kanban_cards (
+CREATE TABLE kanban_cards (
     id SERIAL PRIMARY KEY,
     titulo TEXT NOT NULL,
     descricao TEXT,
     cliente_id INTEGER REFERENCES clientes(id) ON DELETE CASCADE,
     licenca_id INTEGER REFERENCES licencas(id) ON DELETE SET NULL,
-    coluna VARCHAR(30) DEFAULT 'doc_pendente',  -- doc_pendente, em_analise, exigencia, aprovado
-    prioridade VARCHAR(10) DEFAULT 'media',     -- alta, media, baixa
-    posicao INTEGER DEFAULT 0,                   -- ordem dentro da coluna
-    alerta TEXT,                                 -- mensagem de alerta (opcional)
+    coluna VARCHAR(30) DEFAULT 'doc_pendente',
+    prioridade VARCHAR(10) DEFAULT 'media',
+    posicao INTEGER DEFAULT 0,
+    alerta TEXT,
     responsavel_id UUID REFERENCES perfis(id) ON DELETE SET NULL,
     atualizado_em TIMESTAMPTZ DEFAULT NOW(),
     criado_em TIMESTAMPTZ DEFAULT NOW()
@@ -132,14 +149,14 @@ CREATE INDEX idx_kanban_coluna ON kanban_cards(coluna);
 CREATE INDEX idx_kanban_cliente ON kanban_cards(cliente_id);
 
 -- =============================================
--- TABELA: documentos (storage de arquivos por licença)
+-- TABELA: documentos
 -- =============================================
-CREATE TABLE IF NOT EXISTS documentos (
+CREATE TABLE documentos (
     id SERIAL PRIMARY KEY,
     nome_arquivo TEXT NOT NULL,
-    tipo_arquivo VARCHAR(10),            -- pdf, img, xlsx
+    tipo_arquivo VARCHAR(10),
     tamanho_bytes BIGINT,
-    storage_path TEXT NOT NULL,          -- caminho no Supabase Storage
+    storage_path TEXT NOT NULL,
     licenca_id INTEGER REFERENCES licencas(id) ON DELETE CASCADE,
     cliente_id INTEGER REFERENCES clientes(id) ON DELETE CASCADE,
     enviado_por UUID REFERENCES perfis(id) ON DELETE SET NULL,
@@ -149,16 +166,16 @@ CREATE TABLE IF NOT EXISTS documentos (
 CREATE INDEX idx_docs_licenca ON documentos(licenca_id);
 
 -- =============================================
--- TABELA: atividades (log de auditoria / timeline)
+-- TABELA: atividades
 -- =============================================
-CREATE TABLE IF NOT EXISTS atividades (
+CREATE TABLE atividades (
     id SERIAL PRIMARY KEY,
-    tipo VARCHAR(30) NOT NULL,           -- login, criacao, edicao, upload, renovacao, exclusao
+    tipo VARCHAR(30) NOT NULL,
     descricao TEXT NOT NULL,
-    entidade_tipo VARCHAR(20),           -- cliente, licenca, financeiro, kanban
+    entidade_tipo VARCHAR(20),
     entidade_id INTEGER,
     usuario_id UUID REFERENCES perfis(id) ON DELETE SET NULL,
-    metadata JSONB,                      -- dados extras flexíveis
+    metadata JSONB,
     criado_em TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -168,20 +185,19 @@ CREATE INDEX idx_ativ_usuario ON atividades(usuario_id);
 CREATE INDEX idx_ativ_data ON atividades(criado_em);
 
 -- =============================================
--- TABELA: configuracoes (preferências do sistema)
+-- TABELA: configuracoes
 -- =============================================
-CREATE TABLE IF NOT EXISTS configuracoes (
+CREATE TABLE configuracoes (
     id SERIAL PRIMARY KEY,
     chave VARCHAR(100) UNIQUE NOT NULL,
     valor TEXT,
-    tipo VARCHAR(20) DEFAULT 'string',   -- string, boolean, number, json
+    tipo VARCHAR(20) DEFAULT 'string',
     atualizado_em TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Configurações padrão
 INSERT INTO configuracoes (chave, valor, tipo) VALUES
-    ('org_nome', 'EcoSystem Solutions', 'string'),
-    ('org_email', 'admin@ecosystem.com', 'string'),
+    ('org_nome', 'EcoFin Manager', 'string'),
+    ('org_email', 'admin@ecofinmanager.com', 'string'),
     ('idioma', 'pt-BR', 'string'),
     ('timezone', 'America/Sao_Paulo', 'string'),
     ('alerta_90dias', 'true', 'boolean'),
@@ -190,10 +206,8 @@ INSERT INTO configuracoes (chave, valor, tipo) VALUES
 ON CONFLICT (chave) DO NOTHING;
 
 -- =============================================
--- VIEWS: Consultas prontas para o Dashboard
+-- VIEWS
 -- =============================================
-
--- View: licenças com dados do cliente (JOIN relacional)
 CREATE OR REPLACE VIEW vw_licencas_completas AS
 SELECT
     l.*,
@@ -205,7 +219,6 @@ FROM licencas l
 LEFT JOIN clientes c ON l.cliente_id = c.id
 ORDER BY l.data_vencimento ASC;
 
--- View: resumo financeiro mensal
 CREATE OR REPLACE VIEW vw_resumo_financeiro AS
 SELECT
     DATE_TRUNC('month', data) AS mes,
@@ -217,7 +230,6 @@ FROM financeiro
 GROUP BY DATE_TRUNC('month', data)
 ORDER BY mes DESC;
 
--- View: contadores para dashboard
 CREATE OR REPLACE VIEW vw_dashboard_stats AS
 SELECT
     (SELECT COUNT(*) FROM clientes WHERE status = 'ativo') AS clientes_ativos,
@@ -229,7 +241,7 @@ SELECT
     (SELECT COALESCE(SUM(valor), 0) FROM financeiro WHERE tipo = 'despesa' AND DATE_TRUNC('month', data) = DATE_TRUNC('month', CURRENT_DATE)) AS despesa_mes;
 
 -- =============================================
--- RLS (Row Level Security) — Segurança por linha
+-- RLS (Row Level Security)
 -- =============================================
 ALTER TABLE perfis ENABLE ROW LEVEL SECURITY;
 ALTER TABLE clientes ENABLE ROW LEVEL SECURITY;
@@ -239,19 +251,20 @@ ALTER TABLE kanban_cards ENABLE ROW LEVEL SECURITY;
 ALTER TABLE documentos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE atividades ENABLE ROW LEVEL SECURITY;
 
--- Políticas: Usuários autenticados podem ler/escrever tudo (ajuste conforme necessidade)
 CREATE POLICY "Authenticated read all" ON clientes FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Authenticated insert" ON clientes FOR INSERT TO authenticated WITH CHECK (true);
 CREATE POLICY "Authenticated update" ON clientes FOR UPDATE TO authenticated USING (true);
+CREATE POLICY "Authenticated delete" ON clientes FOR DELETE TO authenticated USING (true);
 
 CREATE POLICY "Authenticated read all" ON licencas FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Authenticated insert" ON licencas FOR INSERT TO authenticated WITH CHECK (true);
 CREATE POLICY "Authenticated update" ON licencas FOR UPDATE TO authenticated USING (true);
+CREATE POLICY "Authenticated delete" ON licencas FOR DELETE TO authenticated USING (true);
 
 CREATE POLICY "Authenticated read all" ON financeiro FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Authenticated insert" ON financeiro FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Authenticated update" ON financeiro FOR UPDATE TO authenticated USING (true);
 
-CREATE POLICY "Authenticated read all" ON kanban_cards FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Authenticated all" ON kanban_cards FOR ALL TO authenticated USING (true);
 
 CREATE POLICY "Authenticated read all" ON documentos FOR SELECT TO authenticated USING (true);
@@ -264,7 +277,7 @@ CREATE POLICY "Users read own profile" ON perfis FOR SELECT TO authenticated USI
 CREATE POLICY "Users update own profile" ON perfis FOR UPDATE TO authenticated USING (auth.uid() = id);
 
 -- =============================================
--- DADOS DE EXEMPLO (seed)
+-- DADOS DE EXEMPLO
 -- =============================================
 INSERT INTO clientes (razao_social, cnpj, cidade, uf, departamento, tipo, status) VALUES
     ('Mineração Vale Verde S.A.', '12.345.678/0001-90', 'Belo Horizonte', 'MG', 'Ambiental', 'Licenciamento', 'ativo'),
@@ -272,5 +285,4 @@ INSERT INTO clientes (razao_social, cnpj, cidade, uf, departamento, tipo, status
     ('Agroindústria Solar Ltda', '11.222.333/0001-44', 'Ribeirão Preto', 'SP', 'Jurídico', 'Licenciamento', 'ativo'),
     ('Logística Brasil Ltda', '55.666.777/0001-88', 'São Paulo', 'SP', 'Ambiental', 'Consultoria', 'ativo'),
     ('BioTech Solutions Inc.', '99.888.777/0001-11', 'Campinas', 'SP', 'P&D', 'Jurídico', 'ativo'),
-    ('Construtora XYZ Ltda', '44.333.222/0001-55', 'Curitiba', 'PR', 'Obras', 'Licenciamento', 'inativo')
-ON CONFLICT DO NOTHING;
+    ('Construtora XYZ Ltda', '44.333.222/0001-55', 'Curitiba', 'PR', 'Obras', 'Licenciamento', 'inativo');
