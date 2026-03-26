@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         togglePwd.addEventListener('click', () => {
             const isPassword = passwordInput.type === 'password';
             passwordInput.type = isPassword ? 'text' : 'password';
-            const icon = togglePwd.querySelector('.material-symbols-outlined');
+            const icon = togglePwd.querySelector('[data-lucide]');
             icon.textContent = isPassword ? 'visibility_off' : 'visibility';
             icon.style.transform = 'scale(0.8)';
             setTimeout(() => { icon.style.transform = 'scale(1)'; }, 150);
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Loading state
             const originalHTML = btnLogin.innerHTML;
-            btnLogin.innerHTML = '<span class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span> Autenticando...';
+            btnLogin.innerHTML = '<i data-lucide="loader-circle" class="animate-spin text-[18px]"></i> Autenticando...';
             btnLogin.disabled = true;
             btnLogin.style.opacity = '0.7';
 
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 // Sucesso - animação de saída
                 showToast('Login bem-sucedido! Redirecionando...', 'success');
-                btnLogin.innerHTML = '<span class="material-symbols-outlined text-[18px]">check_circle</span> Verificado!';
+                btnLogin.innerHTML = '<i data-lucide="check-circle-2" class="text-[18px]"></i> Verificado!';
                 btnLogin.style.background = '#22c55e';
 
                 // Fade out da página
@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnGoogle.addEventListener('click', async (e) => {
             e.preventDefault();
             const originalHTML = btnGoogle.innerHTML;
-            btnGoogle.innerHTML = '<span class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span> Conectando ao Google...';
+            btnGoogle.innerHTML = '<i data-lucide="loader-circle" class="animate-spin text-[18px]"></i> Conectando ao Google...';
             btnGoogle.disabled = true;
             btnGoogle.style.opacity = '0.7';
 

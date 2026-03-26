@@ -14,9 +14,6 @@
     <title>EcoFin Manager — Meu Perfil</title>
     <meta name="description" content="EcoFin Manager - Gerencie seu perfil e preferências.">
     <link rel="stylesheet" href="css/styles.css">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
-        rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
@@ -31,38 +28,35 @@
                 </div>
             </div>
             <nav class="sidebar-nav">
-                <a href="dashboard.html"><span class="material-symbols-outlined">space_dashboard</span>Visão Geral</a>
-                <a href="licencas.html"><span class="material-symbols-outlined">verified</span>Licenças</a>
-                <a href="financeiro.html"><span
-                        class="material-symbols-outlined">account_balance_wallet</span>Financeiro</a>
-                <a href="clientes.html"><span class="material-symbols-outlined">group</span>Clientes</a>
-                <a href="processos.html"><span class="material-symbols-outlined">view_kanban</span>Processos</a>
-                <a href="perfil.html" class="active"><span class="material-symbols-outlined">person</span>Meu Perfil</a>
+                <a href="dashboard.html"><i data-lucide="layout-dashboard"></i>Visão Geral</a>
+                <a href="licencas.html"><i data-lucide="badge-check"></i>Licenças</a>
+                <a href="financeiro.html"><i data-lucide="wallet"></i>Financeiro</a>
+                <a href="clientes.html"><i data-lucide="users"></i>Clientes</a>
+                <a href="processos.html"><i data-lucide="kanban"></i>Processos</a>
+                <a href="perfil.html" class="active"><i data-lucide="user"></i>Meu Perfil</a>
             </nav>
             <div class="sidebar-user">
                 <div class="sidebar-user-card">
                     <div class="sidebar-avatar" id="sidebar-avatar">U</div>
                     <div class="sidebar-user-info">
                         <p id="sidebar-user-name">Usuário</p><small id="sidebar-user-email">—</small>
-                    </div><button id="btn-logout" title="Sair"><span class="material-symbols-outlined"
-                            style="font-size:18px;color:var(--text-muted)">logout</span></button>
+                    </div><button id="btn-logout" title="Sair"><i data-lucide="log-out" style="font-size:18px;color:var(--text-muted)"></i></button>
                 </div>
-            </div>
+            
+            <div class="sidebar-version"><span>v1.0.0</span><span>Mar 2026</span></div>
         </aside>
 
         <main class="app-main">
             <header class="app-header">
                 <div class="flex items-center gap-3">
-                    <button class="hamburger-btn" id="hamburger-btn"><span
-                            class="material-symbols-outlined">menu</span></button>
+                    <button class="hamburger-btn" id="hamburger-btn"><i data-lucide="menu"></i></button>
                     <div>
                         <h2 class="text-lg font-bold">Meu Perfil</h2>
                         <p class="text-xs text-muted hide-mobile">Dados pessoais e preferências</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button class="theme-toggle" id="theme-toggle" title="Alternar tema"><span
-                            class="material-symbols-outlined" id="theme-icon">dark_mode</span></button>
+                    <button class="theme-toggle" id="theme-toggle" title="Alternar tema"><i data-lucide="moon" id="theme-icon"></i></button>
                 </div>
             </header>
 
@@ -76,8 +70,7 @@
                             <h3 class="text-lg font-bold" id="perfil-nome-display">Carregando...</h3>
                             <p class="text-sm text-muted" id="perfil-cargo-display">—</p>
                             <p class="text-xs text-muted mt-2" id="perfil-email-display">—</p>
-                            <button class="btn btn-outline btn-sm mt-4" id="btn-upload-avatar"><span
-                                    class="material-symbols-outlined" style="font-size:16px">photo_camera</span>Alterar
+                            <button class="btn btn-outline btn-sm mt-4" id="btn-upload-avatar"><i data-lucide="camera" style="font-size:16px"></i>Alterar
                                 foto</button>
                             <input type="file" id="avatar-input" accept="image/*" style="display:none">
                         </div>
@@ -106,8 +99,7 @@
                             <div><label class="form-label">Bio</label><textarea class="form-textarea" id="perfil-bio"
                                     rows="3"></textarea></div>
                             <div style="display:flex;justify-content:flex-end;gap:12px">
-                                <button class="btn btn-primary" id="btn-salvar-perfil"><span
-                                        class="material-symbols-outlined" style="font-size:16px">save</span>Salvar
+                                <button class="btn btn-primary" id="btn-salvar-perfil"><i data-lucide="save" style="font-size:16px"></i>Salvar
                                     Alterações</button>
                             </div>
                         </div>
@@ -129,6 +121,7 @@
         }
     </style>
   <script src="/js/pwa-install.js"></script>
+  <script>document.addEventListener("DOMContentLoaded",()=>lucide.createIcons());</script>
 </body>
 
 </html>

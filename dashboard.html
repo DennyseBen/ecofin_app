@@ -14,9 +14,6 @@
     <title>EcoFin Manager — Visão Geral</title>
     <meta name="description" content="EcoFin Manager - Painel principal com visão geral do licenciamento ambiental.">
     <link rel="stylesheet" href="css/styles.css">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
-        rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -32,14 +29,12 @@
                 </div>
             </div>
             <nav class="sidebar-nav">
-                <a href="dashboard.html" class="active"><span
-                        class="material-symbols-outlined">space_dashboard</span>Visão Geral</a>
-                <a href="licencas.html"><span class="material-symbols-outlined">verified</span>Licenças</a>
-                <a href="financeiro.html"><span
-                        class="material-symbols-outlined">account_balance_wallet</span>Financeiro</a>
-                <a href="clientes.html"><span class="material-symbols-outlined">group</span>Clientes</a>
-                <a href="processos.html"><span class="material-symbols-outlined">view_kanban</span>Processos</a>
-                <a href="perfil.html"><span class="material-symbols-outlined">person</span>Meu Perfil</a>
+                <a href="dashboard.html" class="active"><i data-lucide="layout-dashboard"></i>Visão Geral</a>
+                <a href="licencas.html"><i data-lucide="badge-check"></i>Licenças</a>
+                <a href="financeiro.html"><i data-lucide="wallet"></i>Financeiro</a>
+                <a href="clientes.html"><i data-lucide="users"></i>Clientes</a>
+                <a href="processos.html"><i data-lucide="kanban"></i>Processos</a>
+                <a href="perfil.html"><i data-lucide="user"></i>Meu Perfil</a>
             </nav>
             <div class="sidebar-user">
                 <div class="sidebar-user-card">
@@ -47,28 +42,25 @@
                     <div class="sidebar-user-info">
                         <p id="sidebar-user-name">Usuário</p><small id="sidebar-user-email">—</small>
                     </div>
-                    <button id="btn-logout" title="Sair"><span class="material-symbols-outlined"
-                            style="font-size:18px;color:var(--text-muted)">logout</span></button>
+                    <button id="btn-logout" title="Sair"><i data-lucide="log-out" style="font-size:18px;color:var(--text-muted)"></i></button>
                 </div>
-            </div>
+            
+            <div class="sidebar-version"><span>v1.0.0</span><span>Mar 2026</span></div>
         </aside>
 
         <main class="app-main">
             <header class="app-header">
                 <div class="flex items-center gap-3">
-                    <button class="hamburger-btn" id="hamburger-btn"><span
-                            class="material-symbols-outlined">menu</span></button>
+                    <button class="hamburger-btn" id="hamburger-btn"><i data-lucide="menu"></i></button>
                     <div>
                         <h2 class="text-lg font-bold">Visão Geral</h2>
                         <p class="text-xs text-muted hide-mobile">Resumo do licenciamento ambiental</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button class="theme-toggle" id="theme-toggle" title="Alternar tema"><span
-                            class="material-symbols-outlined" id="theme-icon">dark_mode</span></button>
+                    <button class="theme-toggle" id="theme-toggle" title="Alternar tema"><i data-lucide="moon" id="theme-icon"></i></button>
                     <div class="hide-mobile" style="position:relative">
-                        <span class="material-symbols-outlined"
-                            style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--text-muted)">search</span>
+                        <i data-lucide="search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--text-muted)"></i>
                         <input type="text" id="global-search" class="form-input" placeholder="Buscar..."
                             style="padding-left:38px;width:220px">
                     </div>
@@ -78,21 +70,20 @@
             <div class="app-content">
                 <!-- AI Banner -->
                 <div class="ai-banner mb-6 fade-in" id="ai-banner" style="display:none">
-                    <span class="material-symbols-outlined ai-banner-icon">auto_awesome</span>
+                    <i data-lucide="sparkles" class="ai-banner-icon"></i>
                     <div class="ai-banner-text">
                         <h4>Insight de IA</h4>
                         <p id="ai-banner-text">Analisando dados...</p>
                     </div>
                     <button onclick="this.parentElement.style.display='none'"
-                        style="margin-left:auto;color:var(--text-muted)"><span class="material-symbols-outlined"
-                            style="font-size:18px">close</span></button>
+                        style="margin-left:auto;color:var(--text-muted)"><i data-lucide="x" style="font-size:18px"></i></button>
                 </div>
 
                 <!-- KPIs -->
                 <div class="kpi-grid mb-6 fade-in">
                     <div class="kpi-card">
                         <div class="flex items-center gap-3">
-                            <div class="kpi-icon green"><span class="material-symbols-outlined">group</span></div>
+                            <div class="kpi-icon green"><i data-lucide="users"></i></div>
                             <div>
                                 <div class="kpi-label">Clientes</div>
                                 <div class="kpi-value" id="kpi-clientes">—</div>
@@ -101,7 +92,7 @@
                     </div>
                     <div class="kpi-card">
                         <div class="flex items-center gap-3">
-                            <div class="kpi-icon blue"><span class="material-symbols-outlined">verified</span></div>
+                            <div class="kpi-icon blue"><i data-lucide="badge-check"></i></div>
                             <div>
                                 <div class="kpi-label">Licenças</div>
                                 <div class="kpi-value" id="kpi-licencas">—</div>
@@ -110,7 +101,7 @@
                     </div>
                     <div class="kpi-card">
                         <div class="flex items-center gap-3">
-                            <div class="kpi-icon yellow"><span class="material-symbols-outlined">warning</span></div>
+                            <div class="kpi-icon yellow"><i data-lucide="triangle-alert"></i></div>
                             <div>
                                 <div class="kpi-label">Vencendo 30d</div>
                                 <div class="kpi-value" id="kpi-vencendo">—</div>
@@ -119,7 +110,7 @@
                     </div>
                     <div class="kpi-card">
                         <div class="flex items-center gap-3">
-                            <div class="kpi-icon green"><span class="material-symbols-outlined">trending_up</span></div>
+                            <div class="kpi-icon green"><i data-lucide="trending-up"></i></div>
                             <div>
                                 <div class="kpi-label">Saldo</div>
                                 <div class="kpi-value" id="kpi-saldo">—</div>
@@ -251,6 +242,7 @@
         });
     </script>
   <script src="/js/pwa-install.js"></script>
+  <script>document.addEventListener("DOMContentLoaded",()=>lucide.createIcons());</script>
 </body>
 
 </html>

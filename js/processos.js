@@ -5,11 +5,11 @@
 
 const KANBAN_COLUMNS = [
     { id: 'planejamento', title: 'Planejamento e Enquadramento', icon: 'lightbulb', color: '#8b5cf6' },
-    { id: 'coleta', title: 'Coleta de Dados e Documentos', icon: 'folder_open', color: '#f59e0b' },
-    { id: 'preenchimento', title: 'Preenchimento e Taxas', icon: 'edit_note', color: '#3b82f6' },
-    { id: 'protocolado', title: 'Protocolado / Em Análise', icon: 'pending', color: '#06b6d4' },
-    { id: 'exigencias', title: 'Exigências e Vistoria', icon: 'warning', color: '#ef4444' },
-    { id: 'concluido', title: 'Concluído', icon: 'check_circle', color: '#16a34a' },
+    { id: 'coleta', title: 'Coleta de Dados e Documentos', icon: 'folder-open', color: '#f59e0b' },
+    { id: 'preenchimento', title: 'Preenchimento e Taxas', icon: 'file-pen-line', color: '#3b82f6' },
+    { id: 'protocolado', title: 'Protocolado / Em Análise', icon: 'clock', color: '#06b6d4' },
+    { id: 'exigencias', title: 'Exigências e Vistoria', icon: 'triangle-alert', color: '#ef4444' },
+    { id: 'concluido', title: 'Concluído', icon: 'check-circle-2', color: '#16a34a' },
 ];
 
 const STORAGE_KEY = 'ecofin_processos_v2';
@@ -81,17 +81,17 @@ function renderBoard() {
         colEl.innerHTML = `
             <div class="kanban-column-header">
                 <div class="kanban-column-title">
-                    <span class="material-symbols-outlined" style="font-size:18px;color:${col.color}">${col.icon}</span>
+                    <i data-lucide="${col.icon}" style="font-size:18px;color:${col.color}"></i>
                     <span>${col.title}</span>
                     <span class="kanban-column-count">${cards.length}</span>
                 </div>
                 <button class="btn-ghost" style="padding:4px" data-add-col="${col.id}" title="Adicionar">
-                    <span class="material-symbols-outlined" style="font-size:18px">add</span>
+                    <i data-lucide="plus" style="font-size:18px"></i>
                 </button>
             </div>
             <div class="kanban-column-body" data-column="${col.id}">
                 ${cards.map(c => renderCard(c)).join('')}
-                ${cards.length === 0 ? '<div class="empty-state"><span class="material-symbols-outlined">inbox</span><p class="text-xs">Nenhum processo</p></div>' : ''}
+                ${cards.length === 0 ? '<div class="empty-state"><i data-lucide="inbox"></i><p class="text-xs">Nenhum processo</p></div>' : ''}
             </div>
         `;
         board.appendChild(colEl);
@@ -119,7 +119,7 @@ function renderCard(p) {
             <div class="kanban-card-footer">
                 <div class="kanban-card-tags">
                     ${p.orgao ? `<span class="badge badge-blue" style="font-size:10px">${p.orgao}</span>` : ''}
-                    ${anexosCount > 0 ? `<span class="badge badge-gray" style="font-size:10px"><span class="material-symbols-outlined" style="font-size:12px">attach_file</span>${anexosCount}</span>` : ''}
+                    ${anexosCount > 0 ? `<span class="badge badge-gray" style="font-size:10px"><i data-lucide="paperclip" style="font-size:12px"></i>${anexosCount}</span>` : ''}
                 </div>
                 <span class="text-xs text-muted">${p.protocolo || '—'}</span>
             </div>
@@ -342,15 +342,15 @@ function renderFileList() {
     const list = document.getElementById('file-list');
     if (!uploadedFiles.length) { list.innerHTML = ''; return; }
 
-    const icons = { '.pdf': 'picture_as_pdf', '.xlsx': 'table_chart', '.csv': 'description' };
+    const icons = { '.pdf': 'file-type-2', '.xlsx': 'table-2', '.csv': 'file-text' };
     list.innerHTML = uploadedFiles.map((f, i) => `
         <div class="file-item">
-            <span class="material-symbols-outlined">${icons[f.type] || 'description'}</span>
+            <i data-lucide="${icons[f.type] || 'description'}"></i>
             <div class="file-item-info">
                 <div class="file-item-name">${f.name}</div>
                 <div class="file-item-meta">${formatFileSize(f.size)} • ${new Date(f.uploadedAt).toLocaleDateString('pt-BR')} • <span class="badge badge-blue" style="font-size:10px">${f.etapa}</span></div>
             </div>
-            <button class="btn-ghost" onclick="removeFile(${i})" title="Remover"><span class="material-symbols-outlined" style="font-size:16px;color:var(--danger)">delete</span></button>
+            <button class="btn-ghost" onclick="removeFile(${i})" title="Remover"><i data-lucide="trash-2" style="font-size:16px;color:var(--danger)"></i></button>
         </div>
     `).join('');
 }

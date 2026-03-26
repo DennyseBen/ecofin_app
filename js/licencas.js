@@ -44,7 +44,7 @@ function renderLicencas(licencas) {
     if (!tbody) return;
 
     if (!licencas.length) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px"><div class="empty-state"><span class="material-symbols-outlined">verified</span><p>Nenhuma licença encontrada</p></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px"><div class="empty-state"><i data-lucide="badge-check"></i><p>Nenhuma licença encontrada</p></div></td></tr>';
         return;
     }
 
@@ -62,7 +62,7 @@ function renderLicencas(licencas) {
             <td><span class="badge badge-blue">${l.orgao}</span></td>
             <td class="text-sm">${formatDate(l.vencimento)} <span class="text-xs text-muted">(${dias}d)</span></td>
             <td>${statusBadge(l.status)}</td>
-            <td><button class="btn btn-ghost btn-sm" onclick="openLicencaDetail(${l.id})"><span class="material-symbols-outlined" style="font-size:16px">open_in_new</span></button></td>
+            <td><button class="btn btn-ghost btn-sm" onclick="openLicencaDetail(${l.id})"><i data-lucide="external-link" style="font-size:16px"></i></button></td>
         </tr>`;
     }).join('');
 }

@@ -3,7 +3,27 @@
     "allow": [
       "Bash(find c:UsersAdministratorDownloadsecofin-manager -type f \\\\\\(-name *.js -o -name *.ts -o -name *.tsx -o -name *.html \\\\\\) -not -path */.git/*)",
       "Bash(vercel env:*)",
-      "Bash(vercel link:*)"
+      "Bash(vercel link:*)",
+      "Bash(ls *.html)",
+      "Bash(node -e \":*)",
+      "Bash(for f:*)",
+      "Bash(do)",
+      "Read(//c/Users/Administrator/Downloads/ecofin-manager/**)",
+      "Bash(sed -i 's|<meta name=\"\"viewport\"\".*|&\\\\n    <!-- PWA -->\\\\n    <link rel=\"\"manifest\"\" href=\"\"/manifest.json\"\">\\\\n    <meta name=\"\"theme-color\"\" content=\"\"#16a34a\"\">\\\\n    <meta name=\"\"apple-mobile-web-app-capable\"\" content=\"\"yes\"\">\\\\n    <meta name=\"\"apple-mobile-web-app-status-bar-style\"\" content=\"\"black-translucent\"\">\\\\n    <meta name=\"\"apple-mobile-web-app-title\"\" content=\"\"EcoFin\"\">\\\\n    <link rel=\"\"apple-touch-icon\"\" href=\"\"/icons/icon-192.png\"\">|' \"$f\")",
+      "Bash(done)",
+      "Bash(sed -i 's|</body>|  <script src=\"\"/js/pwa-install.js\"\"></script>\\\\n</body>|' \"$f\")",
+      "Bash(grep -c \"pwa-install\" *.html)",
+      "Bash(grep -n \"sidebar-footer\\\\|app-footer\\\\|<footer\\\\|version\" /c/Users/Administrator/Downloads/ecofin-manager/*.html)",
+      "Bash(grep -o \"material-symbols-outlined\"\">[^<]*\" /c/Users/Administrator/Downloads/ecofin-manager/*.html)",
+      "Bash(cut -d'>' -f2)",
+      "Bash(grep -o \"material-symbols-outlined\"\">[^<]*\" /c/Users/Administrator/Downloads/ecofin-manager/js/*.js)",
+      "Bash(grep -n \"sidebar-footer\\\\|<footer\\\\|copyright\\\\|© \" /c/Users/Administrator/Downloads/ecofin-manager/*.html /c/Users/Administrator/Downloads/ecofin-manager/js/*.js)",
+      "Bash(grep -o \"material-symbols-outlined\"\">[a-z_]*\" /c/Users/Administrator/Downloads/ecofin-manager/js/*.js)",
+      "Bash(do echo:*)",
+      "Bash(node fix-icons.js)",
+      "Bash(cp fix-icons.js fix-icons.cjs)",
+      "Bash(node fix-icons.cjs)",
+      "Bash(node add-version.cjs)"
     ]
   }
 }

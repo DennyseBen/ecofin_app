@@ -21,10 +21,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Estado do board
     const columns = [
-        { id: 'doc_pendente', title: 'Documentação Pendente', icon: 'folder_open', color: 'text-amber-400' },
-        { id: 'em_analise', title: 'Em Análise', icon: 'pending', color: 'text-blue-400' },
-        { id: 'exigencia', title: 'Exigência', icon: 'warning', color: 'text-red-400' },
-        { id: 'aprovado', title: 'Aprovado', icon: 'check_circle', color: 'text-emerald-400' },
+        { id: 'doc_pendente', title: 'Documentação Pendente', icon: 'folder-open', color: 'text-amber-400' },
+        { id: 'em_analise', title: 'Em Análise', icon: 'clock', color: 'text-blue-400' },
+        { id: 'exigencia', title: 'Exigência', icon: 'triangle-alert', color: 'text-red-400' },
+        { id: 'aprovado', title: 'Aprovado', icon: 'check-circle-2', color: 'text-emerald-400' },
     ];
 
     let boardData = {};
@@ -50,13 +50,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="glass-panel rounded-t-2xl p-4 border-b border-white/5">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined ${col.color} text-[20px]">${col.icon}</span>
+                            <i data-lucide="${col.icon}" class="${col.color} text-[20px]"></i>
                             <h3 class="text-sm font-bold text-slate-200">${col.title}</h3>
                             <span class="text-[10px] font-bold bg-white/10 px-2 py-0.5 rounded-full text-slate-400">${cards.length}</span>
                         </div>
                         <button class="btn-add-card text-slate-500 hover:text-primary transition-colors p-1 rounded-lg hover:bg-white/5"
                                 data-column="${col.id}" title="Adicionar cartão">
-                            <span class="material-symbols-outlined text-[18px]">add</span>
+                            <i data-lucide="plus" class="text-[18px]"></i>
                         </button>
                     </div>
                 </div>
@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
                 <button class="btn-add-card-bottom mt-2 w-full py-2.5 flex items-center justify-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-300 hover:bg-white/5 rounded-xl transition-colors border border-dashed border-white/10 hover:border-white/20"
                         data-column="${col.id}">
-                    <span class="material-symbols-outlined text-[14px]">add</span>
+                    <i data-lucide="plus" class="text-[14px]"></i>
                     Adicionar Cartão
                 </button>
             `;
@@ -96,17 +96,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${p.class}">${p.label}</span>
                     <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button class="btn-edit-card text-slate-500 hover:text-primary p-1 rounded transition-colors" data-card-id="${card.id}" data-column="${columnId}">
-                            <span class="material-symbols-outlined text-[14px]">edit</span>
+                            <i data-lucide="pencil" class="text-[14px]"></i>
                         </button>
                         <button class="btn-archive-card text-slate-500 hover:text-yellow-400 p-1 rounded transition-colors" data-card-id="${card.id}" data-column="${columnId}">
-                            <span class="material-symbols-outlined text-[14px]">archive</span>
+                            <i data-lucide="archive" class="text-[14px]"></i>
                         </button>
                     </div>
                 </div>
                 <h4 class="text-sm font-semibold text-white mb-1">${card.titulo}</h4>
                 <p class="text-xs text-slate-400 mb-3">${card.cliente}</p>
                 ${card.alerta ? `<div class="text-[10px] text-amber-400 bg-amber-500/10 rounded-lg px-2.5 py-1.5 mb-3 flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-[12px]">warning</span>
+                    <i data-lucide="triangle-alert" class="text-[12px]"></i>
                     ${card.alerta}
                 </div>` : ''}
                 <div class="flex items-center justify-between pt-2 border-t border-white/5">

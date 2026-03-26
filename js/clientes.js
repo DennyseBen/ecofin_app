@@ -47,7 +47,7 @@ function renderClientes(clientes) {
     if (!grid) return;
 
     if (!clientes.length) {
-        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><span class="material-symbols-outlined">group_off</span><p class="font-semibold">Nenhum cliente encontrado</p></div>';
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i data-lucide="users-x"></i><p class="font-semibold">Nenhum cliente encontrado</p></div>';
         return;
     }
 

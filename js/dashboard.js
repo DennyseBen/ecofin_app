@@ -68,13 +68,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         let greeting, emoji;
 
         if (hour >= 5 && hour < 12) {
-            greeting = '☀️ Bom dia';
+            greeting = 'Bom dia';
             emoji = 'wb_sunny';
         } else if (hour >= 12 && hour < 18) {
-            greeting = '🌤️ Boa tarde';
+            greeting = 'Boa tarde';
             emoji = 'wb_twilight';
         } else {
-            greeting = '🌙 Boa noite';
+            greeting = 'Boa noite';
             emoji = 'nights_stay';
         }
 
@@ -197,10 +197,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             el.innerHTML = text;
         } else if (isPositive) {
             el.classList.add('up');
-            el.innerHTML = `<span class="material-symbols-outlined text-[12px]">trending_up</span> ${text}`;
+            el.innerHTML = `<i data-lucide="trending-up" class="text-[12px]"></i> ${text}`;
         } else {
             el.classList.add('down');
-            el.innerHTML = `<span class="material-symbols-outlined text-[12px]">trending_down</span> ${text}`;
+            el.innerHTML = `<i data-lucide="trending-down" class="text-[12px]"></i> ${text}`;
         }
     }
 
@@ -364,10 +364,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!ctx) return;
 
         const statusMap = {
-            vigente: { label: 'Vigentes', color: '#4ade80', icon: 'check_circle' },
-            vencida: { label: 'Vencidas', color: '#f87171', icon: 'cancel' },
-            renovando: { label: 'Renovando', color: '#fbbf24', icon: 'autorenew' },
-            exigencia: { label: 'Em Exigência', color: '#60a5fa', icon: 'pending' },
+            vigente: { label: 'Vigentes', color: '#4ade80', icon: 'check-circle-2' },
+            vencida: { label: 'Vencidas', color: '#f87171', icon: 'x-circle' },
+            renovando: { label: 'Renovando', color: '#fbbf24', icon: 'refresh-cw' },
+            exigencia: { label: 'Em Exigência', color: '#60a5fa', icon: 'clock' },
         };
 
         // Contar por status
@@ -383,7 +383,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const statusKeys = [];
 
         Object.entries(counts).forEach(([status, count]) => {
-            const info = statusMap[status] || { label: status, color: '#64748b', icon: 'help' };
+            const info = statusMap[status] || { label: status, color: '#64748b', icon: 'help-circle' };
             labels.push(info.label);
             data.push(count);
             colors.push(info.color);
@@ -478,14 +478,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <tr class="fade-in" style="animation-delay: ${index * 0.05}s;">
                     <td>
                         <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-[14px] text-slate-500">calendar_today</span>
+                            <i data-lucide="calendar" class="text-[14px] text-slate-500"></i>
                             <span class="text-slate-300">${EcoBackend.formatDate(f.data)}</span>
                         </div>
                     </td>
                     <td>
                         <div class="flex items-center gap-2.5">
                             <span class="p-1.5 rounded-lg ${isReceita ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'}">
-                                <span class="material-symbols-outlined text-[16px]">${isReceita ? 'arrow_downward' : 'arrow_upward'}</span>
+                                <i data-lucide="${isReceita ? 'arrow_downward' : 'arrow_upward'}" class="text-[16px]"></i>
                             </span>
                             <div>
                                 <p class="font-semibold text-slate-200 text-sm">${f.cliente}</p>
@@ -540,11 +540,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <div>
                                 <p class="text-sm font-medium text-slate-200 leading-snug">${a.descricao}</p>
                                 <p class="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-[12px]">schedule</span>
+                                    <i data-lucide="clock" class="text-[12px]"></i>
                                     ${timeAgo}
                                 </p>
                             </div>
-                            <span class="material-symbols-outlined text-[16px] text-slate-600 shrink-0 mt-0.5">${icon}</span>
+                            <i data-lucide="${icon}" class="text-[16px] text-slate-600 shrink-0 mt-0.5"></i>
                         </div>
                     </div>
                 `;
@@ -595,7 +595,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Loading state
                 searchPanel.innerHTML = `
                     <div class="px-4 py-4 text-center">
-                        <span class="material-symbols-outlined animate-spin text-primary text-[20px]">progress_activity</span>
+                        <i data-lucide="loader-circle" class="animate-spin text-primary text-[20px]"></i>
                         <p class="text-xs text-slate-500 mt-2">Buscando em todas as bases...</p>
                     </div>
                 `;
@@ -609,13 +609,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                         let html = resultados.map(m => `
                             <div class="px-4 py-3 hover:bg-white/5 cursor-pointer flex items-center gap-3 rounded-lg transition-colors group">
                                 <div class="p-2 rounded-lg bg-white/5 ${m.color} group-hover:bg-white/10 transition-colors shrink-0">
-                                    <span class="material-symbols-outlined text-[18px]">${m.icon}</span>
+                                    <i data-lucide="${m.icon}" class="text-[18px]"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-bold text-slate-200 truncate">${highlightMatch(m.name, query)}</p>
                                     <p class="text-[10px] text-slate-500 uppercase font-semibold truncate">${m.type} • ${m.detail || ''}</p>
                                 </div>
-                                <span class="material-symbols-outlined text-[14px] text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                <i data-lucide="arrow-right" class="text-[14px] text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity"></i>
                             </div>
                         `).join('');
 
@@ -631,7 +631,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         searchPanel.innerHTML = html;
                     } else {
                         let html = `<div class="px-4 py-4 text-center">
-                            <span class="material-symbols-outlined text-slate-600 text-3xl mb-2">search_off</span>
+                            <i data-lucide="search-x" class="text-slate-600 text-3xl mb-2"></i>
                             <p class="text-sm text-slate-400">Nenhum resultado para "<strong class="text-slate-200">${query}</strong>"</p>
                         </div>`;
 
@@ -705,7 +705,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="notification-item">
                     <div class="flex items-start gap-3">
                         <span class="p-2 rounded-lg ${n.bgClass} shrink-0 mt-0.5">
-                            <span class="material-symbols-outlined text-[16px] ${n.colorClass}">${n.icon}</span>
+                            <i data-lucide="${n.icon}" class="text-[16px] ${n.colorClass}"></i>
                         </span>
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-semibold text-slate-200">${n.title}</p>
@@ -739,7 +739,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             vencendo.forEach(l => {
                 const dias = EcoBackend.getDaysUntil(l.vencimento || l.data_vencimento);
                 notifications.push({
-                    icon: 'event_busy',
+                    icon: 'calendar-x2',
                     title: l.titulo,
                     description: `Vence em ${dias} dias • ${l.orgao || 'Órgão não informado'}`,
                     time: `Vencimento: ${EcoBackend.formatDate(l.vencimento || l.data_vencimento)}`,
@@ -752,7 +752,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const vencidas = await EcoQueries.licencas.vencidas();
             vencidas.forEach(l => {
                 notifications.push({
-                    icon: 'warning',
+                    icon: 'triangle-alert',
                     title: `${l.titulo} — VENCIDA`,
                     description: `Licença expirou! Processo: ${l.processo}`,
                     time: `Venceu: ${EcoBackend.formatDate(l.vencimento || l.data_vencimento)}`,
@@ -766,7 +766,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             (Array.isArray(financeiro) ? financeiro : []).forEach(f => {
                 if (f.status === 'atrasado') {
                     notifications.push({
-                        icon: 'payments',
+                        icon: 'credit-card',
                         title: `Pagamento atrasado — ${f.cliente}`,
                         description: `${f.categoria}: ${EcoBackend.formatCurrency(f.valor)}`,
                         time: `Data: ${EcoBackend.formatDate(f.data)}`,

@@ -14,9 +14,6 @@
     <title>EcoFin Manager — Processos</title>
     <meta name="description" content="EcoFin Manager - Gestão de processos de licenciamento ambiental com Kanban.">
     <link rel="stylesheet" href="css/styles.css">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
-        rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
@@ -33,14 +30,12 @@
                 </div>
             </div>
             <nav class="sidebar-nav">
-                <a href="dashboard.html"><span class="material-symbols-outlined">space_dashboard</span>Visão Geral</a>
-                <a href="licencas.html"><span class="material-symbols-outlined">verified</span>Licenças</a>
-                <a href="financeiro.html"><span
-                        class="material-symbols-outlined">account_balance_wallet</span>Financeiro</a>
-                <a href="clientes.html"><span class="material-symbols-outlined">group</span>Clientes</a>
-                <a href="processos.html" class="active"><span
-                        class="material-symbols-outlined">view_kanban</span>Processos</a>
-                <a href="perfil.html"><span class="material-symbols-outlined">person</span>Meu Perfil</a>
+                <a href="dashboard.html"><i data-lucide="layout-dashboard"></i>Visão Geral</a>
+                <a href="licencas.html"><i data-lucide="badge-check"></i>Licenças</a>
+                <a href="financeiro.html"><i data-lucide="wallet"></i>Financeiro</a>
+                <a href="clientes.html"><i data-lucide="users"></i>Clientes</a>
+                <a href="processos.html" class="active"><i data-lucide="kanban"></i>Processos</a>
+                <a href="perfil.html"><i data-lucide="user"></i>Meu Perfil</a>
             </nav>
             <div class="sidebar-user">
                 <div class="sidebar-user-card">
@@ -49,28 +44,26 @@
                         <p id="sidebar-user-name">Usuário</p>
                         <small id="sidebar-user-email">—</small>
                     </div>
-                    <button id="btn-logout" title="Sair"><span class="material-symbols-outlined"
-                            style="font-size:18px;color:var(--text-muted)">logout</span></button>
+                    <button id="btn-logout" title="Sair"><i data-lucide="log-out" style="font-size:18px;color:var(--text-muted)"></i></button>
                 </div>
-            </div>
+            
+            <div class="sidebar-version"><span>v1.0.0</span><span>Mar 2026</span></div>
         </aside>
 
         <!-- Main -->
         <main class="app-main">
             <header class="app-header">
                 <div class="flex items-center gap-3">
-                    <button class="hamburger-btn" id="hamburger-btn"><span
-                            class="material-symbols-outlined">menu</span></button>
+                    <button class="hamburger-btn" id="hamburger-btn"><i data-lucide="menu"></i></button>
                     <div>
                         <h2 class="text-lg font-bold">Processos</h2>
                         <p class="text-xs text-muted hide-mobile">Kanban de licenciamento ambiental</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button class="theme-toggle" id="theme-toggle" title="Alternar tema"><span
-                            class="material-symbols-outlined" id="theme-icon">dark_mode</span></button>
+                    <button class="theme-toggle" id="theme-toggle" title="Alternar tema"><i data-lucide="moon" id="theme-icon"></i></button>
                     <button class="btn btn-primary btn-sm" id="btn-novo-processo">
-                        <span class="material-symbols-outlined" style="font-size:16px">add</span>
+                        <i data-lucide="plus" style="font-size:16px"></i>
                         <span class="hide-mobile">Novo Processo</span>
                     </button>
                 </div>
@@ -79,14 +72,13 @@
             <div class="app-content">
                 <!-- AI Banner -->
                 <div class="ai-banner mb-6 fade-in" id="ai-banner" style="display:none">
-                    <span class="material-symbols-outlined ai-banner-icon">auto_awesome</span>
+                    <i data-lucide="sparkles" class="ai-banner-icon"></i>
                     <div class="ai-banner-text">
                         <h4>Insight de IA</h4>
                         <p id="ai-banner-text">Analisando seus processos...</p>
                     </div>
                     <button onclick="this.parentElement.style.display='none'"
-                        style="margin-left:auto;color:var(--text-muted)"><span class="material-symbols-outlined"
-                            style="font-size:18px">close</span></button>
+                        style="margin-left:auto;color:var(--text-muted)"><i data-lucide="x" style="font-size:18px"></i></button>
                 </div>
 
                 <!-- Kanban Board -->
@@ -103,8 +95,7 @@
                     <h3 class="text-lg font-bold" id="modal-title">Novo Processo</h3>
                     <p class="text-xs text-muted" id="modal-subtitle">Preencha os dados do processo</p>
                 </div>
-                <button id="modal-close" class="btn-ghost" style="padding:8px"><span
-                        class="material-symbols-outlined">close</span></button>
+                <button id="modal-close" class="btn-ghost" style="padding:8px"><i data-lucide="x"></i></button>
             </div>
             <div class="tabs" id="modal-tabs">
                 <button class="tab active" data-tab="dados">Dados</button>
@@ -197,7 +188,7 @@
                 <!-- Tab: Anexos -->
                 <div class="tab-content" id="tab-anexos">
                     <div class="file-drop-zone" id="file-drop-zone">
-                        <span class="material-symbols-outlined">cloud_upload</span>
+                        <i data-lucide="cloud-upload"></i>
                         <p class="font-semibold" style="color:var(--text-secondary)">Arraste arquivos aqui ou clique
                             para selecionar</p>
                         <p class="text-xs text-muted mt-2">Apenas .pdf, .xlsx e .csv (máx. 10MB)</p>
@@ -218,6 +209,7 @@
     <script src="js/shared.js"></script>
     <script src="js/processos.js"></script>
   <script src="/js/pwa-install.js"></script>
+  <script>document.addEventListener("DOMContentLoaded",()=>lucide.createIcons());</script>
 </body>
 
 </html>

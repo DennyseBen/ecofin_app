@@ -216,8 +216,11 @@ textarea {
     font-weight: 600;
 }
 
-.sidebar-nav .material-symbols-outlined {
-    font-size: 20px;
+.sidebar-nav .lucide {
+    width: 18px;
+    height: 18px;
+    stroke-width: 1.75;
+    flex-shrink: 0;
 }
 
 .sidebar-user {
@@ -1426,4 +1429,27 @@ textarea {
     .slide-over {
         width: 100%;
     }
+}
+/* ====================== LUCIDE ICONS ====================== */
+.lucide {
+    width: 1em;
+    height: 1em;
+    stroke-width: 1.75;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+/* Sidebar version badge */
+.sidebar-version {
+    padding: 8px 14px;
+    font-size: 10px;
+    color: var(--text-muted);
+    opacity: 0.6;
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }

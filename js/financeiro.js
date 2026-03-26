@@ -149,7 +149,7 @@ function renderTable() {
     const page = filteredTransacoes.slice(start, start + PAGE_SIZE);
 
     if (!page.length) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px"><div class="empty-state"><span class="material-symbols-outlined">receipt_long</span><p>Nenhuma transação encontrada</p></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px"><div class="empty-state"><i data-lucide="receipt"></i><p>Nenhuma transação encontrada</p></div></td></tr>';
     } else {
         tbody.innerHTML = page.map(t => {
             const isR = t.tipo === 'receita';

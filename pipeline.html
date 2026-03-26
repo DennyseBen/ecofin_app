@@ -14,7 +14,6 @@
     <title>EcoFin Manager — Pipeline de Licenças</title>
     <meta name="description" content="EcoFin Manager - Pipeline Kanban para acompanhamento de licenças ambientais.">
     <link rel="stylesheet" href="css/styles.css">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
@@ -48,27 +47,27 @@
         <nav class="flex-1 px-4 py-4 space-y-1.5 overflow-y-auto custom-scrollbar">
             <a href="dashboard.html"
                 class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-white/5 hover:text-slate-100 transition-colors">
-                <span class="material-symbols-outlined">dashboard</span><span>Dashboard</span>
+                <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
             </a>
             <a href="licencas.html"
                 class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-white/5 hover:text-slate-100 transition-colors">
-                <span class="material-symbols-outlined">verified</span><span>Licenças</span>
+                <i data-lucide="badge-check"></i><span>Licenças</span>
             </a>
             <a href="financeiro.html"
                 class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-white/5 hover:text-slate-100 transition-colors">
-                <span class="material-symbols-outlined">account_balance_wallet</span><span>Financeiro</span>
+                <i data-lucide="wallet"></i><span>Financeiro</span>
             </a>
             <a href="clientes.html"
                 class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-white/5 hover:text-slate-100 transition-colors">
-                <span class="material-symbols-outlined">group</span><span>Clientes</span>
+                <i data-lucide="users"></i><span>Clientes</span>
             </a>
             <a href="#"
                 class="nav-item active flex items-center gap-3 px-4 py-3 rounded-xl text-primary bg-primary/5 transition-colors">
-                <span class="material-symbols-outlined">view_kanban</span><span>Pipeline</span>
+                <i data-lucide="kanban"></i><span>Pipeline</span>
             </a>
             <a href="perfil.html"
                 class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-white/5 hover:text-slate-100 transition-colors">
-                <span class="material-symbols-outlined">person</span><span>Meu Perfil</span>
+                <i data-lucide="user"></i><span>Meu Perfil</span>
             </a>
         </nav>
         <div class="p-4 border-t border-white/5">
@@ -80,7 +79,7 @@
                     <p class="text-[10px] text-slate-500 truncate" id="sidebar-user-email">—</p>
                 </div>
                 <button id="btn-logout" class="text-slate-500 hover:text-red-400 transition-colors" title="Logout">
-                    <span class="material-symbols-outlined text-[20px]">logout</span>
+                    <i data-lucide="log-out" class="text-[20px]"></i>
                 </button>
             </div>
         </div>
@@ -98,7 +97,7 @@
                 </div>
             </div>
             <button id="btn-novo-card" class="btn-primary text-sm py-2.5 px-5 hidden sm:flex items-center gap-2">
-                <span class="material-symbols-outlined text-[16px]">add</span>
+                <i data-lucide="plus" class="text-[16px]"></i>
                 Novo Cartão
             </button>
         </header>
@@ -113,7 +112,7 @@
         <!-- FAB Mobile -->
         <button id="btn-novo-card-mobile"
             class="sm:hidden fixed bottom-6 right-6 z-40 size-14 bg-primary rounded-2xl shadow-[0_0_25px_rgba(74,222,128,0.3)] flex items-center justify-center text-black hover:scale-110 transition-transform">
-            <span class="material-symbols-outlined text-2xl font-bold">add</span>
+            <i data-lucide="plus" class="text-2xl font-bold"></i>
         </button>
     </main>
 
@@ -184,6 +183,7 @@
         }
     </style>
   <script src="/js/pwa-install.js"></script>
+  <script>document.addEventListener("DOMContentLoaded",()=>lucide.createIcons());</script>
 </body>
 
 </html>
