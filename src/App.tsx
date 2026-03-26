@@ -1,42 +1,38 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import React, { useState } from 'react';
-import Layout from './components/Layout';
-import Dashboard from './pages/Dashboard';
-import CRM from './pages/CRM';
-import Kanban from './pages/Kanban';
-import Financial from './pages/Financial';
-import Notifications from './pages/Notifications';
-import AI from './pages/AI';
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { ThemeProvider } from './contexts/ThemeContext'
+import { AuthProvider } from './contexts/AuthContext'
+import ProtectedRoute from './components/ProtectedRoute'
+import DashboardLayout from './components/layout/DashboardLayout'
+import Dashboard from './pages/Dashboard'
+import Clientes from './pages/Clientes'
+import Licencas from './pages/Licencas'
+import Financas from './pages/Financas'
+import Processos from './pages/Processos'
+import Configuracoes from './pages/Configuracoes'
+import Notificacoes from './pages/Notificacoes'
+import Login from './pages/Login'
+import InstallPWA from './components/InstallPWA'
 
 export default function App() {
-  const [currentPath, setCurrentPath] = useState('/');
-
-  const renderPage = () => {
-    switch (currentPath) {
-      case '/':
-        return <Dashboard />;
-      case '/crm':
-        return <CRM />;
-      case '/kanban':
-        return <Kanban />;
-      case '/financial':
-        return <Financial />;
-      case '/notifications':
-        return <Notifications />;
-      case '/ai':
-        return <AI />;
-      default:
-        return <Dashboard />;
-    }
-  };
-
   return (
-    <Layout currentPath={currentPath} onNavigate={setCurrentPath}>
-      {renderPage()}
-    </Layout>
-  );
+    <AuthProvider>
+      <ThemeProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/clientes" element={<Clientes />} />
+              <Route path="/licencas" element={<Licencas />} />
+              <Route path="/notificacoes" element={<Notificacoes />} />
+              <Route path="/financeiro" element={<Financas />} />
+              <Route path="/processos" element={<Processos />} />
+              <Route path="/configuracoes" element={<Configuracoes />} />
+            </Route>
+          </Routes>
+          <InstallPWA />
+        </BrowserRouter>
+      </ThemeProvider>
+    </AuthProvider>
+  )
 }

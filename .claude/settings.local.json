@@ -49,7 +49,24 @@
       "Bash(grep -n \"cdn.jsdelivr\\\\|supabase.co\\\\|@supabase\\\\|supabase-js\" *.html js/supabase.js)",
       "Bash(sed -i 's|<script src=\"\"https://cdn.jsdelivr.net/npm/sweetalert2@11\"\"></script>|<script src=\"\"https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js\"\"></script>\\\\n    <script src=\"\"https://cdn.jsdelivr.net/npm/sweetalert2@11\"\"></script>|' \"$f\")",
       "Bash(echo \"updated $f\")",
-      "Bash(grep -c \"supabase.min.js\" *.html)"
+      "Bash(grep -c \"supabase.min.js\" *.html)",
+      "Bash(gh repo:*)",
+      "Bash(git -C \"C:\\\\Users\\\\Administrator\\\\Downloads\\\\ecofin-manager-old\" log --oneline)",
+      "Bash(git -C C:UsersAdministratorDownloadsecofin-manager-old show f0e9d51 --stat)",
+      "Bash(git -C C:UsersAdministratorDownloadsecofin-manager-old show f0e9d51:package.json)",
+      "Bash(cp \"C:\\\\Users\\\\Administrator\\\\Downloads\\\\ecofin-app-restore\\\\vercel.json\" \"c:\\\\Users\\\\Administrator\\\\Downloads\\\\ecofin-manager\\\\vercel.json\")",
+      "Bash(rsync -av --exclude='.git' --exclude='node_modules' --exclude='.vercel' \"C:\\\\Users\\\\Administrator\\\\Downloads\\\\ecofin-app-restore/\" .)",
+      "Bash(cp -r \"C:\\\\Users\\\\Administrator\\\\Downloads\\\\ecofin-app-restore\\\\src\" .)",
+      "Bash(cp -r \"C:\\\\Users\\\\Administrator\\\\Downloads\\\\ecofin-app-restore\\\\public\" .)",
+      "Bash(cp \"C:\\\\Users\\\\Administrator\\\\Downloads\\\\ecofin-app-restore\\\\package.json\" .)",
+      "Bash(cp \"C:\\\\Users\\\\Administrator\\\\Downloads\\\\ecofin-app-restore\\\\package-lock.json\" .)",
+      "Bash(cp \"C:\\\\Users\\\\Administrator\\\\Downloads\\\\ecofin-app-restore\\\\vite.config.ts\" .)",
+      "Bash(cp \"C:\\\\Users\\\\Administrator\\\\Downloads\\\\ecofin-app-restore\\\\tailwind.config.js\" .)",
+      "Bash(cp \"C:\\\\Users\\\\Administrator\\\\Downloads\\\\ecofin-app-restore\\\\tsconfig.json\" .)",
+      "Bash(cp \"C:\\\\Users\\\\Administrator\\\\Downloads\\\\ecofin-app-restore\\\\tsconfig.app.json\" .)",
+      "Bash(cp \"C:\\\\Users\\\\Administrator\\\\Downloads\\\\ecofin-app-restore\\\\tsconfig.node.json\" .)",
+      "Bash(cp \"C:\\\\Users\\\\Administrator\\\\Downloads\\\\ecofin-app-restore\\\\index.html\" .)",
+      "Bash(cp \"C:\\\\Users\\\\Administrator\\\\Downloads\\\\ecofin-app-restore\\\\postcss.config.js\" .)"
     ]
   }
 }

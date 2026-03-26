@@ -1,255 +1,269 @@
-import React, { useMemo } from 'react';
-import { 
-  FileText, 
-  CheckCircle2, 
-  Clock, 
-  AlertTriangle,
-  TrendingUp,
-  Users
-} from 'lucide-react';
-import { 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer 
-} from 'recharts';
-import { format, isValid, parseISO, differenceInCalendarDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { loadJson, type NotificationItem } from '../lib/storage';
-import { useNavigation } from '../lib/navigation';
+import { Users, AlertTriangle, ShieldCheck, ArrowUpRight, Leaf, Activity, Bell } from 'lucide-react'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useSupabase } from '../hooks/useSupabase'
+import { fetchDashboardStats, fetchLicencasPorTipo, fetchProximosVencimentos, fetchAlertasLicencas } from '../lib/api'
+import { computeStatus, statusBadgeClass, getDaysRemaining, isInAlertZone } from '../lib/types'
+import { useAuth } from '../contexts/AuthContext'
 
-type TxType = 'income' | 'expense';
-interface Transaction {
-  id: string;
-  dateIso: string;
-  description: string;
-  client: string;
-  amount: number;
-  type: TxType;
-  status: 'Pago' | 'Pendente';
+const formatDate = (dateStr: string | null): string => {
+    if (!dateStr) return '—'
+    const [y, m, d] = dateStr.split('T')[0].split('-')
+    return `${d}/${m}/${y}`
 }
 
-interface KanbanTask {
-  id: string;
-  title: string;
-  client: string;
-  dueDateIso?: string;
-  priority: 'low' | 'medium' | 'high';
-  archived?: boolean;
-}
-interface KanbanColumn {
-  id: string;
-  title: string;
-  taskIds: string[];
-}
-interface KanbanData {
-  tasks: Record<string, KanbanTask>;
-  columns: Record<string, KanbanColumn>;
-  columnOrder: string[];
+function ComplianceGauge({ value }: { value: number }) {
+    const radius = 80
+    const circumference = Math.PI * radius
+    const offset = circumference - (value / 100) * circumference
+    const color = value >= 70 ? '#10b981' : value >= 40 ? '#f59e0b' : '#ef4444'
+    return (
+        <div className="relative flex flex-col items-center">
+            <svg width="200" height="120" viewBox="0 0 200 120">
+                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="currentColor" strokeWidth="12" className="text-slate-100 dark:text-white/[0.06]" strokeLinecap="round" />
+                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke={color} strokeWidth="12" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset} className="animate-gauge" style={{ filter: `drop-shadow(0 0 8px ${color}40)` }} />
+            </svg>
+            <div className="absolute bottom-2 flex flex-col items-center">
+                <span className="text-4xl font-extrabold" style={{ color }}>{value}%</span>
+                <span className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold mt-0.5">Conformidade</span>
+            </div>
+        </div>
+    )
 }
 
-interface Client {
-  id: string;
-  name: string;
-  type: string;
-  contact: string;
-  email: string;
-  phone: string;
-  location: string;
-  status: 'Ativo' | 'Em Análise' | 'Inativo';
+function TimelineStep({ label, count, active }: { label: string; count: number; active?: boolean }) {
+    return (
+        <div className="flex flex-col items-center gap-2">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-all ${active ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-slate-100 dark:bg-white/[0.06] text-slate-400'}`}>
+                {count}
+            </div>
+            <span className="text-[10px] font-medium text-slate-400 text-center max-w-[80px] leading-tight">{label}</span>
+        </div>
+    )
 }
+
+function MiniProgress({ value, color }: { value: number; color: string }) {
+    return (
+        <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-white/[0.06] overflow-hidden">
+            <div className={`h-full rounded-full ${color} transition-all duration-1000`} style={{ width: `${value}%` }} />
+        </div>
+    )
+}
+
+const tabs = ['Visão Geral', 'Vencimentos', 'Atividade']
 
 export default function Dashboard() {
-  const { navigate } = useNavigation();
-  const clients = loadJson<Client[]>('ecofin.clients.v1', []);
-  const kanban = loadJson<KanbanData | null>('ecofin.kanban.v1', null);
-  const transactions = loadJson<Transaction[]>('ecofin.transactions.v1', []);
-  const notifications = loadJson<NotificationItem[]>('ecofin.notifications.v1', []);
+    const [activeTab, setActiveTab] = useState('Visão Geral')
+    const navigate = useNavigate()
+    const { user } = useAuth()
+    const userName = user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuário'
 
-  const licenseStats = useMemo(() => {
-    const allTasks = kanban ? Object.values(kanban.tasks) : [];
-    const activeTasks = allTasks.filter((t) => !t.archived);
-    const analysisColumnIds = kanban
-      ? kanban.columnOrder.filter((cid) => kanban.columns[cid]?.title.toLowerCase().includes('análise'))
-      : [];
-    const analysisSet = new Set<string>();
-    if (kanban) {
-      for (const cid of analysisColumnIds) {
-        for (const tid of kanban.columns[cid]?.taskIds ?? []) analysisSet.add(tid);
-      }
-    }
-    const inAnalysis = activeTasks.filter((t) => analysisSet.has(t.id));
+    const { data: stats, loading: statsLoading } = useSupabase(fetchDashboardStats, {
+        total_clientes: 0, total_licencas: 0, licencas_validas: 0,
+        licencas_vencidas: 0, vencendo_90_dias: 0, compliance_rate: 0
+    })
+    const { data: licencasPorTipo } = useSupabase(fetchLicencasPorTipo, [])
+    const { data: recentExpiring } = useSupabase(() => fetchProximosVencimentos(8), [])
+    const { data: alertasLicencas } = useSupabase(fetchAlertasLicencas, [])
+    const alertItems = alertasLicencas.filter(isInAlertZone).slice(0, 5)
 
-    const now = new Date();
-    const dueSoon = activeTasks.filter((t) => {
-      if (!t.dueDateIso) return false;
-      const d = parseISO(t.dueDateIso);
-      if (!isValid(d)) return false;
-      const days = differenceInCalendarDays(d, now);
-      return days >= 0 && days <= 30;
-    });
-
-    return {
-      active: activeTasks.length,
-      inAnalysis: inAnalysis.length,
-      dueSoon: dueSoon.length,
-      clients: clients.length,
-    };
-  }, [clients.length, kanban]);
-
-  const cashflowData = useMemo(() => {
-    if (!transactions.length) {
-      return [
-        { name: 'Jan', revenue: 0, expenses: 0 },
-        { name: 'Fev', revenue: 0, expenses: 0 },
-        { name: 'Mar', revenue: 0, expenses: 0 },
-        { name: 'Abr', revenue: 0, expenses: 0 },
-        { name: 'Mai', revenue: 0, expenses: 0 },
-        { name: 'Jun', revenue: 0, expenses: 0 },
-        { name: 'Jul', revenue: 0, expenses: 0 },
-      ];
+    const getChartColor = (type: string) => {
+        const t = type.toUpperCase()
+        if (t.includes('LO')) return 'bg-emerald-500'
+        if (t.includes('LI')) return 'bg-sky-500'
+        if (t.includes('DLA')) return 'bg-amber-500'
+        if (t.includes('LP')) return 'bg-violet-500'
+        return 'bg-blue-400'
     }
 
-    const byMonth = new Map<string, { month: string; revenue: number; expenses: number }>();
-    for (const t of transactions) {
-      const key = t.dateIso.slice(0, 7);
-      const entry = byMonth.get(key) ?? { month: key, revenue: 0, expenses: 0 };
-      if (t.type === 'income') entry.revenue += t.amount;
-      else entry.expenses += t.amount;
-      byMonth.set(key, entry);
+    if (statsLoading) {
+        return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div></div>
     }
-    const rows = Array.from(byMonth.values()).sort((a, b) => a.month.localeCompare(b.month)).slice(-7);
-    return rows.map((r) => {
-      const d = parseISO(`${r.month}-01`);
-      const name = isValid(d) ? format(d, 'MMM', { locale: ptBR }) : r.month;
-      return { name, revenue: r.revenue, expenses: r.expenses };
-    });
-  }, [transactions]);
 
-  const recentActivities = useMemo(() => {
-    return [...notifications]
-      .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
-      .slice(0, 4)
-      .map((n) => {
-        const icon =
-          n.type === 'success' ? CheckCircle2 :
-          n.type === 'warning' ? AlertTriangle :
-          n.type === 'error' ? AlertTriangle :
-          TrendingUp;
-        const color =
-          n.type === 'success' ? 'text-emerald-500' :
-          n.type === 'warning' ? 'text-amber-500' :
-          n.type === 'error' ? 'text-rose-500' :
-          'text-blue-500';
-        return { title: n.title, desc: n.message, time: n.time, icon, color };
-      });
-  }, [notifications]);
+    const kpis = [
+        { label: 'Total Clientes', value: stats.total_clientes, icon: Users, desc: 'Cadastrados no sistema', iconBg: 'bg-emerald-50 dark:bg-emerald-500/10', iconColor: 'text-emerald-500', path: '/clientes' },
+        { label: 'Licenças Ativas', value: stats.licencas_validas, icon: ShieldCheck, desc: 'Em conformidade', iconBg: 'bg-sky-50 dark:bg-sky-500/10', iconColor: 'text-sky-500', path: '/licencas?status=Válida' },
+        { label: 'Vencendo em 90 dias', value: stats.vencendo_90_dias, icon: AlertTriangle, desc: 'Requer atenção', iconBg: 'bg-amber-50 dark:bg-amber-500/10', iconColor: 'text-amber-500', path: '/licencas?status=Vencendo' },
+        { label: 'Total Processos', value: stats.total_licencas, icon: Activity, desc: 'Licenças registradas', iconBg: 'bg-violet-50 dark:bg-violet-500/10', iconColor: 'text-violet-500', path: '/licencas' },
+    ]
 
-  const stats = useMemo(() => ([
-    { name: 'Licenças Ativas', value: String(licenseStats.active), icon: FileText, change: 'Atual', color: 'text-emerald-600', bg: 'bg-emerald-100' },
-    { name: 'Em Análise', value: String(licenseStats.inAnalysis), icon: Clock, change: 'Atual', color: 'text-amber-600', bg: 'bg-amber-100' },
-    { name: 'Vencendo em 30d', value: String(licenseStats.dueSoon), icon: AlertTriangle, change: 'Atual', color: 'text-rose-600', bg: 'bg-rose-100' },
-    { name: 'Clientes', value: String(licenseStats.clients), icon: Users, change: 'Total', color: 'text-blue-600', bg: 'bg-blue-100' },
-  ]), [licenseStats]);
+    return (
+        <div className="space-y-8 animate-fade-in">
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Visão Geral</h1>
-        <p className="text-slate-500">Acompanhe o status das licenças e saúde financeira.</p>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {stats.map((stat) => (
-          <button
-            key={stat.name}
-            type="button"
-            onClick={() => {
-              if (stat.name.includes('Cliente')) navigate('/crm');
-              else navigate('/kanban');
-            }}
-            className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-left hover:border-emerald-500/30 hover:shadow-md transition-all"
-          >
-            <div className="flex items-center justify-between">
-              <div className={`p-3 rounded-xl ${stat.bg}`}>
-                <stat.icon className={`w-6 h-6 ${stat.color}`} />
-              </div>
-              <span className="text-xs font-medium text-emerald-600">
-                Clique para ver detalhes
-              </span>
-            </div>
-            <div className="mt-4">
-              <h3 className="text-3xl font-bold text-slate-900">{stat.value}</h3>
-              <p className="text-sm text-slate-500 font-medium mt-1">{stat.name}</p>
-            </div>
-          </button>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Chart */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-slate-900">Fluxo de Caixa</h2>
-            <button
-              type="button"
-              onClick={() => navigate('/financial')}
-              className="text-sm text-emerald-600 font-medium hover:text-emerald-700"
-            >
-              Ver Relatório Completo &rarr;
-            </button>
-          </div>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={cashflowData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                />
-                <Area type="monotone" dataKey="revenue" name="Receitas" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" />
-                <Area type="monotone" dataKey="expenses" name="Despesas" stroke="#f43f5e" strokeWidth={2} fillOpacity={1} fill="url(#colorExpenses)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-          <h2 className="text-lg font-bold text-slate-900 mb-6">Atividades Recentes</h2>
-          <div className="space-y-6">
-            {recentActivities.length === 0 ? (
-              <div className="text-sm text-slate-500">Sem atividades registradas ainda.</div>
-            ) : recentActivities.map((activity, i) => (
-              <div key={i} className="flex gap-4">
-                <div className="mt-1">
-                  <activity.icon className={`w-5 h-5 ${activity.color}`} />
+            {/* Alert Banner */}
+            {alertItems.length > 0 && (
+                <div className="card !bg-amber-50 dark:!bg-amber-500/[0.08] !border-amber-200 dark:!border-amber-500/20 cursor-pointer hover:opacity-90 transition-opacity" onClick={() => navigate('/notificacoes')}>
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                            <div className="p-1.5 rounded-xl bg-amber-100 dark:bg-amber-500/20">
+                                <Bell size={15} className="text-amber-600 dark:text-amber-400" />
+                            </div>
+                            <p className="text-sm font-bold text-amber-700 dark:text-amber-300">
+                                {alertItems.length} licença{alertItems.length > 1 ? 's precisam' : ' precisa'} de atenção
+                            </p>
+                        </div>
+                        <span className="text-xs text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1">
+                            Ver todas <ArrowUpRight size={12} />
+                        </span>
+                    </div>
+                    <div className="space-y-1.5">
+                        {alertItems.map((l, i) => {
+                            const days = getDaysRemaining(l)
+                            return (
+                                <div key={i} className="flex items-center justify-between text-xs py-1 border-b border-amber-200/50 dark:border-amber-500/10 last:border-0">
+                                    <span className="font-medium text-slate-700 dark:text-slate-200 truncate max-w-[60%]">{l.razao_social}</span>
+                                    <span className={`font-bold px-2 py-0.5 rounded-full ${days !== null && days <= 15 ? 'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400'}`}>
+                                        {days !== null && days >= 0 ? `${days}d` : 'Vencida'} · {l.tipo}
+                                    </span>
+                                </div>
+                            )
+                        })}
+                    </div>
                 </div>
+            )}
+
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">{activity.title}</p>
-                  <p className="text-sm text-slate-500 mt-0.5">{activity.desc}</p>
-                  <p className="text-xs text-slate-400 mt-1">{activity.time}</p>
+                    <div className="flex items-center gap-2 text-emerald-500 mb-1"><Leaf size={18} /><span className="text-xs font-bold uppercase tracking-widest">EcoFin Manager</span></div>
+                    <h1 className="text-3xl font-extrabold tracking-tight">Olá, {userName} 👋</h1>
+                    <p className="text-slate-400 text-sm mt-1">Monitoramento de licenciamento ambiental em tempo real.</p>
                 </div>
-              </div>
-            ))}
-          </div>
+                <div className="flex gap-1 bg-slate-100 dark:bg-white/[0.04] rounded-full p-1">
+                    {tabs.map(tab => (
+                        <button key={tab} onClick={() => setActiveTab(tab)} className={activeTab === tab ? 'pill-tab-active' : 'pill-tab'}>{tab}</button>
+                    ))}
+                </div>
+            </div>
+
+            {(activeTab === 'Visão Geral' || activeTab === 'Vencimentos') && (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div className="lg:col-span-4 card flex flex-col items-center justify-center py-8">
+                        <ComplianceGauge value={stats.compliance_rate} />
+                        <div className="grid grid-cols-3 gap-4 mt-6 w-full">
+                            <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?status=Válida')}>
+                                <p className="text-lg font-bold text-emerald-500">{stats.licencas_validas}</p>
+                                <p className="text-[10px] text-slate-400 uppercase tracking-wider">Válidas</p>
+                            </div>
+                            <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?status=Vencendo')}>
+                                <p className="text-lg font-bold text-amber-500">{stats.vencendo_90_dias}</p>
+                                <p className="text-[10px] text-slate-400 uppercase tracking-wider">Vencendo</p>
+                            </div>
+                            <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?status=Vencida')}>
+                                <p className="text-lg font-bold text-red-500">{stats.licencas_vencidas}</p>
+                                <p className="text-[10px] text-slate-400 uppercase tracking-wider">Vencidas</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {kpis.map((kpi, i) => (
+                            <div key={i} className="card-hover cursor-pointer animate-slide-up" style={{ animationDelay: `${i * 80}ms` }} onClick={() => navigate(kpi.path)}>
+                                <div className="flex items-start justify-between">
+                                    <div className={`p-2.5 rounded-2xl ${kpi.iconBg}`}><kpi.icon size={20} className={kpi.iconColor} /></div>
+                                    <ArrowUpRight size={16} className="text-slate-300 dark:text-slate-600" />
+                                </div>
+                                <p className="text-3xl font-extrabold mt-4">{kpi.value}</p>
+                                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 mt-1">{kpi.label}</p>
+                                <p className="text-xs text-slate-400 mt-0.5">{kpi.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {(activeTab === 'Visão Geral' || activeTab === 'Atividade') && (
+                <div className="card">
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="font-bold">Pipeline de Processos</h3>
+                        <a href="/processos" className="text-xs text-emerald-500 font-semibold hover:underline flex items-center gap-1">Ver Kanban <ArrowUpRight size={12} /></a>
+                    </div>
+                    <div className="flex items-center justify-between relative px-4">
+                        <div className="absolute top-5 left-12 right-12 h-px bg-slate-200 dark:bg-white/[0.06]" />
+                        <TimelineStep label="Planejamento" count={3} active />
+                        <TimelineStep label="Coleta de Docs" count={5} active />
+                        <TimelineStep label="Taxas" count={2} />
+                        <TimelineStep label="Em Análise" count={4} />
+                        <TimelineStep label="Exigências" count={1} />
+                        <TimelineStep label="Concluído" count={12} active />
+                    </div>
+                </div>
+            )}
+
+            {(activeTab === 'Visão Geral' || activeTab === 'Vencimentos') && (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div className="lg:col-span-4 card">
+                        <h3 className="font-bold mb-6">Licenças por Tipo</h3>
+                        <div className="space-y-4">
+                            {licencasPorTipo.slice(0, 5).map((item, i) => {
+                                const pct = stats.total_licencas > 0 ? Math.round((item.count / stats.total_licencas) * 100) : 0
+                                const color = getChartColor(item.tipo)
+                                return (
+                                    <div key={i} className="group cursor-pointer" onClick={() => navigate(`/licencas?tipo=${item.tipo}`)}>
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <div className="flex items-center gap-2">
+                                                <span className={`w-2 h-2 rounded-full ${color}`} />
+                                                <span className="text-sm font-medium uppercase">{item.tipo}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs font-bold text-slate-500">{item.count}</span>
+                                                <span className="text-[10px] text-slate-400">{pct}%</span>
+                                            </div>
+                                        </div>
+                                        <MiniProgress value={pct} color={color} />
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+
+                    <div className="lg:col-span-8 card overflow-hidden !p-0">
+                        <div className="flex items-center justify-between p-6 pb-4">
+                            <h3 className="font-bold">Vencimentos Próximos</h3>
+                            <a href="/licencas" className="text-xs text-emerald-500 font-semibold hover:underline flex items-center gap-1">Ver todas <ArrowUpRight size={12} /></a>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead><tr className="border-b border-slate-100 dark:border-white/[0.04]">
+                                    <th className="table-header px-6">Cliente</th>
+                                    <th className="table-header px-4">Tipo</th>
+                                    <th className="table-header px-4">Órgão</th>
+                                    <th className="table-header px-4">Vencimento</th>
+                                    <th className="table-header px-6 text-right">Status</th>
+                                </tr></thead>
+                                <tbody className="text-sm">
+                                    {recentExpiring.map((c, i) => {
+                                        const status = computeStatus(c)
+                                        const daysRemaining = status === 'Vencendo' ? getDaysRemaining(c) : null
+
+                                        return (
+                                            <tr key={i} className="table-row border-b border-slate-50 dark:border-white/[0.02] last:border-0 cursor-pointer hover:bg-emerald-50/50 dark:hover:bg-emerald-500/[0.03]" onClick={() => navigate(`/licencas?id=${c.id}`)}>
+                                                <td className="py-3.5 px-6">
+                                                    <p className="font-medium text-sm">{c.razao_social}</p>
+                                                    <p className="text-[10px] text-slate-400 mt-0.5">{c.atividade_licenciada || c.cidade}</p>
+                                                </td>
+                                                <td className="py-3.5 px-4"><span className="px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-white/[0.04] text-[10px] font-bold tracking-wider">{c.tipo}</span></td>
+                                                <td className="py-3.5 px-4 text-slate-400 text-xs">{c.departamento || '—'}</td>
+                                                <td className="py-3.5 px-4 text-xs font-medium">
+                                                    <div className="flex flex-col">
+                                                        <span>{formatDate(c.validade)}</span>
+                                                        {daysRemaining !== null && (
+                                                            <span className="text-[10px] text-amber-500 font-semibold mt-0.5">({daysRemaining} dias)</span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="py-3.5 px-6 text-right">
+                                                    <span className={`badge ${statusBadgeClass(status)}`}>{status}</span>
+                                                </td>
+                                            </tr>
+                                        )
+                                    })}
+                                    {recentExpiring.length === 0 && <tr><td colSpan={5} className="py-8 text-center text-slate-400 text-sm">Nenhum vencimento próximo.</td></tr>}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
-      </div>
-    </div>
-  );
+    )
 }
