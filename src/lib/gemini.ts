@@ -1,50 +1,41 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { fetchDashboardStats } from "./api";
 
 let genAI: any = null;
 
 export const initGemini = (apiKey: string) => {
-  if (!apiKey) {
-    genAI = null;
-    return;
-  }
+  if (!apiKey) { genAI = null; return; }
   genAI = new GoogleGenerativeAI(apiKey);
 };
 
 export const getFineResponse = async (prompt: string, contextData: any) => {
-  if (!genAI) {
-    return handleOfflineFineResponse(prompt, contextData);
-  }
+  if (!genAI) return handleOfflineFineResponse(prompt, contextData);
 
   try {
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
-      systemInstruction: `Você é a Fine, a Assistente Virtual Inteligente do EcoFin Manager.
-O EcoFin Manager é um software de gestão de licenciamento ambiental (licenças, outorgas) e finanças (faturas, contratos).
+      systemInstruction: `Você é a Fine, Assistente Virtual Inteligente do EcoFin Manager — sistema de gestão de licenciamento ambiental e finanças.
 
-DOMÍNIO DE CONHECIMENTO:
-1. LICENCIAMENTO: Tipos (LP, LI, LO, Dispensa, CLUA), prazos de renovação.
-2. FINANCEIRO: Faturas, Contratos.
-3. CLIENTES: Cadastro, endereço via CNPJ.
+DOMÍNIO:
+- LICENCIAMENTO: LP (Licença Prévia), LI (Licença de Instalação), LO (Licença de Operação), CLUA, Dispensa, Outorgas (Captação Superficial, Subterrânea, Lançamento, Barragem).
+  • Prazos típicos: LP=2-4 anos, LI=6 anos, LO=10 anos, Outorgas=10-15 anos.
+  • Renovação deve iniciar: LP 60 dias antes, LI 90 dias, LO 120 dias, Outorgas 180 dias.
+- FINANCEIRO: faturas mensais, contratos, NFS-e via Focus NF-e, status (pendente/pago/cancelado).
+- CLIENTES: cadastro com CNPJ, multi-tenant, cada usuário vê apenas seus clientes.
+- KANBAN: fases do processo (planejamento → coleta de dados → protocolado → em exigências → concluído).
+- COMPLIANCE: licencas_validas / total_licencas × 100 = taxa de conformidade.
 
 COMPORTAMENTO:
-- Seja prestativa, técnica porém amigável.
-- Responda em Português do Brasil.
-- Use emojis moderadamente.
-- Se não tiver dados no contexto, explique amigavelmente.
-- Você chama-se Fine.`
+- Responda sempre em Português do Brasil, de forma técnica e amigável.
+- Use emojis moderadamente para destacar urgências (🔴 crítico, 🟡 atenção, 🟢 ok).
+- Quando alertas existirem, priorize os mais urgentes primeiro.
+- Ofereça sugestões proativas (ex: "Recomendo iniciar a renovação da LO da empresa X").
+- Você se chama Fine.`
     });
 
     const chat = model.startChat({
       history: [
-        {
-          role: "user",
-          parts: [{ text: "Contexto Atualizado: " + JSON.stringify(contextData) }],
-        },
-        {
-          role: "model",
-          parts: [{ text: "Ok, recebi os dados atuais da plataforma." }],
-        },
+        { role: "user", parts: [{ text: "Contexto atual da plataforma: " + JSON.stringify(contextData, null, 0) }] },
+        { role: "model", parts: [{ text: "Contexto recebido. Pronta para ajudar!" }] },
       ],
     });
 
@@ -56,45 +47,69 @@ COMPORTAMENTO:
   }
 };
 
-function handleOfflineFineResponse(prompt: string, contextData: any): string {
+function handleOfflineFineResponse(prompt: string, ctx: any): string {
   const p = prompt.toLowerCase();
 
-  if (p.includes("olá") || p.includes("oi") || p.includes("bom dia") || p.includes("boa tarde")) {
-    return "Olá! Sou a Fine 💚. No momento ocorreu uma falha de conexão e minha IA avançada está inacessível. Mas eu ainda posso te ajudar com funções básicas! Pergunte sobre 'vencimentos' ou 'faturas'.";
+  if (p.includes("olá") || p.includes("oi") || p.includes("bom dia") || p.includes("boa tarde") || p.includes("boa noite")) {
+    const alertas = ctx?.alertas_criticos || 0;
+    if (alertas > 0) return `Olá! 👋 Sou a Fine. Atenção: há ${alertas} licença(s) em zona de alerta agora. Digite "alertas" para ver.`;
+    return "Olá! Sou a Fine 💚. Tudo certo por aqui! Como posso ajudar com vencimentos, faturas ou licenças?";
+  }
+
+  if (p.includes("alert") || p.includes("urgente") || p.includes("vencendo")) {
+    const v = ctx?.alertas || ctx?.proximos_vencimentos || [];
+    if (v.length === 0) return "🟢 Nenhuma licença em alerta no momento!";
+    let resp = `🔴 ${v.length} licença(s) requerem atenção:\n\n`;
+    v.slice(0, 5).forEach((item: any) => {
+      const data = item.vencimento ? item.vencimento.split('T')[0].split('-').reverse().join('/') : '—';
+      resp += `• **${item.tipo}** — ${item.cliente}\n  ⏳ Vence: ${data}\n`;
+    });
+    return resp;
   }
 
   if (p.includes("vencimento") || p.includes("vencer") || p.includes("licença") || p.includes("outorga")) {
-    const v = contextData?.proximos_vencimentos || [];
-    if (v.length === 0) return "Não identifiquei nenhuma licença ou outorga próxima do vencimento nos dados atuais! 🎉 Tudo certo.";
-
-    let resp = "Aqui estão as licenças/outorgas que requerem atenção logo:\n\n";
+    const v = ctx?.proximos_vencimentos || [];
+    if (v.length === 0) return "🟢 Nenhuma licença ou outorga próxima do vencimento!";
+    let resp = "Próximos vencimentos:\n\n";
     v.forEach((item: any) => {
-      let dataStr = item.vencimento;
-      if (dataStr) {
-        const [y, m, d] = dataStr.split('T')[0].split('-');
-        dataStr = `${d}/${m}/${y}`;
-      }
-      resp += `📝 **${item.tipo}** - ${item.cliente}\n⏳ Vence em: ${dataStr || 'Não informada'}\n\n`;
+      const data = item.vencimento ? item.vencimento.split('T')[0].split('-').reverse().join('/') : '—';
+      resp += `📝 **${item.tipo}** — ${item.cliente}\n  ⏳ ${data}\n`;
     });
     return resp;
   }
 
   if (p.includes("fatura") || p.includes("pagamento") || p.includes("financeiro")) {
-    const f = contextData?.faturas_recentes || [];
-    if (f.length === 0) return "Não encontrei faturas recentes cadastradas no seu painel.";
-
-    let resp = "Aqui estão os valores das suas faturas recentes:\n\n";
+    const f = ctx?.faturas_recentes || [];
+    if (f.length === 0) return "Sem faturas recentes no painel.";
+    let resp = "Faturas recentes:\n\n";
     f.forEach((item: any) => {
-      resp += `💰 R$ ${Number(item.valor).toFixed(2).replace('.', ',')} - Status: ${item.status}\n`;
+      const val = Number(item.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      resp += `💰 ${val} — Status: **${item.status}**\n`;
     });
     return resp;
   }
 
-  if (p.includes("resumo") || p.includes("dashboard") || p.includes("estatística")) {
-    const s = contextData?.stats;
-    if (!s) return "Não consegui carregar os dados gerais.";
-    return `📊 **Resumo Atual:**\n- Clientes Ativos: ${s.clientesAtivos}\n- Licenças Ativas: ${s.licencasAtivas}\n- Faturas Pendentes: ${s.faturasPendentes}`;
+  if (p.includes("kanban") || p.includes("processo") || p.includes("etapa")) {
+    const k = ctx?.kanban || [];
+    if (k.length === 0) return "Nenhum processo no Kanban no momento.";
+    const por_fase: Record<string, number> = {};
+    k.forEach((c: any) => { por_fase[c.fase] = (por_fase[c.fase] || 0) + 1; });
+    let resp = "📋 Kanban atual:\n\n";
+    Object.entries(por_fase).forEach(([fase, count]) => { resp += `• ${fase}: ${count} card(s)\n`; });
+    return resp;
   }
 
-  return "Desculpe, como minha comunicação com o servidor falhou, eu só entendo comandos simples como 'vencimentos', 'faturas' ou 'resumo'. Tente novamente em alguns instantes! 🤓";
+  if (p.includes("resumo") || p.includes("dashboard") || p.includes("status")) {
+    const s = ctx?.stats;
+    if (!s) return "Não foi possível carregar o resumo.";
+    const compliance = s.compliance_rate ? Number(s.compliance_rate).toFixed(1) : '—';
+    return `📊 **Resumo:**\n• Clientes: ${s.total_clientes ?? '—'}\n• Licenças: ${s.total_licencas ?? '—'}\n• Válidas: ${s.licencas_validas ?? '—'}\n• Vencidas: ${s.licencas_vencidas ?? '—'}\n• Compliance: ${compliance}%`;
+  }
+
+  if (p.includes("cliente")) {
+    const total = ctx?.stats?.total_clientes ?? ctx?.clientes_count ?? '—';
+    return `👥 Total de clientes cadastrados: **${total}**. Para detalhes, acesse a página de Clientes.`;
+  }
+
+  return "Estou em modo offline no momento. Tente: 'alertas', 'vencimentos', 'faturas', 'resumo' ou 'kanban'. 🤓";
 }

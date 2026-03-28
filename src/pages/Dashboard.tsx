@@ -1,7 +1,8 @@
 import { Users, AlertTriangle, ShieldCheck, ArrowUpRight, Leaf, Activity, Bell } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSupabase } from '../hooks/useSupabase'
+import { useRealtime } from '../hooks/useRealtime'
 import { fetchDashboardStats, fetchLicencasPorTipo, fetchProximosVencimentos, fetchAlertasLicencas, fetchKanbanCards } from '../lib/api'
 import { computeStatus, statusBadgeClass, getDaysRemaining, isInAlertZone } from '../lib/types'
 import { useAuth } from '../contexts/AuthContext'
@@ -58,14 +59,19 @@ export default function Dashboard() {
     const { user } = useAuth()
     const userName = user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuário'
 
-    const { data: stats, loading: statsLoading } = useSupabase(fetchDashboardStats, {
+    const { data: stats, loading: statsLoading, refetch: refetchStats } = useSupabase(fetchDashboardStats, {
         total_clientes: 0, total_licencas: 0, licencas_validas: 0,
         licencas_vencidas: 0, vencendo_90_dias: 0, compliance_rate: 0
     })
-    const { data: licencasPorTipo } = useSupabase(fetchLicencasPorTipo, [])
-    const { data: recentExpiring } = useSupabase(() => fetchProximosVencimentos(8), [])
-    const { data: alertasLicencas } = useSupabase(fetchAlertasLicencas, [])
-    const { data: kanbanCards } = useSupabase(fetchKanbanCards, [])
+    const { data: licencasPorTipo, refetch: refetchTipo } = useSupabase(fetchLicencasPorTipo, [])
+    const { data: recentExpiring, refetch: refetchExpiring } = useSupabase(() => fetchProximosVencimentos(8), [])
+    const { data: alertasLicencas, refetch: refetchAlertas } = useSupabase(fetchAlertasLicencas, [])
+    const { data: kanbanCards, refetch: refetchKanban } = useSupabase(fetchKanbanCards, [])
+
+    const refetchAll = useCallback(() => {
+        refetchStats(); refetchTipo(); refetchExpiring(); refetchAlertas(); refetchKanban()
+    }, [refetchStats, refetchTipo, refetchExpiring, refetchAlertas, refetchKanban])
+    useRealtime(['licencas', 'outorgas', 'kanban_cards'], refetchAll)
     const alertItems = alertasLicencas.filter(isInAlertZone).slice(0, 5)
 
     // Contadores dinâmicos do Kanban

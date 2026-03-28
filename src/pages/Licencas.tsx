@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
+import { useRealtime } from '../hooks/useRealtime'
 import { Search, Plus, FileText, Calendar, Building2, X, Edit2, Trash2, Save, ExternalLink, Eye, Droplets, AlertTriangle, RotateCcw, ChevronDown, ChevronUp, ClipboardList, Paperclip, Loader2 } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { useSupabase } from '../hooks/useSupabase'
-import { fetchLicencas, insertLicenca, updateLicenca, deleteLicenca, fetchClientes, fetchOutorgas, insertOutorga, updateOutorga, deleteOutorga } from '../lib/api'
+import { fetchLicencas, insertLicenca, updateLicenca, deleteLicenca, fetchClientes, fetchOutorgas, insertOutorga, updateOutorga, deleteOutorga, consultarCNPJ } from '../lib/api'
 import { computeStatus, statusBadgeClass, getDaysRemaining, isInAlertZone, TIPOS_LICENCA, TIPOS_OUTORGA, getRenovacaoLeadDays } from '../lib/types'
 import type { Licenca, Outorga, Cliente } from '../lib/types'
 import { importarDocumento } from '../lib/importLicenca'
@@ -137,6 +138,9 @@ export default function Licencas() {
     const { data: outorgas, refetch: refetchOutorgas } = useSupabase(fetchOutorgas, [])
     const { data: clientes } = useSupabase(fetchClientes, [])
 
+    const refetchAll = useCallback(() => { refetch(); refetchOutorgas() }, [refetch, refetchOutorgas])
+    useRealtime(['licencas', 'outorgas'], refetchAll)
+
     const initTab = searchParams.get('tab') === 'outorgas' ? 'Outorgas' : 'Licenças'
     const [activeTab, setActiveTab] = useState<'Licenças' | 'Outorgas'>(initTab)
     const [search, setSearch] = useState('')
@@ -151,7 +155,29 @@ export default function Licencas() {
     const [pdfModal, setPdfModal] = useState<string | null>(null)
     const [importing, setImporting] = useState(false)
     const [importedFileName, setImportedFileName] = useState<string | null>(null)
+    const [cnpjLoading, setCnpjLoading] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
+
+    const handleCnpjChange = async (raw: string) => {
+        const digits = raw.replace(/\D/g, '')
+        setForm((f: any) => ({ ...f, cnpj: raw }))
+        if (digits.length === 14) {
+            setCnpjLoading(true)
+            try {
+                const data = await consultarCNPJ(digits)
+                setForm((f: any) => ({
+                    ...f,
+                    cnpj: raw,
+                    ...(data.razao_social && !f.razao_social ? { razao_social: data.razao_social } : {}),
+                    ...(data.cidade && !f.cidade ? { cidade: data.cidade } : {}),
+                }))
+            } catch {
+                // silently ignore — CNPJ may not be in API
+            } finally {
+                setCnpjLoading(false)
+            }
+        }
+    }
 
     const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -694,7 +720,10 @@ export default function Licencas() {
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div><label className="text-xs font-semibold text-slate-500 mb-1 block">Órgão</label><input className="form-input" value={form.orgao || ''} onChange={e => setForm((f: any) => ({ ...f, orgao: e.target.value }))} /></div>
-                                        <div><label className="text-xs font-semibold text-slate-500 mb-1 block">CNPJ</label><input className="form-input" value={form.cnpj || ''} onChange={e => setForm((f: any) => ({ ...f, cnpj: e.target.value }))} /></div>
+                                        <div>
+                                            <label className="text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5">CNPJ {cnpjLoading && <Loader2 size={10} className="animate-spin text-indigo-500" />}</label>
+                                            <input className="form-input" placeholder="00.000.000/0000-00" value={form.cnpj || ''} onChange={e => handleCnpjChange(e.target.value)} />
+                                        </div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div><label className="text-xs font-semibold text-slate-500 mb-1 block">Validade</label><input type="date" className="form-input" value={form.validade || ''} onChange={e => setForm((f: any) => ({ ...f, validade: e.target.value }))} /></div>
@@ -826,7 +855,10 @@ export default function Licencas() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div><label className="text-xs font-semibold text-slate-500 mb-1 block">Órgão</label><input className="form-input" placeholder="ANA, SEMAS..." value={form.orgao || ''} onChange={e => setForm((f: any) => ({ ...f, orgao: e.target.value }))} /></div>
-                                    <div><label className="text-xs font-semibold text-slate-500 mb-1 block">CNPJ</label><input className="form-input" value={form.cnpj || ''} onChange={e => setForm((f: any) => ({ ...f, cnpj: e.target.value }))} /></div>
+                                    <div>
+                                        <label className="text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5">CNPJ {cnpjLoading && <Loader2 size={10} className="animate-spin text-indigo-500" />}</label>
+                                        <input className="form-input" placeholder="00.000.000/0000-00" value={form.cnpj || ''} onChange={e => handleCnpjChange(e.target.value)} />
+                                    </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div><label className="text-xs font-semibold text-slate-500 mb-1 block">Validade</label><input type="date" className="form-input" value={form.validade || ''} onChange={e => setForm((f: any) => ({ ...f, validade: e.target.value }))} /></div>
