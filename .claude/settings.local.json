@@ -71,7 +71,14 @@
       "Bash(node -e \"const d=require\\(''C:/Users/Administrator/Downloads/ecofin-app-restore/src/data/clients.json''\\); console.log\\(''Total registros:'', d.length\\); console.log\\(''Campos:'', Object.keys\\(d[0]\\).join\\('', ''\\)\\);\")",
       "Bash(node --input-type=commonjs -e \"const d=JSON.parse\\(require\\(''fs''\\).readFileSync\\(''C:/Users/Administrator/Downloads/ecofin-app-restore/src/data/clients.json'',''utf8''\\)\\); console.log\\(''Total:'', d.length\\); console.log\\(''Campos:'', Object.keys\\(d[0]\\).join\\('', ''\\)\\);\")",
       "Bash(node seed2.cjs)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npx tsx:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(grep -n \"useRealtime\\\\|channel\\\\|subscribe\\\\|realtime\" /c/Users/Administrator/Downloads/ecofin-manager/src/hooks/*.ts)"
     ]
   }
 }
