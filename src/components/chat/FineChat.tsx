@@ -15,8 +15,8 @@ export default function FineChat() {
     const scrollRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        initGemini(profile?.gemini_api_key || '')
-    }, [profile?.gemini_api_key])
+        initGemini(import.meta.env.VITE_GEMINI_API_KEY || '')
+    }, [])
 
     useEffect(() => {
         if (scrollRef.current) {

@@ -20,7 +20,6 @@ export default function Configuracoes() {
     const [notifVencimentos, setNotifVencimentos] = useState(true)
     const [notifRenovacoes, setNotifRenovacoes] = useState(true)
     const [notifSistema, setNotifSistema] = useState(true)
-    const [geminiKey, setGeminiKey] = useState('')
     const [savingNotif, setSavingNotif] = useState(false)
 
     // NFS-e config state
@@ -64,7 +63,6 @@ export default function Configuracoes() {
             setNotifVencimentos(profile.notify_vencimentos ?? true)
             setNotifRenovacoes(profile.notify_renovacoes ?? true)
             setNotifSistema(profile.notify_sistema ?? true)
-            setGeminiKey(profile.gemini_api_key || '')
         }
     }, [profile])
 
@@ -123,8 +121,7 @@ export default function Configuracoes() {
             whatsapp_notificacoes: notifWhatsApp || null,
             notify_vencimentos: notifVencimentos,
             notify_renovacoes: notifRenovacoes,
-            notify_sistema: notifSistema,
-            gemini_api_key: geminiKey || null
+            notify_sistema: notifSistema
         })
         setSavingNotif(false)
         if (!error) showToast('Preferências de notificação salvas!')
@@ -318,44 +315,6 @@ export default function Configuracoes() {
                     </div>
                     <button className="btn-primary disabled:opacity-50" onClick={handleSaveNotif} disabled={savingNotif}>
                         {savingNotif ? 'Salvando...' : 'Salvar Preferências'}
-                    </button>
-                </div>
-            </section>
-
-            {/* AI Assistant Settings */}
-            <section className="card bg-gradient-to-br from-indigo-50/50 to-emerald-50/50 dark:from-indigo-500/5 dark:to-emerald-500/5 border border-indigo-100 dark:border-indigo-500/20">
-                <div className="flex items-center gap-3 mb-2">
-                    <Sparkles size={18} className="text-indigo-500" />
-                    <h3 className="font-bold">Assistente com Inteligência Artificial</h3>
-                </div>
-                <p className="text-xs text-slate-400 mb-5">
-                    Utilize o Google Gemini (Grátis) para analisar licenças, gerar resumos e tirar dúvidas sobre processos. <strong>Sua chave já está configurada permanentemente.</strong>
-                </p>
-                <div className="p-3 mb-5 border border-emerald-100 dark:border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-500/5 rounded-2xl flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0">
-                        <Sparkles size={16} />
-                    </div>
-                    <div>
-                        <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Status: Fine Conectada</p>
-                        <p className="text-[10px] text-emerald-500/80">O assistente já está pronto para uso.</p>
-                    </div>
-                </div>
-                <div className="space-y-4">
-                    <div>
-                        <label className="text-xs font-semibold text-slate-500 mb-2 block">Chave de API do Gemini</label>
-                        <input
-                            className="form-input font-mono text-sm"
-                            type="password"
-                            placeholder="Cole sua chave aqui (AI Studio)"
-                            value={geminiKey}
-                            onChange={e => setGeminiKey(e.target.value)}
-                        />
-                        <p className="text-[10px] text-slate-400 mt-2">
-                            Consiga sua chave grátis em: <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-indigo-500 hover:underline">AI Studio - Google</a>
-                        </p>
-                    </div>
-                    <button className="btn-primary bg-indigo-500 hover:bg-indigo-600 border-indigo-600 shadow-indigo-500/20 text-white disabled:opacity-50" onClick={handleSaveNotif} disabled={savingNotif}>
-                        {savingNotif ? 'Salvando...' : 'Ativar Inteligência Artificial'}
                     </button>
                 </div>
             </section>

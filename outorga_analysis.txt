@@ -1,0 +1,35 @@
+
+=== planilha_outorgas.csv ===
+Total rows: 2
+Headers: Pasta, Processo, Ano, CNPJ, Razao Social, Cidade, Bairro, Tipo, Depart, Validade, RIAA, Renovacao, Status
+Valid rows: 2
+Tipo values: Outorga
+Rows with "outorga" in Tipo: 2
+
+=== planilha_ceprof.csv ===
+Total rows: 19
+Headers: Pasta, Processo, Ano, CNPJ, Razao Social, Cidade, Bairro, Tipo, Depart, Validade, RIAA, Status
+Valid rows: 19
+Tipo values: CEPROF
+Rows with "outorga" in Tipo: 0
+
+=== planilha_registro_anm.csv ===
+Total rows: 19
+Headers: Pasta, Processo, Ano, CNPJ, Razao Social, Cidade, Bairro, Tipo, Depart, Validade, RAL, Renovacao, Status
+Valid rows: 19
+Tipo values: Registro
+Rows with "outorga" in Tipo: 0
+
+=== Planilha LAR ASV.xlsx ===
+Total rows: 52
+Headers: Pasta, Processo, Ano, CNPJ, Razão Social, Cidade, Bairro, Tipo, Depart., Validade, RIAA, Renovação, Status
+Valid rows: 52
+Tipo values: ASV | LAR
+Rows with "outorga" in Tipo: 0
+
+=== Processsos LO Lic Prefeito.xlsx ===
+Total rows: 445
+Headers: Pasta, Processo, Ano, CNPJ, Razão Social, Cidade, Bairro, Tipo, Depart., Validade, RIAA, Renovação, Status
+Valid rows: 444
+Tipo values: LO | LI | DLA | ASV | LP | LIO | LOC | Licença Prefeito | Dispensa
+Rows with "outorga" in Tipo: 0

@@ -18,7 +18,7 @@ export const getFineResponse = async (prompt: string, contextData: any) => {
 
   try {
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash-lite",
       systemInstruction: `Você é a Fine, a Assistente Virtual Inteligente do EcoFin Manager.
 O EcoFin Manager é um software de gestão de licenciamento ambiental (licenças, outorgas) e finanças (faturas, contratos).
 
@@ -60,7 +60,7 @@ function handleOfflineFineResponse(prompt: string, contextData: any): string {
   const p = prompt.toLowerCase();
 
   if (p.includes("olá") || p.includes("oi") || p.includes("bom dia") || p.includes("boa tarde")) {
-    return "Olá! Sou a Fine 💚. No momento minha Inteligência Artificial avançada (Gemini) está offline pois a Chave de API não foi configurada nas Configurações. Mas eu ainda posso te ajudar com funções básicas! Pergunte sobre 'vencimentos' ou 'faturas'.";
+    return "Olá! Sou a Fine 💚. No momento ocorreu uma falha de conexão e minha IA avançada está inacessível. Mas eu ainda posso te ajudar com funções básicas! Pergunte sobre 'vencimentos' ou 'faturas'.";
   }
 
   if (p.includes("vencimento") || p.includes("vencer") || p.includes("licença") || p.includes("outorga")) {
@@ -96,5 +96,5 @@ function handleOfflineFineResponse(prompt: string, contextData: any): string {
     return `📊 **Resumo Atual:**\n- Clientes Ativos: ${s.clientesAtivos}\n- Licenças Ativas: ${s.licencasAtivas}\n- Faturas Pendentes: ${s.faturasPendentes}`;
   }
 
-  return "Desculpe, como minha chave de Inteligência Artificial não está ativa, eu só entendo comandos simples como 'vencimentos', 'faturas' ou 'resumo'. Configure a Chave de API nas Configurações para eu usar 100% da minha inteligência! 🤓";
+  return "Desculpe, como minha comunicação com o servidor falhou, eu só entendo comandos simples como 'vencimentos', 'faturas' ou 'resumo'. Tente novamente em alguns instantes! 🤓";
 }

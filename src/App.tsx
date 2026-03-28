@@ -11,6 +11,7 @@ import Processos from './pages/Processos'
 import Configuracoes from './pages/Configuracoes'
 import Notificacoes from './pages/Notificacoes'
 import Login from './pages/Login'
+import ResetPassword from './pages/ResetPassword'
 import InstallPWA from './components/InstallPWA'
 
 export default function App() {
@@ -20,6 +21,7 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/clientes" element={<Clientes />} />

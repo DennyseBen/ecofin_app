@@ -1,0 +1,6 @@
+Licencas no banco: 0
+Outorgas no banco: 2
+Insert OK! Has data_riaa: true
+data_riaa value: 2025-01-15
+Columns: id, titulo, tipo, processo, cliente_id, orgao, data_emissao, data_vencimento, status, observacoes, documento_url, responsavel_id, criado_em, atualizado_em, pasta, ano, razao_social, cnpj, cidade, bairro, grupo, atividade_licenciada, departamento, validade, validade_serial, riaa_ral, renovacao, pdf_url, data_renovacao, data_riaa
+Cleanup done

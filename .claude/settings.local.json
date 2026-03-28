@@ -66,7 +66,12 @@
       "Bash(cp \"C:\\\\Users\\\\Administrator\\\\Downloads\\\\ecofin-app-restore\\\\tsconfig.app.json\" .)",
       "Bash(cp \"C:\\\\Users\\\\Administrator\\\\Downloads\\\\ecofin-app-restore\\\\tsconfig.node.json\" .)",
       "Bash(cp \"C:\\\\Users\\\\Administrator\\\\Downloads\\\\ecofin-app-restore\\\\index.html\" .)",
-      "Bash(cp \"C:\\\\Users\\\\Administrator\\\\Downloads\\\\ecofin-app-restore\\\\postcss.config.js\" .)"
+      "Bash(cp \"C:\\\\Users\\\\Administrator\\\\Downloads\\\\ecofin-app-restore\\\\postcss.config.js\" .)",
+      "Bash(ls \"C:\\\\Users\\\\Administrator\\\\Downloads\\\\ecofin-app-restore\\\\dados_drive 2>/dev/null && head -5 C:UsersAdministratorDownloadsecofin-app-restoresync.cjs\")",
+      "Bash(node -e \"const d=require\\(''C:/Users/Administrator/Downloads/ecofin-app-restore/src/data/clients.json''\\); console.log\\(''Total registros:'', d.length\\); console.log\\(''Campos:'', Object.keys\\(d[0]\\).join\\('', ''\\)\\);\")",
+      "Bash(node --input-type=commonjs -e \"const d=JSON.parse\\(require\\(''fs''\\).readFileSync\\(''C:/Users/Administrator/Downloads/ecofin-app-restore/src/data/clients.json'',''utf8''\\)\\); console.log\\(''Total:'', d.length\\); console.log\\(''Campos:'', Object.keys\\(d[0]\\).join\\('', ''\\)\\);\")",
+      "Bash(node seed2.cjs)",
+      "Bash(npm install:*)"
     ]
   }
 }
