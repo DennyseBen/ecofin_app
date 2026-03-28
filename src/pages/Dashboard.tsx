@@ -2,7 +2,7 @@ import { Users, AlertTriangle, ShieldCheck, ArrowUpRight, Leaf, Activity, Bell }
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSupabase } from '../hooks/useSupabase'
-import { fetchDashboardStats, fetchLicencasPorTipo, fetchProximosVencimentos, fetchAlertasLicencas } from '../lib/api'
+import { fetchDashboardStats, fetchLicencasPorTipo, fetchProximosVencimentos, fetchAlertasLicencas, fetchKanbanCards } from '../lib/api'
 import { computeStatus, statusBadgeClass, getDaysRemaining, isInAlertZone } from '../lib/types'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -65,7 +65,17 @@ export default function Dashboard() {
     const { data: licencasPorTipo } = useSupabase(fetchLicencasPorTipo, [])
     const { data: recentExpiring } = useSupabase(() => fetchProximosVencimentos(8), [])
     const { data: alertasLicencas } = useSupabase(fetchAlertasLicencas, [])
+    const { data: kanbanCards } = useSupabase(fetchKanbanCards, [])
     const alertItems = alertasLicencas.filter(isInAlertZone).slice(0, 5)
+
+    // Contadores dinâmicos do Kanban
+    const stages = {
+        planejamento: kanbanCards.filter(c => c.stage === 'planejamento').length,
+        coleta: kanbanCards.filter(c => c.stage === 'coleta' || c.stage === 'preenchimento').length,
+        protocolado: kanbanCards.filter(c => c.stage === 'protocolado').length,
+        exigencias: kanbanCards.filter(c => c.stage === 'exigencias' || c.stage === 'analise').length,
+        concluido: kanbanCards.filter(c => c.stage === 'concluido').length
+    }
 
     const getChartColor = (type: string) => {
         const t = type.toUpperCase()
@@ -179,12 +189,11 @@ export default function Dashboard() {
                     </div>
                     <div className="flex items-center justify-between relative px-4">
                         <div className="absolute top-5 left-12 right-12 h-px bg-slate-200 dark:bg-white/[0.06]" />
-                        <TimelineStep label="Planejamento" count={3} active />
-                        <TimelineStep label="Coleta de Docs" count={5} active />
-                        <TimelineStep label="Taxas" count={2} />
-                        <TimelineStep label="Em Análise" count={4} />
-                        <TimelineStep label="Exigências" count={1} />
-                        <TimelineStep label="Concluído" count={12} active />
+                        <TimelineStep label="Planejamento" count={stages.planejamento} active={stages.planejamento > 0} />
+                        <TimelineStep label="Coleta de Docs" count={stages.coleta} active={stages.coleta > 0} />
+                        <TimelineStep label="Protocolado" count={stages.protocolado} active={stages.protocolado > 0} />
+                        <TimelineStep label="Em Análise / Exigências" count={stages.exigencias} active={stages.exigencias > 0} />
+                        <TimelineStep label="Concluído" count={stages.concluido} active={stages.concluido > 0} />
                     </div>
                 </div>
             )}
