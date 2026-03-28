@@ -1,10 +1,11 @@
-import { useState, useMemo, useEffect, useCallback } from 'react'
-import { Search, Plus, FileText, Calendar, Building2, X, Edit2, Trash2, Save, ExternalLink, Eye, Droplets, AlertTriangle, RotateCcw, ChevronDown, ChevronUp, ClipboardList } from 'lucide-react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
+import { Search, Plus, FileText, Calendar, Building2, X, Edit2, Trash2, Save, ExternalLink, Eye, Droplets, AlertTriangle, RotateCcw, ChevronDown, ChevronUp, ClipboardList, Paperclip, Loader2 } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { useSupabase } from '../hooks/useSupabase'
 import { fetchLicencas, insertLicenca, updateLicenca, deleteLicenca, fetchClientes, fetchOutorgas, insertOutorga, updateOutorga, deleteOutorga } from '../lib/api'
 import { computeStatus, statusBadgeClass, getDaysRemaining, isInAlertZone, TIPOS_LICENCA, TIPOS_OUTORGA, getRenovacaoLeadDays } from '../lib/types'
 import type { Licenca, Outorga, Cliente } from '../lib/types'
+import { importarDocumento } from '../lib/importLicenca'
 
 const formatDate = (d: string | null) => {
     if (!d) return '—'
@@ -148,6 +149,38 @@ export default function Licencas() {
     const [showNew, setShowNew] = useState(false)
     const [form, setForm] = useState<any>({ razao_social: '', tipo: 'LO', atividade_licenciada: '', departamento: '', validade: '', data_renovacao: '', pdf_url: '', status: 'Válida', cidade: '', cnpj: '' })
     const [pdfModal, setPdfModal] = useState<string | null>(null)
+    const [importing, setImporting] = useState(false)
+    const [importedFileName, setImportedFileName] = useState<string | null>(null)
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
+    const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+        setImporting(true)
+        try {
+            const apiKey = import.meta.env.VITE_GEMINI_API_KEY
+            const { fields, fileUrl } = await importarDocumento(file, apiKey)
+            setForm((f: any) => ({
+                ...f,
+                pdf_url: fileUrl,
+                ...(fields.razao_social && { razao_social: fields.razao_social }),
+                ...(fields.cnpj && { cnpj: fields.cnpj }),
+                ...(fields.tipo && { tipo: fields.tipo }),
+                ...(fields.validade && { validade: fields.validade }),
+                ...(fields.departamento && { departamento: fields.departamento }),
+                ...(fields.atividade_licenciada && { atividade_licenciada: fields.atividade_licenciada }),
+                ...(fields.processo && { processo: fields.processo }),
+                ...(fields.cidade && { cidade: fields.cidade }),
+                ...(fields.numero_outorga && { numero_outorga: fields.numero_outorga }),
+            }))
+            setImportedFileName(file.name)
+        } catch (err: any) {
+            alert(`Erro ao importar: ${err.message}`)
+        } finally {
+            setImporting(false)
+            if (fileInputRef.current) fileInputRef.current.value = ''
+        }
+    }
 
     // Open specific license if ?id= is in URL
     useEffect(() => {
@@ -268,10 +301,12 @@ export default function Licencas() {
             if (activeTab === 'Outorgas') {
                 await insertOutorga(form)
                 setShowNew(false)
+                setImportedFileName(null)
                 refetchOutorgas()
             } else {
                 await insertLicenca(form)
                 setShowNew(false)
+                setImportedFileName(null)
                 refetch()
             }
         } catch (e: any) {
@@ -741,9 +776,16 @@ export default function Licencas() {
                                     <input type="date" className="form-input" value={form.data_renovacao || ''} onChange={e => setForm((f: any) => ({ ...f, data_renovacao: e.target.value }))} />
                                 </div>
                                 <div><label className="text-xs font-semibold text-slate-500 mb-1 block">Atividade Licenciada</label><input className="form-input" value={form.atividade_licenciada || ''} onChange={e => setForm((f: any) => ({ ...f, atividade_licenciada: e.target.value }))} /></div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div><label className="text-xs font-semibold text-slate-500 mb-1 block">Órgão</label><input className="form-input" value={form.departamento || ''} onChange={e => setForm((f: any) => ({ ...f, departamento: e.target.value }))} /></div>
-                                    <div><label className="text-xs font-semibold text-slate-500 mb-1 block">URL do PDF</label><input className="form-input" placeholder="https://..." value={form.pdf_url || ''} onChange={e => setForm((f: any) => ({ ...f, pdf_url: e.target.value }))} /></div>
+                                <div><label className="text-xs font-semibold text-slate-500 mb-1 block">Órgão</label><input className="form-input" value={form.departamento || ''} onChange={e => setForm((f: any) => ({ ...f, departamento: e.target.value }))} /></div>
+                                <div>
+                                    <label className="text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5"><Paperclip size={12} className="text-indigo-500" /> Importar documento</label>
+                                    <input ref={fileInputRef} type="file" accept=".pdf,.xlsx,.xls,.docx,.doc" className="hidden" onChange={handleImport} />
+                                    <button type="button" onClick={() => fileInputRef.current?.click()} disabled={importing}
+                                        className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-200 dark:border-white/10 hover:border-indigo-400 dark:hover:border-indigo-500 text-slate-500 dark:text-slate-400 text-xs font-medium transition-colors disabled:opacity-50">
+                                        {importing ? <Loader2 size={14} className="animate-spin text-indigo-500" /> : <Paperclip size={14} className="text-indigo-500" />}
+                                        {importing ? 'Extraindo dados...' : importedFileName ? <span className="truncate text-emerald-600 dark:text-emerald-400">{importedFileName}</span> : 'Clique para importar PDF, Excel ou Word'}
+                                    </button>
+                                    {form.pdf_url && <a href={form.pdf_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-sky-500 hover:underline mt-1 flex items-center gap-1"><ExternalLink size={10} /> Ver arquivo enviado</a>}
                                 </div>
                                 <div>
                                     <label className="text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5"><ClipboardList size={12} className="text-amber-500" /> Data RIAA/RAL</label>
@@ -772,7 +814,15 @@ export default function Licencas() {
                                     <div><label className="text-xs font-semibold text-slate-500 mb-1 block">Validade</label><input type="date" className="form-input" value={form.validade || ''} onChange={e => setForm((f: any) => ({ ...f, validade: e.target.value }))} /></div>
                                     <div><label className="text-xs font-semibold text-slate-500 mb-1 block">Data de Renovação</label><input type="date" className="form-input" value={form.data_renovacao || ''} onChange={e => setForm((f: any) => ({ ...f, data_renovacao: e.target.value }))} /></div>
                                 </div>
-                                <div><label className="text-xs font-semibold text-slate-500 mb-1 block">URL do PDF</label><input className="form-input" placeholder="https://..." value={form.pdf_url || ''} onChange={e => setForm((f: any) => ({ ...f, pdf_url: e.target.value }))} /></div>
+                                <div>
+                                    <label className="text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5"><Paperclip size={12} className="text-indigo-500" /> Importar documento</label>
+                                    <button type="button" onClick={() => fileInputRef.current?.click()} disabled={importing}
+                                        className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-200 dark:border-white/10 hover:border-indigo-400 dark:hover:border-indigo-500 text-slate-500 dark:text-slate-400 text-xs font-medium transition-colors disabled:opacity-50">
+                                        {importing ? <Loader2 size={14} className="animate-spin text-indigo-500" /> : <Paperclip size={14} className="text-indigo-500" />}
+                                        {importing ? 'Extraindo dados...' : importedFileName ? <span className="truncate text-emerald-600 dark:text-emerald-400">{importedFileName}</span> : 'Clique para importar PDF, Excel ou Word'}
+                                    </button>
+                                    {form.pdf_url && <a href={form.pdf_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-sky-500 hover:underline mt-1 flex items-center gap-1"><ExternalLink size={10} /> Ver arquivo enviado</a>}
+                                </div>
                                 <div>
                                     <label className="text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5"><ClipboardList size={12} className="text-amber-500" /> Data RIAA/RAL</label>
                                     <input type="date" className="form-input" value={form.data_riaa || ''} onChange={e => setForm((f: any) => ({ ...f, data_riaa: e.target.value }))} />
