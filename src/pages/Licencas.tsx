@@ -585,7 +585,16 @@ export default function Licencas() {
                                             <label className="text-xs font-semibold text-slate-500 mb-1 block">Data de Renovação <span className="text-emerald-500 font-normal">(auto)</span></label>
                                             <input type="date" className="form-input" value={form.data_renovacao || ''} onChange={e => setForm((f: any) => ({ ...f, data_renovacao: e.target.value }))} />
                                         </div>
-                                        <div><label className="text-xs font-semibold text-slate-500 mb-1 block">URL do PDF</label><input className="form-input" placeholder="https://..." value={form.pdf_url || ''} onChange={e => setForm((f: any) => ({ ...f, pdf_url: e.target.value }))} /></div>
+                                        <div>
+                                            <label className="text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5"><Paperclip size={12} className="text-indigo-500" /> Importar documento</label>
+                                            <input ref={fileInputRef} type="file" accept=".pdf,.xlsx,.xls,.docx,.doc" className="hidden" onChange={handleImport} />
+                                            <button type="button" onClick={() => fileInputRef.current?.click()} disabled={importing}
+                                                className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-200 dark:border-white/10 hover:border-indigo-400 dark:hover:border-indigo-500 text-slate-500 dark:text-slate-400 text-xs font-medium transition-colors disabled:opacity-50">
+                                                {importing ? <Loader2 size={14} className="animate-spin text-indigo-500" /> : <Paperclip size={14} className="text-indigo-500" />}
+                                                {importing ? 'Extraindo dados...' : importedFileName ? <span className="truncate text-emerald-600 dark:text-emerald-400">{importedFileName}</span> : form.pdf_url ? 'Substituir arquivo' : 'Clique para importar PDF, Excel ou Word'}
+                                            </button>
+                                            {form.pdf_url && <a href={form.pdf_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-sky-500 hover:underline mt-1 flex items-center gap-1"><ExternalLink size={10} /> Ver arquivo atual</a>}
+                                        </div>
                                     </div>
                                     <div>
                                         <label className="text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5 block"><ClipboardList size={12} className="text-amber-500" /> Data RIAA</label>
@@ -695,7 +704,16 @@ export default function Licencas() {
                                         <label className="text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5"><ClipboardList size={12} className="text-amber-500" /> Data RIAA/RAL</label>
                                         <input type="date" className="form-input" value={form.data_riaa || ''} onChange={e => setForm((f: any) => ({ ...f, data_riaa: e.target.value }))} />
                                     </div>
-                                    <div><label className="text-xs font-semibold text-slate-500 mb-1 block">URL do PDF</label><input className="form-input" placeholder="https://..." value={form.pdf_url || ''} onChange={e => setForm((f: any) => ({ ...f, pdf_url: e.target.value }))} /></div>
+                                    <div>
+                                        <label className="text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5"><Paperclip size={12} className="text-indigo-500" /> Importar documento</label>
+                                        <input ref={fileInputRef} type="file" accept=".pdf,.xlsx,.xls,.docx,.doc" className="hidden" onChange={handleImport} />
+                                        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={importing}
+                                            className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-200 dark:border-white/10 hover:border-indigo-400 dark:hover:border-indigo-500 text-slate-500 dark:text-slate-400 text-xs font-medium transition-colors disabled:opacity-50">
+                                            {importing ? <Loader2 size={14} className="animate-spin text-indigo-500" /> : <Paperclip size={14} className="text-indigo-500" />}
+                                            {importing ? 'Extraindo dados...' : importedFileName ? <span className="truncate text-emerald-600 dark:text-emerald-400">{importedFileName}</span> : form.pdf_url ? 'Substituir arquivo' : 'Clique para importar PDF, Excel ou Word'}
+                                        </button>
+                                        {form.pdf_url && <a href={form.pdf_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-sky-500 hover:underline mt-1 flex items-center gap-1"><ExternalLink size={10} /> Ver arquivo atual</a>}
+                                    </div>
                                     <div><label className="text-xs font-semibold text-slate-500 mb-1 block">Notas</label><textarea className="form-input resize-none" rows={2} value={form.notas || ''} onChange={e => setForm((f: any) => ({ ...f, notas: e.target.value }))} /></div>
                                     <div className="flex gap-3 pt-4">
                                         <button className="btn-ghost" onClick={() => setEditing(false)}>Cancelar</button>
