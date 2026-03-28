@@ -18,7 +18,7 @@ export const getFineResponse = async (prompt: string, contextData: any) => {
 
   try {
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash-lite",
+      model: "gemini-2.5-flash",
       systemInstruction: `Você é a Fine, a Assistente Virtual Inteligente do EcoFin Manager.
 O EcoFin Manager é um software de gestão de licenciamento ambiental (licenças, outorgas) e finanças (faturas, contratos).
 

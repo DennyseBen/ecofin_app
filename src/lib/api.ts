@@ -234,9 +234,9 @@ export async function deleteKanbanCard(id: string): Promise<void> {
    ══════════════════════════════════════════ */
 
 export async function fetchDashboardStats(): Promise<DashboardStats> {
-    const { data, error } = await supabase.from('vw_dashboard_stats').select('*').single()
+    const { data, error } = await supabase.rpc('get_dashboard_stats')
     if (error) throw error
-    return data
+    return (data as DashboardStats[])[0]
 }
 
 /* ── Licenças por Tipo (agrupado) ── */
