@@ -78,7 +78,15 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(grep -n \"useRealtime\\\\|channel\\\\|subscribe\\\\|realtime\" /c/Users/Administrator/Downloads/ecofin-manager/src/hooks/*.ts)"
+      "Bash(grep -n \"useRealtime\\\\|channel\\\\|subscribe\\\\|realtime\" /c/Users/Administrator/Downloads/ecofin-manager/src/hooks/*.ts)",
+      "Bash(find c:UsersAdministratorDownloadsecofin-manager -type f -name *.sql)",
+      "Skill(claude-api)",
+      "Skill(claude-api:*)",
+      "Bash(pnpm i:*)",
+      "Bash(npm i:*)",
+      "Bash(vercel --version)",
+      "Bash(vercel login:*)",
+      "Bash(npx plugins:*)"
     ]
   }
 }

@@ -8,3 +8,12 @@ coverage/
 !.env.example
 
 .vercel
+
+# Playwright
+playwright-report/
+test-results/
+
+# Temp outputs and backups
+test_output*.txt
+read_err.js
+backup_wipe.json
