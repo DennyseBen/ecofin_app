@@ -10,11 +10,7 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
 });
 
 const files = [
-    'C:/Users/Administrator/Downloads/sonho/zeradas/Planilha LAR ASV.xlsx',
-    'C:/Users/Administrator/Downloads/sonho/zeradas/Processsos LO Lic Prefeito.xlsx',
-    'C:/Users/Administrator/Downloads/sonho/zeradas/planilha_ceprof.csv',
-    'C:/Users/Administrator/Downloads/sonho/zeradas/planilha_outorgas.csv',
-    'C:/Users/Administrator/Downloads/sonho/zeradas/planilha_registro_anm.csv'
+    'Planilha de Processos.xlsx'
 ];
 
 function parseDate(serial: any): string | null {
