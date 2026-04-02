@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useRealtime } from '../hooks/useRealtime'
-import { Search, Plus, FileText, Calendar, Building2, X, Edit2, Trash2, Save, ExternalLink, Eye, Droplets, AlertTriangle, RotateCcw, ChevronDown, ChevronUp, ClipboardList, Paperclip, Loader2 } from 'lucide-react'
+import { Search, Plus, FileText, Calendar, Building2, X, Edit2, Trash2, Save, ExternalLink, Eye, Droplets, AlertTriangle, RotateCcw, ChevronDown, ChevronUp, ClipboardList, Paperclip, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { useSupabase } from '../hooks/useSupabase'
 import { fetchLicencas, insertLicenca, updateLicenca, deleteLicenca, fetchClientes, fetchOutorgas, insertOutorga, updateOutorga, deleteOutorga, consultarCNPJ } from '../lib/api'
@@ -147,6 +147,8 @@ export default function Licencas() {
     const [filterType, setFilterType] = useState(searchParams.get('tipo') || 'all')
     const [filterStatus, setFilterStatus] = useState(searchParams.get('status') || 'all')
     const [filterRenovar, setFilterRenovar] = useState(false)
+    const [page, setPage] = useState(1)
+    const PAGE_SIZE = 30
     const [selected, setSelected] = useState<Licenca | null>(null)
     const [selectedOutorga, setSelectedOutorga] = useState<Outorga | null>(null)
     const [editing, setEditing] = useState(false)
@@ -265,6 +267,14 @@ export default function Licencas() {
             return matchSearch && matchStatus && matchRenovar
         })
     }, [outorgas, search, filterStatus, filterRenovar])
+
+    const activeFiltered = activeTab === 'Licenças' ? filteredLicencas : filteredOutorgas
+    const totalPages = Math.ceil(activeFiltered.length / PAGE_SIZE)
+    const paginatedItems = activeFiltered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+    useEffect(() => {
+        setPage(1)
+    }, [search, filterType, filterStatus, filterRenovar, activeTab])
 
     const alertCount = useMemo(() => {
         return licencas.filter(isInAlertZone).length + outorgas.filter(isInAlertZone).length
@@ -444,7 +454,7 @@ export default function Licencas() {
             {/* Cards Grid */}
             {activeTab === 'Licenças' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {filteredLicencas.slice(0, 30).map((c, i) => {
+                    {(paginatedItems as Licenca[]).map((c, i) => {
                         const status = computeStatus(c)
                         const daysRemaining = getDaysRemaining(c)
                         const inAlert = isInAlertZone(c)
@@ -495,7 +505,7 @@ export default function Licencas() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {filteredOutorgas.slice(0, 30).map((o, i) => {
+                    {(paginatedItems as Outorga[]).map((o, i) => {
                         const status = computeStatus(o)
                         const daysRemaining = getDaysRemaining(o)
                         const inAlert = isInAlertZone(o)
@@ -546,8 +556,14 @@ export default function Licencas() {
                 </div>
             )}
 
-            {(activeTab === 'Licenças' ? filteredLicencas.length : filteredOutorgas.length) > 30 && (
-                <p className="text-center text-xs text-slate-400">Mostrando 30 — use a pesquisa para refinar.</p>
+            {activeFiltered.length > 0 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 dark:border-white/[0.04]">
+                    <span className="text-xs text-slate-400">Página {page} de {totalPages || 1} • Total: {activeFiltered.length}</span>
+                    <div className="flex gap-2">
+                        <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="btn-ghost !h-9 !px-3 disabled:opacity-30"><ChevronLeft size={14} /> Anterior</button>
+                        <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="btn-ghost !h-9 !px-3 disabled:opacity-30">Próxima <ChevronRight size={14} /></button>
+                    </div>
+                </div>
             )}
 
             {/* PDF Modal */}

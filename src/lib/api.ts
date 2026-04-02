@@ -53,18 +53,23 @@ export async function insertLicenca(lic: Partial<Omit<Licenca, 'id' | 'created_a
     if (!clean.tipo) clean.tipo = 'LO'
     if (!clean.status) clean.status = 'Válida'
 
-    const { data, error } = await supabase.from('licencas').insert(clean).select().single()
+    const { data, error } = await supabase.from('licencas').insert(clean).select()
     if (error) {
         console.error('insertLicenca error:', error)
         throw error
     }
-    return data
+    return data?.[0] || clean as Licenca
 }
 
 export async function updateLicenca(id: number, updates: Partial<Licenca>): Promise<Licenca> {
-    const { data, error } = await supabase.from('licencas').update(updates).eq('id', id).select().single()
+    const clean: Record<string, any> = {}
+    for (const [key, val] of Object.entries(updates)) {
+        if (val === '') clean[key] = null
+        else if (val !== undefined) clean[key] = val
+    }
+    const { data, error } = await supabase.from('licencas').update(clean).eq('id', id).select()
     if (error) throw error
-    return data
+    return data?.[0] || clean as Licenca
 }
 
 export async function deleteLicenca(id: number): Promise<void> {
@@ -94,18 +99,23 @@ export async function insertOutorga(o: Partial<Omit<Outorga, 'id' | 'created_at'
     if (!clean.razao_social) throw new Error('Razão Social é obrigatória')
     if (!clean.tipo) clean.tipo = 'Captação Superficial'
 
-    const { data, error } = await supabase.from('outorgas').insert(clean).select().single()
+    const { data, error } = await supabase.from('outorgas').insert(clean).select()
     if (error) {
         console.error('insertOutorga error:', error)
         throw error
     }
-    return data
+    return data?.[0] || clean as Outorga
 }
 
 export async function updateOutorga(id: number, updates: Partial<Outorga>): Promise<Outorga> {
-    const { data, error } = await supabase.from('outorgas').update(updates).eq('id', id).select().single()
+    const clean: Record<string, any> = {}
+    for (const [key, val] of Object.entries(updates)) {
+        if (val === '') clean[key] = null
+        else if (val !== undefined) clean[key] = val
+    }
+    const { data, error } = await supabase.from('outorgas').update(clean).eq('id', id).select()
     if (error) throw error
-    return data
+    return data?.[0] || clean as Outorga
 }
 
 export async function deleteOutorga(id: number): Promise<void> {
@@ -157,15 +167,27 @@ export async function fetchClienteById(id: number): Promise<Cliente> {
 }
 
 export async function insertCliente(c: Omit<Cliente, 'id' | 'created_at'>): Promise<Cliente> {
-    const { data, error } = await supabase.from('clientes').insert(c).select().single()
+    const validCols = ['razao_social', 'cnpj', 'cidade', 'bairro', 'grupo', 'cep', 'celular', 'email', 'logradouro', 'numero', 'complemento'] as const
+    const clean: Record<string, any> = {}
+    for (const key of validCols) {
+        if (key in c && (c as any)[key] !== undefined && (c as any)[key] !== '') {
+            clean[key] = (c as any)[key]
+        }
+    }
+    const { data, error } = await supabase.from('clientes').insert(clean).select()
     if (error) throw error
-    return data
+    return data?.[0] || clean as Cliente
 }
 
 export async function updateCliente(id: number, updates: Partial<Cliente>): Promise<Cliente> {
-    const { data, error } = await supabase.from('clientes').update(updates).eq('id', id).select().single()
+    const clean: Record<string, any> = {}
+    for (const [key, val] of Object.entries(updates)) {
+        if (val === '') clean[key] = null
+        else if (val !== undefined) clean[key] = val
+    }
+    const { data, error } = await supabase.from('clientes').update(clean).eq('id', id).select()
     if (error) throw error
-    return data
+    return data?.[0] || clean as Cliente
 }
 
 export async function deleteCliente(id: number): Promise<void> {
