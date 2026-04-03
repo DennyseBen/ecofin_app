@@ -558,6 +558,7 @@ export async function emitirNfseFatura(faturaId: number, discriminacaoOverride?:
 
     const referencia = gerarReferencia(faturaId)
     const cliente = (fatura as any).cliente
+    if (!cliente) throw new Error('Cliente não encontrado para esta fatura. Verifique se o cliente está cadastrado e vinculado corretamente.')
 
     const notasParaUsar = discriminacaoOverride !== undefined ? discriminacaoOverride : (fatura.notas || null)
 

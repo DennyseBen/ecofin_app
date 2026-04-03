@@ -11,13 +11,17 @@ const ThemeContext = createContext<ThemeContextType>({ theme: 'dark', toggleThem
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
     const [theme, setTheme] = useState<Theme>(() => {
-        const saved = localStorage.getItem('ecofin-theme') as Theme
-        return saved || 'dark'
+        try {
+            const saved = localStorage.getItem('ecofin-theme') as Theme
+            return saved || 'dark'
+        } catch {
+            return 'dark'
+        }
     })
 
     useEffect(() => {
         document.documentElement.classList.toggle('dark', theme === 'dark')
-        localStorage.setItem('ecofin-theme', theme)
+        try { localStorage.setItem('ecofin-theme', theme) } catch { /* private mode */ }
     }, [theme])
 
     const toggleTheme = () => setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))

@@ -47,28 +47,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return
         }
 
+        let enrichedUser = sessionUser
         try {
             const profileData = await fetchUserProfile(sessionUser.id)
             if (profileData) {
-                // Sync full_name and avatar_url back to user_metadata for compatibility
-                if (!sessionUser.user_metadata) (sessionUser as any).user_metadata = {}
-                sessionUser.user_metadata.full_name = profileData.full_name || sessionUser.user_metadata.full_name
-                sessionUser.user_metadata.avatar_url = profileData.avatar_url || sessionUser.user_metadata.avatar_url
+                // Sync full_name and avatar_url back to user_metadata for compatibility (immutable)
+                enrichedUser = {
+                    ...sessionUser,
+                    user_metadata: {
+                        ...sessionUser.user_metadata,
+                        full_name: profileData.full_name || sessionUser.user_metadata?.full_name,
+                        avatar_url: profileData.avatar_url || sessionUser.user_metadata?.avatar_url,
+                    }
+                } as User
                 setProfile(profileData)
             } else {
                 // Profile might not exist yet — try to read from auth metadata
                 const { data } = await supabase.from('profiles').select('full_name, avatar_url').eq('id', sessionUser.id).single()
                 if (data) {
-                    if (!sessionUser.user_metadata) (sessionUser as any).user_metadata = {}
-                    sessionUser.user_metadata.full_name = data.full_name || sessionUser.user_metadata.full_name
-                    sessionUser.user_metadata.avatar_url = data.avatar_url || sessionUser.user_metadata.avatar_url
+                    enrichedUser = {
+                        ...sessionUser,
+                        user_metadata: {
+                            ...sessionUser.user_metadata,
+                            full_name: data.full_name || sessionUser.user_metadata?.full_name,
+                            avatar_url: data.avatar_url || sessionUser.user_metadata?.avatar_url,
+                        }
+                    } as User
                 }
             }
         } catch (e) {
             console.error("Error loading profile:", e)
         }
 
-        setUser(sessionUser)
+        setUser(enrichedUser)
         setLoading(false)
     }
 

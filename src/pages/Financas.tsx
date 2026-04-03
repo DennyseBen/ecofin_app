@@ -226,7 +226,7 @@ export default function Financas() {
             headStyles: { fillColor: [16, 185, 129] },
         })
 
-        const finalY = (doc as any).lastAutoTable.finalY || 130
+        const finalY = (doc as any).lastAutoTable?.finalY ?? 130
 
         doc.setFontSize(14)
         doc.setFont('helvetica', 'bold')

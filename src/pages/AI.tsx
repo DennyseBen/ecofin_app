@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { GoogleGenAI, createPartFromBase64 } from '@google/genai';
 import { FileText, Sparkles, Upload, X } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 function readFileAsBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -40,14 +41,15 @@ Campos:
 }`;
 
 export default function AI() {
-  const apiKey = process.env.GEMINI_API_KEY as string;
+  const { profile } = useAuth();
+  const apiKey = profile?.gemini_api_key ?? '';
   const [file, setFile] = useState<File | null>(null);
   const [prompt, setPrompt] = useState(defaultPrompt);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [output, setOutput] = useState<string>('');
 
-  const canRun = useMemo(() => !!file && !busy, [file, busy]);
+  const canRun = useMemo(() => !!file && !busy && !!apiKey, [file, busy, apiKey]);
 
   const clear = () => {
     setFile(null);
@@ -107,6 +109,12 @@ export default function AI() {
           </button>
         </div>
       </div>
+
+      {!apiKey && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl px-4 py-3 text-sm">
+          Nenhuma chave da API Gemini configurada. Acesse <strong>Configurações → IA (Gemini)</strong> e informe sua chave para usar esta funcionalidade.
+        </div>
+      )}
 
 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">

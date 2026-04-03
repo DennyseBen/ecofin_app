@@ -71,7 +71,7 @@ export default function Configuracoes() {
             setLoadingAdmin(true)
             Promise.all([fetchAllProfiles(), fetchInvites()])
                 .then(([p, i]) => { setProfiles(p); setInvites(i) })
-                .catch(() => { })
+                .catch((e) => console.error('Erro ao carregar painel admin:', e))
                 .finally(() => setLoadingAdmin(false))
         }
     }, [isAdmin])
