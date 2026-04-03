@@ -451,6 +451,17 @@ export default function Licencas() {
             {/* Smart Banner */}
             <SmartAlertBanner licencas={licencas} outorgas={outorgas} />
 
+            {/* Top Pagination — visible before scrolling through cards */}
+            {activeFiltered.length > PAGE_SIZE && (
+                <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-400">Página {page} de {totalPages} • {activeFiltered.length} resultados</span>
+                    <div className="flex gap-2">
+                        <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="btn-ghost !h-9 !px-3 disabled:opacity-30"><ChevronLeft size={14} /> Anterior</button>
+                        <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="btn-ghost !h-9 !px-3 disabled:opacity-30">Próxima <ChevronRight size={14} /></button>
+                    </div>
+                </div>
+            )}
+
             {/* Cards Grid */}
             {activeTab === 'Licenças' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
