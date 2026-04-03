@@ -204,6 +204,16 @@ export default function Clientes() {
                 </div>
             </div>
 
+            {filtered.length > PAGE_SIZE && (
+                <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-400">Página {page} de {totalPages} • {filtered.length} resultados</span>
+                    <div className="flex gap-2">
+                        <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="btn-ghost !h-9 !px-3 disabled:opacity-30"><ChevronLeft size={14} /> Anterior</button>
+                        <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="btn-ghost !h-9 !px-3 disabled:opacity-30">Próxima <ChevronRight size={14} /></button>
+                    </div>
+                </div>
+            )}
+
             <div className="card overflow-hidden !p-0">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
