@@ -292,12 +292,14 @@ export default function Licencas() {
                 ...prev,
                 razao_social: match.razao_social,
                 cnpj: match.cnpj || prev.cnpj,
-                cidade: match.cidade || prev.cidade,
-                bairro: match.bairro || prev.bairro,
-                grupo: match.grupo || prev.grupo
+                ...(activeTab === 'Licenças' && {
+                    cidade: match.cidade || prev.cidade,
+                    bairro: match.bairro || prev.bairro,
+                    grupo: match.grupo || prev.grupo,
+                }),
             }))
         }
-    }, [form.razao_social, form.cnpj, clientes])
+    }, [form.razao_social, form.cnpj, clientes, activeTab])
 
     // Auto-compute data_renovacao when validade or tipo changes
     const autoComputeRenovacao = useCallback((validade: string, tipo: string) => {
@@ -327,7 +329,13 @@ export default function Licencas() {
     }
 
     const openEdit = (item: Licenca | Outorga) => {
-        setForm({ ...item, validade: item.validade ? item.validade.split('T')[0] : '', data_renovacao: item.data_renovacao ? item.data_renovacao.split('T')[0] : '', data_riaa: item.data_riaa ? item.data_riaa.split('T')[0] : '' })
+        const base = { validade: item.validade ? item.validade.split('T')[0] : '', data_renovacao: item.data_renovacao ? item.data_renovacao.split('T')[0] : '', data_riaa: item.data_riaa ? item.data_riaa.split('T')[0] : '' }
+        if (activeTab === 'Outorgas') {
+            const o = item as Outorga
+            setForm({ razao_social: o.razao_social, cnpj: o.cnpj, tipo: o.tipo, numero_outorga: o.numero_outorga, orgao: o.orgao, validade: base.validade, data_renovacao: base.data_renovacao, pdf_url: o.pdf_url, status: o.status, notas: o.notas, data_riaa: base.data_riaa })
+        } else {
+            setForm({ ...item, ...base })
+        }
         setEditing(true)
     }
 
