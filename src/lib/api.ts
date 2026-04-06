@@ -62,8 +62,10 @@ export async function insertLicenca(lic: Partial<Omit<Licenca, 'id' | 'created_a
 }
 
 export async function updateLicenca(id: number, updates: Partial<Licenca>): Promise<Licenca> {
+    const validCols = ['razao_social', 'cnpj', 'cidade', 'bairro', 'grupo', 'tipo', 'atividade_licenciada', 'departamento', 'validade', 'status', 'pdf_url', 'data_renovacao', 'pasta', 'processo', 'ano', 'cliente_id', 'riaa_ral', 'renovacao', 'data_riaa'] as const
     const clean: Record<string, any> = {}
     for (const [key, val] of Object.entries(updates)) {
+        if (!(validCols as readonly string[]).includes(key)) continue
         if (val === '') clean[key] = null
         else if (val !== undefined) clean[key] = val
     }
@@ -108,8 +110,10 @@ export async function insertOutorga(o: Partial<Omit<Outorga, 'id' | 'created_at'
 }
 
 export async function updateOutorga(id: number, updates: Partial<Outorga>): Promise<Outorga> {
+    const validCols = ['razao_social', 'cnpj', 'tipo', 'numero_outorga', 'orgao', 'validade', 'data_renovacao', 'pdf_url', 'status', 'notas', 'data_riaa'] as const
     const clean: Record<string, any> = {}
     for (const [key, val] of Object.entries(updates)) {
+        if (!(validCols as readonly string[]).includes(key)) continue
         if (val === '') clean[key] = null
         else if (val !== undefined) clean[key] = val
     }

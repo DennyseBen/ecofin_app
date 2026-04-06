@@ -171,7 +171,7 @@ export default function Licencas() {
                     ...f,
                     cnpj: raw,
                     ...(data.razao_social && !f.razao_social ? { razao_social: data.razao_social } : {}),
-                    ...(data.cidade && !f.cidade ? { cidade: data.cidade } : {}),
+                    ...(activeTab === 'Licenças' && data.cidade && !f.cidade ? { cidade: data.cidade } : {}),
                 }))
             } catch {
                 // silently ignore — CNPJ may not be in API
