@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSupabase } from '../hooks/useSupabase'
 import { useRealtime } from '../hooks/useRealtime'
-import { fetchDashboardStats, fetchLicencasPorTipo, fetchProximosVencimentos, fetchAlertasLicencas, fetchKanbanCards } from '../lib/api'
+import { fetchDashboardStats, fetchLicencasPorTipo, fetchProximosVencimentos, fetchAlertasLicencas, fetchKanbanCards, fetchOutorgas } from '../lib/api'
 import { computeStatus, statusBadgeClass, getDaysRemaining, isInAlertZone } from '../lib/types'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -13,7 +13,7 @@ const formatDate = (dateStr: string | null): string => {
     return `${d}/${m}/${y}`
 }
 
-function ComplianceGauge({ value }: { value: number }) {
+function ComplianceGauge({ value, title = "Conformidade" }: { value: number; title?: string }) {
     const radius = 80
     const circumference = Math.PI * radius
     const offset = circumference - (value / 100) * circumference
@@ -26,7 +26,7 @@ function ComplianceGauge({ value }: { value: number }) {
             </svg>
             <div className="absolute bottom-2 flex flex-col items-center">
                 <span className="text-4xl font-extrabold" style={{ color }}>{value}%</span>
-                <span className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold mt-0.5">Conformidade</span>
+                <span className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold mt-0.5">{title}</span>
             </div>
         </div>
     )
@@ -67,10 +67,11 @@ export default function Dashboard() {
     const { data: recentExpiring, refetch: refetchExpiring } = useSupabase(() => fetchProximosVencimentos(8), [])
     const { data: alertasLicencas, refetch: refetchAlertas } = useSupabase(fetchAlertasLicencas, [])
     const { data: kanbanCards, refetch: refetchKanban } = useSupabase(fetchKanbanCards, [])
+    const { data: outorgas, refetch: refetchOutorgas } = useSupabase(fetchOutorgas, [])
 
     const refetchAll = useCallback(() => {
-        refetchStats(); refetchTipo(); refetchExpiring(); refetchAlertas(); refetchKanban()
-    }, [refetchStats, refetchTipo, refetchExpiring, refetchAlertas, refetchKanban])
+        refetchStats(); refetchTipo(); refetchExpiring(); refetchAlertas(); refetchKanban(); refetchOutorgas()
+    }, [refetchStats, refetchTipo, refetchExpiring, refetchAlertas, refetchKanban, refetchOutorgas])
     useRealtime(['licencas', 'outorgas', 'kanban_cards'], refetchAll)
     const alertItems = alertasLicencas.filter(isInAlertZone).slice(0, 5)
 
@@ -81,6 +82,16 @@ export default function Dashboard() {
         protocolado: kanbanCards.filter(c => c.stage === 'protocolado').length,
         exigencias: kanbanCards.filter(c => c.stage === 'exigencias' || c.stage === 'analise').length,
         concluido: kanbanCards.filter(c => c.stage === 'concluido').length
+    }
+
+    // Calcula compliance Outorgas
+    const outorgasValidas = outorgas.filter(o => computeStatus(o) === 'Válida' || computeStatus(o) === 'Vencendo').length
+    const statsOutorgas = {
+        total: outorgas.length,
+        validas: outorgasValidas,
+        vencendo: outorgas.filter(o => computeStatus(o) === 'Vencendo').length,
+        vencidas: outorgas.filter(o => computeStatus(o) === 'Vencida').length,
+        compliance: outorgas.length > 0 ? Math.round((outorgasValidas / outorgas.length) * 100) : 0
     }
 
     const getChartColor = (type: string) => {
@@ -153,25 +164,57 @@ export default function Dashboard() {
 
             {(activeTab === 'Visão Geral' || activeTab === 'Vencimentos') && (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <div className="lg:col-span-4 card flex flex-col items-center justify-center py-8">
-                        <ComplianceGauge value={stats.compliance_rate} />
-                        <div className="grid grid-cols-3 gap-4 mt-6 w-full">
-                            <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?status=Válida')}>
-                                <p className="text-lg font-bold text-emerald-500">{stats.licencas_validas}</p>
-                                <p className="text-[10px] text-slate-400 uppercase tracking-wider">Válidas</p>
+                    <div className="lg:col-span-5 card flex flex-col justify-center py-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full divide-y sm:divide-y-0 sm:divide-x divide-slate-100 dark:divide-white/[0.06]">
+                            {/* Dashboard Licenças */}
+                            <div className="flex flex-col items-center pt-2 sm:pt-0">
+                                <ComplianceGauge value={stats.compliance_rate} title="Licenças" />
+                                <div className="grid grid-cols-3 gap-2 mt-4 w-full px-2">
+                                    <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?status=Válida')}>
+                                        <p className="text-sm font-bold text-emerald-500">{stats.licencas_validas}</p>
+                                        <p className="text-[9px] text-slate-400 uppercase tracking-wider">Válidas</p>
+                                    </div>
+                                    <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?status=Vencendo')}>
+                                        <p className="text-sm font-bold text-amber-500">{stats.vencendo_90_dias}</p>
+                                        <p className="text-[9px] text-slate-400 uppercase tracking-wider">Vencendo</p>
+                                    </div>
+                                    <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?status=Vencida')}>
+                                        <p className="text-sm font-bold text-red-500">{stats.licencas_vencidas}</p>
+                                        <p className="text-[9px] text-slate-400 uppercase tracking-wider">Vencidas</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?status=Vencendo')}>
-                                <p className="text-lg font-bold text-amber-500">{stats.vencendo_90_dias}</p>
-                                <p className="text-[10px] text-slate-400 uppercase tracking-wider">Vencendo</p>
-                            </div>
-                            <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?status=Vencida')}>
-                                <p className="text-lg font-bold text-red-500">{stats.licencas_vencidas}</p>
-                                <p className="text-[10px] text-slate-400 uppercase tracking-wider">Vencidas</p>
+                            {/* Dashboard Outorgas */}
+                            <div className="flex flex-col items-center pt-6 sm:pt-0">
+                                <ComplianceGauge value={statsOutorgas.compliance} title="Outorgas" />
+                                <div className="grid grid-cols-3 gap-2 mt-4 w-full px-2">
+                                    <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?tab=outorgas&status=Válida')}>
+                                        <p className="text-sm font-bold text-emerald-500">{statsOutorgas.validas}</p>
+                                        <p className="text-[9px] text-slate-400 uppercase tracking-wider">Válidas</p>
+                                    </div>
+                                    <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?tab=outorgas&status=Vencendo')}>
+                                        <p className="text-sm font-bold text-amber-500">{statsOutorgas.vencendo}</p>
+                                        <p className="text-[9px] text-slate-400 uppercase tracking-wider">Vencendo</p>
+                                    </div>
+                                    <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?tab=outorgas&status=Vencida')}>
+                                        <p className="text-sm font-bold text-red-500">{statsOutorgas.vencidas}</p>
+                                        <p className="text-[9px] text-slate-400 uppercase tracking-wider">Vencidas</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                        {stats.compliance_rate < 100 || statsOutorgas.compliance < 100 ? (
+                            <div className="mt-8 text-center px-4">
+                                <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 py-2 px-3 rounded-xl inline-block">🚀 Meta: Alcançar 100% de conformidade! Você consegue.</p>
+                            </div>
+                        ) : (
+                            <div className="mt-8 text-center px-4">
+                                <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 py-2 px-3 rounded-xl inline-block">🏆 Excelente trabalho! 100% de conformidade alcançada.</p>
+                            </div>
+                        )}
                     </div>
 
-                    <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {kpis.map((kpi, i) => (
                             <div key={i} className="card-hover cursor-pointer animate-slide-up" style={{ animationDelay: `${i * 80}ms` }} onClick={() => navigate(kpi.path)}>
                                 <div className="flex items-start justify-between">
