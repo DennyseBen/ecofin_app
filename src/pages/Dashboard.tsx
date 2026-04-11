@@ -1,5 +1,6 @@
 import { Users, AlertTriangle, ShieldCheck, ArrowUpRight, Leaf, Activity, Bell, Droplets, Target, Medal } from 'lucide-react'
 import { useState, useCallback } from 'react'
+import { useTheme } from '../contexts/ThemeContext'
 import { useNavigate } from 'react-router-dom'
 import { useSupabase } from '../hooks/useSupabase'
 import { useRealtime } from '../hooks/useRealtime'
@@ -21,6 +22,50 @@ function ComplianceMetric({ title, stats, type, onClickParam }: { title: string,
     const iconColor = type === 'licencas' ? 'text-emerald-500' : 'text-sky-500'
     const iconBg = type === 'licencas' ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'bg-sky-50 dark:bg-sky-500/10'
 
+    const { theme } = useTheme()
+
+    let chartUI = null;
+
+    if (theme === 'contemporaneo') {
+        const pieColor = stats.compliance >= 70 ? '#10b981' : stats.compliance >= 40 ? '#f59e0b' : '#ef4444'
+        const pieBgColor = stats.compliance >= 70 ? '#10b98120' : stats.compliance >= 40 ? '#f59e0b20' : '#ef444420'
+        chartUI = (
+            <div className="relative flex items-center justify-center w-[84px] h-[84px] shrink-0 rounded-full" style={{ background: `conic-gradient(${pieColor} ${stats.compliance}%, ${pieBgColor} ${stats.compliance}%)` }}>
+                 <div className="w-[60px] h-[60px] bg-white dark:bg-slate-900 rounded-full flex items-center justify-center shadow-inner">
+                     <span className={`text-xl font-black ${colorClass}`}>{stats.compliance}%</span>
+                 </div>
+            </div>
+        )
+    } else if (theme === 'moderno') {
+        chartUI = (
+             <div className="relative flex flex-col items-center justify-end w-[90px] h-[50px] shrink-0 overflow-visible mt-2">
+                 <svg className="w-full h-full overflow-visible" viewBox="0 0 100 50">
+                      <path d="M 10 50 A 40 40 0 0 1 90 50" className="stroke-slate-200 dark:stroke-white/[0.08] fill-none" strokeWidth="12" strokeLinecap="round" />
+                      <path d="M 10 50 A 40 40 0 0 1 90 50" className={`fill-none ${barColorClass} transition-all duration-1000 ease-out`} strokeWidth="12" strokeDasharray="125.6" strokeDashoffset={125.6 - (stats.compliance / 100) * 125.6} strokeLinecap="round" />
+                 </svg>
+                 <span className={`absolute bottom-0 translate-y-3 text-2xl font-black ${colorClass}`}>{stats.compliance}%</span>
+             </div>
+        )
+    } else {
+        // Galaxy
+        const glowColor = stats.compliance >= 70 ? 'rgba(16,185,129,0.5)' : stats.compliance >= 40 ? 'rgba(245,158,11,0.5)' : 'rgba(239,68,68,0.5)'
+        chartUI = (
+            <div className="relative flex items-center justify-center w-[84px] h-[84px] shrink-0" style={{ filter: `drop-shadow(0 0 12px ${glowColor})` }}>
+                <svg className="transform -rotate-90 w-full h-full" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="40" className="stroke-white/[0.02] fill-none" strokeWidth="8" />
+                    <circle 
+                        cx="50" cy="50" r="40" 
+                        className={`fill-none ${barColorClass} transition-all duration-1000 ease-out`} 
+                        strokeWidth="8" 
+                        strokeDasharray="251.3" 
+                        strokeDashoffset={251.3 - (stats.compliance / 100) * 251.3} 
+                        strokeLinecap="round" 
+                    />
+                </svg>
+            </div>
+        )
+    }
+
     return (
         <div className="card p-6 flex flex-col justify-between relative overflow-hidden transition-all hover:border-slate-300 dark:hover:border-white/20">
             {is100 && (
@@ -40,25 +85,15 @@ function ComplianceMetric({ title, stats, type, onClickParam }: { title: string,
                                 {title}
                             </h3>
                         </div>
-                        <div className="flex items-baseline gap-1">
-                            <span className={`text-5xl font-black tracking-tight leading-none ${colorClass}`}>{stats.compliance}%</span>
-                        </div>
-                        <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mt-2">Conformidade</span>
+                        {theme !== 'moderno' && theme !== 'contemporaneo' && (
+                            <div className="flex items-baseline gap-1">
+                                <span className={`text-5xl font-black tracking-tight leading-none ${colorClass}`}>{stats.compliance}%</span>
+                            </div>
+                        )}
+                        <span className={`text-[10px] uppercase tracking-widest font-bold text-slate-400 ${theme === 'moderno' || theme === 'contemporaneo' ? 'mt-0' : 'mt-2'}`}>Conformidade</span>
                     </div>
 
-                    <div className="relative flex items-center justify-center w-[84px] h-[84px] shrink-0">
-                        <svg className="transform -rotate-90 w-full h-full" viewBox="0 0 100 100">
-                            <circle cx="50" cy="50" r="40" className="stroke-slate-100 dark:stroke-white/[0.04] fill-none" strokeWidth="12" />
-                            <circle 
-                                cx="50" cy="50" r="40" 
-                                className={`fill-none ${barColorClass} transition-all duration-1000 ease-out`} 
-                                strokeWidth="12" 
-                                strokeDasharray="251.3" 
-                                strokeDashoffset={251.3 - (stats.compliance / 100) * 251.3} 
-                                strokeLinecap="round" 
-                            />
-                        </svg>
-                    </div>
+                    {chartUI}
                 </div>
 
                 <div className="flex items-center mt-3 bg-slate-50 dark:bg-white/[0.02] p-1.5 rounded-xl border border-slate-100 dark:border-white/5">

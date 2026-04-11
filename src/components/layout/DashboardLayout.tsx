@@ -5,7 +5,7 @@ import FineChat from '../chat/FineChat'
 
 export default function DashboardLayout() {
     return (
-        <div className="flex h-screen overflow-hidden bg-[#f4f6f5] dark:bg-[#0a1410]">
+        <div className="app-shell flex h-screen overflow-hidden">
             <Sidebar />
             <main className="flex-1 flex flex-col overflow-hidden">
                 <Header />

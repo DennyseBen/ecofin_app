@@ -3,14 +3,14 @@ import { useTheme } from '../../contexts/ThemeContext'
 import { useAuth } from '../../contexts/AuthContext'
 import {
     LayoutDashboard, Users, FileText, Wallet, ClipboardList,
-    Settings, Moon, Sun, Bell,
+    Settings, Bell, Palette,
     Menu, X, LogOut, ShieldCheck
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { fetchAlertCount } from '../../lib/api'
 
 export default function Sidebar() {
-    const { theme, toggleTheme } = useTheme()
+    const { theme, setTheme } = useTheme()
     const { user, isAdmin, signOut } = useAuth()
     const location = useLocation()
     const [mobileOpen, setMobileOpen] = useState(false)
@@ -36,6 +36,12 @@ export default function Sidebar() {
         { to: '/processos', icon: ClipboardList, label: 'Processos' },
         { to: '/configuracoes', icon: Settings, label: 'Configurações' },
     ]
+
+    const themeOptions = [
+        { id: 'contemporaneo', label: 'Contemporaneo', preview: 'from-[#eff4f2] via-[#dce9e3] to-[#9dc8b7]' },
+        { id: 'moderno', label: 'Moderno', preview: 'from-[#07130f] via-[#144232] to-[#2bbf8a]' },
+        { id: 'galaxy', label: 'Galaxy', preview: 'from-[#06051a] via-[#251356] to-[#7d5cff]' },
+    ] as const
 
     return (
         <>
@@ -115,10 +121,28 @@ export default function Sidebar() {
 
                 {/* Footer */}
                 <div className="p-4 space-y-2">
-                    <button onClick={toggleTheme} className="sidebar-link w-full">
-                        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-                        <span>{theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}</span>
-                    </button>
+                    <div className="sidebar-link w-full">
+                        <Palette size={18} />
+                        <span className="capitalize">Tema: {theme}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-100 dark:border-white/10">
+                        {themeOptions.map(option => {
+                            const active = theme === option.id
+                            return (
+                                <button
+                                    key={option.id}
+                                    onClick={() => setTheme(option.id)}
+                                    className={`rounded-xl px-1 py-2 text-[10px] font-bold uppercase tracking-wide transition-all border ${active
+                                        ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/30 border-emerald-400'
+                                        : 'text-slate-500 dark:text-slate-400 border-transparent hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400'
+                                        }`}
+                                >
+                                    <span className={`mb-1 block h-2 w-full rounded-full bg-gradient-to-r ${option.preview}`} />
+                                    {option.label}
+                                </button>
+                            )
+                        })}
+                    </div>
                     <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03]">
                         {userAvatar ? (
                             <img src={userAvatar} alt={userName} className="w-9 h-9 rounded-xl object-cover shadow-sm" referrerPolicy="no-referrer" />

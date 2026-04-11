@@ -5,6 +5,62 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --app-bg: #0a1410;
+    --app-bg-alt: #0f2119;
+    --app-text: #e6f3eb;
+    --app-muted: #91a69c;
+    --app-surface: rgba(10, 20, 16, 0.84);
+    --app-surface-border: rgba(16, 185, 129, 0.22);
+    --app-surface-hover: rgba(16, 185, 129, 0.1);
+    --app-nav-hover: rgba(16, 185, 129, 0.12);
+    --app-nav-active: rgba(16, 185, 129, 0.2);
+    --app-shadow: 0 16px 42px rgba(7, 12, 10, 0.35);
+    --app-ring: rgba(16, 185, 129, 0.45);
+  }
+
+  html.theme-contemporaneo {
+    --app-bg: #eff4f2;
+    --app-bg-alt: #dce9e3;
+    --app-text: #1f2f29;
+    --app-muted: #5f736b;
+    --app-surface: rgba(255, 255, 255, 0.86);
+    --app-surface-border: rgba(18, 133, 98, 0.2);
+    --app-surface-hover: rgba(16, 185, 129, 0.07);
+    --app-nav-hover: rgba(16, 185, 129, 0.1);
+    --app-nav-active: rgba(16, 185, 129, 0.18);
+    --app-shadow: 0 14px 40px rgba(26, 58, 49, 0.12);
+    --app-ring: rgba(16, 185, 129, 0.32);
+  }
+
+  html.theme-moderno {
+    --app-bg: #07130f;
+    --app-bg-alt: #10251c;
+    --app-text: #e5f8ee;
+    --app-muted: #95b6a8;
+    --app-surface: rgba(8, 19, 15, 0.82);
+    --app-surface-border: rgba(30, 187, 136, 0.24);
+    --app-surface-hover: rgba(33, 209, 149, 0.12);
+    --app-nav-hover: rgba(26, 165, 122, 0.16);
+    --app-nav-active: rgba(28, 185, 135, 0.25);
+    --app-shadow: 0 18px 52px rgba(2, 8, 6, 0.5);
+    --app-ring: rgba(52, 211, 153, 0.42);
+  }
+
+  html.theme-galaxy {
+    --app-bg: #06051a;
+    --app-bg-alt: #130b3a;
+    --app-text: #e5e6ff;
+    --app-muted: #a8a7cf;
+    --app-surface: rgba(16, 12, 43, 0.72);
+    --app-surface-border: rgba(125, 92, 255, 0.34);
+    --app-surface-hover: rgba(125, 92, 255, 0.14);
+    --app-nav-hover: rgba(125, 92, 255, 0.16);
+    --app-nav-active: rgba(125, 92, 255, 0.24);
+    --app-shadow: 0 20px 56px rgba(2, 2, 14, 0.58);
+    --app-ring: rgba(148, 120, 255, 0.5);
+  }
+
   * {
     @apply border-slate-200 dark:border-white/[0.07];
   }
@@ -12,9 +68,24 @@
   body {
     font-family: 'Outfit', sans-serif;
     @apply antialiased;
-    @apply bg-[#f4f6f5] text-slate-800;
-    @apply dark:bg-[#0a1410] dark:text-slate-100;
+    color: var(--app-text);
+    background-color: var(--app-bg);
+    background-image:
+      radial-gradient(1100px 600px at 100% -5%, var(--app-bg-alt) 0%, transparent 65%),
+      radial-gradient(850px 520px at -10% 120%, var(--app-bg-alt) 0%, transparent 75%);
+    background-attachment: fixed;
     transition: background-color 0.35s ease, color 0.35s ease;
+  }
+
+  body.theme-transition,
+  body.theme-transition * {
+    transition:
+      background-color 360ms ease,
+      border-color 360ms ease,
+      color 360ms ease,
+      box-shadow 360ms ease,
+      fill 360ms ease,
+      stroke 360ms ease;
   }
 }
 
@@ -42,29 +113,63 @@
 
   /* ═══ Cards — Activity Planner style: high radius, soft shadows, airy ═══ */
   .card {
-    @apply bg-white dark:bg-[#0c1813] border border-slate-200/60 dark:border-emerald-500/10 rounded-[28px] p-5 sm:p-7 shadow-sm shadow-slate-200/50 dark:shadow-none transition-all duration-300;
+    @apply border rounded-[28px] p-5 sm:p-7 transition-all duration-300;
+    background: var(--app-surface);
+    border-color: var(--app-surface-border);
+    box-shadow: var(--app-shadow);
+    backdrop-filter: blur(10px);
+  }
+
+  .app-shell {
+    background-color: var(--app-bg);
+    color: var(--app-text);
+    transition: background-color 0.35s ease, color 0.35s ease;
   }
 
   .card-hover {
-    @apply card hover:shadow-xl hover:shadow-emerald-500/[0.06] hover:-translate-y-1 hover:border-emerald-300 dark:hover:border-emerald-500/30;
+    @apply card hover:-translate-y-1;
+  }
+
+  .card-hover:hover {
+    background: var(--app-surface-hover);
+    border-color: var(--app-ring);
+    box-shadow: var(--app-shadow);
   }
 
   /* ═══ Sidebar — Activity Planner dark style ═══ */
   .sidebar-link {
-    @apply flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-medium text-slate-500 dark:text-slate-400 transition-all duration-200 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400;
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200;
+    color: var(--app-muted);
   }
 
   .sidebar-link-active {
-    @apply flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/[0.12] shadow-sm shadow-emerald-100 dark:shadow-none transition-all duration-200;
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-semibold transition-all duration-200;
+    color: var(--app-text);
+    background: var(--app-nav-active);
+    box-shadow: inset 0 0 0 1px var(--app-ring);
+  }
+
+  .sidebar-link:hover {
+    color: var(--app-text);
+    background: var(--app-nav-hover);
   }
 
   /* ═══ Pill Tabs — DisputeFox style ═══ */
   .pill-tab {
-    @apply px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10;
+    @apply px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer;
+    color: var(--app-muted);
+    border: 1px solid transparent;
   }
 
   .pill-tab-active {
-    @apply pill-tab text-white bg-emerald-500 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-white shadow-md shadow-emerald-500/30;
+    @apply pill-tab text-white shadow-md;
+    background: linear-gradient(120deg, rgba(16, 185, 129, 0.95), rgba(45, 212, 191, 0.88));
+    border-color: rgba(255, 255, 255, 0.26);
+  }
+
+  .pill-tab:hover {
+    color: var(--app-text);
+    background: var(--app-nav-hover);
   }
 
   /* ═══ Badges ═══ */
