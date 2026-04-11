@@ -226,6 +226,7 @@ export default function Licencas() {
         if (upper === 'ANM' || upper === 'REGISTRO ANM' || upper === 'REGISTRO') return 'Registro ANM'
         if (upper === 'PREFEITO' || upper === 'LICENÇA PREFEITO' || upper === 'LICENCA PREFEITO' || upper === 'LIC. PREFEITO' || upper === 'LIC.PREFEITO') return 'Licença Prefeito'
         if (upper === 'SUPRESSÃO' || upper === 'SUPRESSÃO VEGETAL' || upper === 'SUPRESSAO' || upper === 'SUPRESSAO VEGETAL') return 'Supressão Vegetal'
+        if (upper === 'DISPENSA' || upper === 'DISPENSA DE OUTORGA') return 'Dispensa de Outorga'
         if (upper === 'L.I' || upper === 'L. I') return 'LI'
         if (upper === 'CADRI') return null
         return t

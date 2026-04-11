@@ -115,7 +115,7 @@ export function getRenovacaoLeadDays(tipo: string): number {
     const t = (tipo || '').toUpperCase().trim()
     if (['LO', 'LP', 'LI', 'ASV', 'LAR', 'LICENÇA PREFEITO', 'LICENCA PREFEITO', 'LIC. PREFEITO', 'LIC.PREFEITO', 'SUPRESSÃO', 'SUPRESSAO', 'AUV', 'PREFEITO'].some(k => t === k || t.includes(k))) return 120
     if (['ANM', 'CEPROF', 'REGISTRO ANM'].some(k => t === k || t.includes(k))) return 60
-    if (t.includes('OUTORGA')) return 180
+    if (t.includes('OUTORGA') || t.includes('DISPENSA')) return 180
     return 90
 }
 
@@ -209,6 +209,7 @@ export const TIPOS_LICENCA = [
     'ASV', 'AUV',
     'Supressão Vegetal',
     'Licença Prefeito',
+    'Dispensa de Outorga',
     'Lar',
 ]
 

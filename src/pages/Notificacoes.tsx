@@ -37,7 +37,7 @@ type AlertItem = {
 const STORAGE_KEY = 'ecofin.regras.v1'
 
 const ALL_TIPOS = [
-    'LP', 'LI', 'LO', 'CLUA', 'Dispensa', 'ASV', 'AUV', 'LAR',
+    'LP', 'LI', 'LO', 'CLUA', 'Dispensa de Outorga', 'ASV', 'AUV', 'LAR',
     'Supressão', 'Licença Prefeito', 'ANM', 'CEPROF', 'Registro ANM',
     'RIAA', 'RAL', 'OUTORGA',
 ]
@@ -51,7 +51,7 @@ const BUILTIN_RULES: RegraNotificacao[] = [
     },
     {
         id: 'builtin-120', nome: 'Prazo padrão',
-        tipos: ['LO', 'LP', 'LI', 'ASV', 'AUV', 'LAR', 'Supressão', 'CLUA', 'Dispensa', 'Licença Prefeito'],
+        tipos: ['LO', 'LP', 'LI', 'ASV', 'AUV', 'LAR', 'Supressão', 'CLUA', 'Dispensa de Outorga', 'Licença Prefeito'],
         dias: 120, cor: 'amber', canais: ['sistema'], custom: false, ativo: true,
         descricao: 'Principais licenças ambientais estaduais/federais',
     },
@@ -66,12 +66,12 @@ const BUILTIN_RULES: RegraNotificacao[] = [
 const COR_PALETTE: RegraNotificacao['cor'][] = ['sky', 'amber', 'emerald', 'violet', 'rose', 'indigo']
 
 const COR_MAP: Record<RegraNotificacao['cor'], { bg: string; text: string; border: string; badge: string }> = {
-    sky:     { bg: 'bg-sky-50 dark:bg-sky-500/10',     text: 'text-sky-600 dark:text-sky-400',     border: 'border-sky-300 dark:border-sky-700',     badge: 'bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300' },
-    amber:   { bg: 'bg-amber-50 dark:bg-amber-500/10', text: 'text-amber-600 dark:text-amber-400', border: 'border-amber-300 dark:border-amber-700', badge: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300' },
+    sky: { bg: 'bg-sky-50 dark:bg-sky-500/10', text: 'text-sky-600 dark:text-sky-400', border: 'border-sky-300 dark:border-sky-700', badge: 'bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300' },
+    amber: { bg: 'bg-amber-50 dark:bg-amber-500/10', text: 'text-amber-600 dark:text-amber-400', border: 'border-amber-300 dark:border-amber-700', badge: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300' },
     emerald: { bg: 'bg-emerald-50 dark:bg-emerald-500/10', text: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-300 dark:border-emerald-700', badge: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' },
-    violet:  { bg: 'bg-violet-50 dark:bg-violet-500/10', text: 'text-violet-600 dark:text-violet-400', border: 'border-violet-300 dark:border-violet-700', badge: 'bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300' },
-    rose:    { bg: 'bg-rose-50 dark:bg-rose-500/10',   text: 'text-rose-600 dark:text-rose-400',   border: 'border-rose-300 dark:border-rose-700',   badge: 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300' },
-    indigo:  { bg: 'bg-indigo-50 dark:bg-indigo-500/10', text: 'text-indigo-600 dark:text-indigo-400', border: 'border-indigo-300 dark:border-indigo-700', badge: 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300' },
+    violet: { bg: 'bg-violet-50 dark:bg-violet-500/10', text: 'text-violet-600 dark:text-violet-400', border: 'border-violet-300 dark:border-violet-700', badge: 'bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300' },
+    rose: { bg: 'bg-rose-50 dark:bg-rose-500/10', text: 'text-rose-600 dark:text-rose-400', border: 'border-rose-300 dark:border-rose-700', badge: 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300' },
+    indigo: { bg: 'bg-indigo-50 dark:bg-indigo-500/10', text: 'text-indigo-600 dark:text-indigo-400', border: 'border-indigo-300 dark:border-indigo-700', badge: 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300' },
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -223,11 +223,10 @@ function RuleFormPanel({
                                     <button
                                         key={tipo}
                                         onClick={() => toggleTipo(tipo)}
-                                        className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${
-                                            selected
+                                        className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${selected
                                                 ? 'bg-emerald-500 text-white border-emerald-500'
                                                 : 'bg-slate-50 dark:bg-white/[0.04] border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-emerald-400'
-                                        }`}
+                                            }`}
                                     >
                                         {tipo}
                                     </button>
@@ -244,9 +243,8 @@ function RuleFormPanel({
                                 <button
                                     key={cor}
                                     onClick={() => setForm(f => ({ ...f, cor }))}
-                                    className={`w-7 h-7 rounded-full border-2 transition-transform ${
-                                        COR_MAP[cor].bg.split(' ')[0].replace('bg-', 'bg-').replace('50', '400').replace('500/10', '400')
-                                    } ${form.cor === cor ? 'scale-125 border-slate-900 dark:border-white' : 'border-transparent'}`}
+                                    className={`w-7 h-7 rounded-full border-2 transition-transform ${COR_MAP[cor].bg.split(' ')[0].replace('bg-', 'bg-').replace('50', '400').replace('500/10', '400')
+                                        } ${form.cor === cor ? 'scale-125 border-slate-900 dark:border-white' : 'border-transparent'}`}
                                     style={{ backgroundColor: cor === 'sky' ? '#38bdf8' : cor === 'amber' ? '#fbbf24' : cor === 'emerald' ? '#34d399' : cor === 'violet' ? '#a78bfa' : cor === 'rose' ? '#fb7185' : '#818cf8' }}
                                 />
                             ))}
@@ -267,11 +265,10 @@ function RuleFormPanel({
                                     <button
                                         key={key}
                                         onClick={() => toggleCanal(key)}
-                                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-sm transition-all ${
-                                            active
+                                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-sm transition-all ${active
                                                 ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
                                                 : 'border-slate-200 dark:border-white/10 text-slate-500 hover:border-slate-300'
-                                        }`}
+                                            }`}
                                     >
                                         <span className={active ? 'text-emerald-500' : 'text-slate-400'}>{icon}</span>
                                         {label}
@@ -546,11 +543,10 @@ export default function Notificacoes() {
                             <div key={rule.id} className="relative group">
                                 <button
                                     onClick={() => handleRuleClick(rule.id)}
-                                    className={`w-full text-center p-3 rounded-xl border transition-all ${
-                                        isActive
+                                    className={`w-full text-center p-3 rounded-xl border transition-all ${isActive
                                             ? `${c.bg} ${c.border} border-2 scale-[1.02] shadow-sm`
                                             : `bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/10 hover:${c.bg} hover:${c.border}`
-                                    }`}
+                                        }`}
                                     title={rule.descricao || rule.nome}
                                 >
                                     <p className={`text-xl font-extrabold ${c.text}`}>{rule.dias}</p>

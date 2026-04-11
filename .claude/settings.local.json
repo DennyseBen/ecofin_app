@@ -86,7 +86,15 @@
       "Bash(npm i:*)",
       "Bash(vercel --version)",
       "Bash(vercel login:*)",
-      "Bash(npx plugins:*)"
+      "Bash(npx plugins:*)",
+      "mcp__claude_ai_Supabase__list_projects",
+      "mcp__claude_ai_Supabase__execute_sql",
+      "mcp__claude_ai_Supabase__apply_migration",
+      "Bash(find c:/Users/Administrator/Downloads/ecofin-manager -name *.sql -type f)",
+      "mcp__claude_ai_Supabase__get_project",
+      "mcp__claude_ai_Vercel__list_deployments",
+      "mcp__claude_ai_Vercel__deploy_to_vercel",
+      "Bash(npx vercel:*)"
     ]
   }
 }
