@@ -20,7 +20,7 @@ function ComplianceGauge({ value, title = "Conformidade" }: { value: number; tit
     const color = value >= 70 ? '#10b981' : value >= 40 ? '#f59e0b' : '#ef4444'
     return (
         <div className="relative flex flex-col items-center">
-            <svg width="200" height="120" viewBox="0 0 200 120">
+            <svg className="w-full max-w-[160px] h-auto" viewBox="0 0 200 120">
                 <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="currentColor" strokeWidth="12" className="text-slate-100 dark:text-white/[0.06]" strokeLinecap="round" />
                 <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke={color} strokeWidth="12" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset} className="animate-gauge" style={{ filter: `drop-shadow(0 0 8px ${color}40)` }} />
             </svg>
@@ -164,57 +164,8 @@ export default function Dashboard() {
 
             {(activeTab === 'Visão Geral' || activeTab === 'Vencimentos') && (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <div className="lg:col-span-5 card flex flex-col justify-center py-6">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full divide-y sm:divide-y-0 sm:divide-x divide-slate-100 dark:divide-white/[0.06]">
-                            {/* Dashboard Licenças */}
-                            <div className="flex flex-col items-center pt-2 sm:pt-0">
-                                <ComplianceGauge value={stats.compliance_rate} title="Licenças" />
-                                <div className="grid grid-cols-3 gap-2 mt-4 w-full px-2">
-                                    <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?status=Válida')}>
-                                        <p className="text-sm font-bold text-emerald-500">{stats.licencas_validas}</p>
-                                        <p className="text-[9px] text-slate-400 uppercase tracking-wider">Válidas</p>
-                                    </div>
-                                    <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?status=Vencendo')}>
-                                        <p className="text-sm font-bold text-amber-500">{stats.vencendo_90_dias}</p>
-                                        <p className="text-[9px] text-slate-400 uppercase tracking-wider">Vencendo</p>
-                                    </div>
-                                    <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?status=Vencida')}>
-                                        <p className="text-sm font-bold text-red-500">{stats.licencas_vencidas}</p>
-                                        <p className="text-[9px] text-slate-400 uppercase tracking-wider">Vencidas</p>
-                                    </div>
-                                </div>
-                            </div>
-                            {/* Dashboard Outorgas */}
-                            <div className="flex flex-col items-center pt-6 sm:pt-0">
-                                <ComplianceGauge value={statsOutorgas.compliance} title="Outorgas" />
-                                <div className="grid grid-cols-3 gap-2 mt-4 w-full px-2">
-                                    <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?tab=outorgas&status=Válida')}>
-                                        <p className="text-sm font-bold text-emerald-500">{statsOutorgas.validas}</p>
-                                        <p className="text-[9px] text-slate-400 uppercase tracking-wider">Válidas</p>
-                                    </div>
-                                    <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?tab=outorgas&status=Vencendo')}>
-                                        <p className="text-sm font-bold text-amber-500">{statsOutorgas.vencendo}</p>
-                                        <p className="text-[9px] text-slate-400 uppercase tracking-wider">Vencendo</p>
-                                    </div>
-                                    <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?tab=outorgas&status=Vencida')}>
-                                        <p className="text-sm font-bold text-red-500">{statsOutorgas.vencidas}</p>
-                                        <p className="text-[9px] text-slate-400 uppercase tracking-wider">Vencidas</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {stats.compliance_rate < 100 || statsOutorgas.compliance < 100 ? (
-                            <div className="mt-8 text-center px-4">
-                                <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 py-2 px-3 rounded-xl inline-block">🚀 Meta: Alcançar 100% de conformidade! Você consegue.</p>
-                            </div>
-                        ) : (
-                            <div className="mt-8 text-center px-4">
-                                <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 py-2 px-3 rounded-xl inline-block">🏆 Excelente trabalho! 100% de conformidade alcançada.</p>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* KPIs principais */}
+                    <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {kpis.map((kpi, i) => (
                             <div key={i} className="card-hover cursor-pointer animate-slide-up" style={{ animationDelay: `${i * 80}ms` }} onClick={() => navigate(kpi.path)}>
                                 <div className="flex items-start justify-between">
@@ -226,6 +177,58 @@ export default function Dashboard() {
                                 <p className="text-xs text-slate-400 mt-0.5">{kpi.desc}</p>
                             </div>
                         ))}
+                    </div>
+
+                    {/* Paineis de Conformidade Individuais */}
+                    <div className="lg:col-span-4 flex flex-col gap-4">
+                        {/* Licenças */}
+                        <div className="card flex flex-col items-center justify-center py-5">
+                            <ComplianceGauge value={stats.compliance_rate} title="Conformidade Licenças" />
+                            <div className="grid grid-cols-3 gap-2 mt-4 w-full px-2">
+                                <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?status=Válida')}>
+                                    <p className="text-sm font-bold text-emerald-500">{stats.licencas_validas}</p>
+                                    <p className="text-[9px] text-slate-400 uppercase tracking-wider">Válidas</p>
+                                </div>
+                                <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?status=Vencendo')}>
+                                    <p className="text-sm font-bold text-amber-500">{stats.vencendo_90_dias}</p>
+                                    <p className="text-[9px] text-slate-400 uppercase tracking-wider">Vencendo</p>
+                                </div>
+                                <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?status=Vencida')}>
+                                    <p className="text-sm font-bold text-red-500">{stats.licencas_vencidas}</p>
+                                    <p className="text-[9px] text-slate-400 uppercase tracking-wider">Vencidas</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Outorgas */}
+                        <div className="card flex flex-col items-center justify-center py-5">
+                            <ComplianceGauge value={statsOutorgas.compliance} title="Conformidade Outorgas" />
+                            <div className="grid grid-cols-3 gap-2 mt-4 w-full px-2">
+                                <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?tab=outorgas&status=Válida')}>
+                                    <p className="text-sm font-bold text-emerald-500">{statsOutorgas.validas}</p>
+                                    <p className="text-[9px] text-slate-400 uppercase tracking-wider">Válidas</p>
+                                </div>
+                                <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?tab=outorgas&status=Vencendo')}>
+                                    <p className="text-sm font-bold text-amber-500">{statsOutorgas.vencendo}</p>
+                                    <p className="text-[9px] text-slate-400 uppercase tracking-wider">Vencendo</p>
+                                </div>
+                                <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?tab=outorgas&status=Vencida')}>
+                                    <p className="text-sm font-bold text-red-500">{statsOutorgas.vencidas}</p>
+                                    <p className="text-[9px] text-slate-400 uppercase tracking-wider">Vencidas</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Mensagem Motivacional */}
+                        {(stats.compliance_rate < 100 || statsOutorgas.compliance < 100) ? (
+                            <div className="text-center">
+                                <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 py-1.5 px-3 rounded-lg inline-block w-full">🚀 Rumo aos 100%!</p>
+                            </div>
+                        ) : (
+                            <div className="text-center">
+                                <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 py-1.5 px-3 rounded-lg inline-block w-full">🏆 100% Garantido!</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
