@@ -1,4 +1,4 @@
-import { Users, AlertTriangle, ShieldCheck, ArrowUpRight, Leaf, Activity, Bell, Droplets } from 'lucide-react'
+import { Users, AlertTriangle, ShieldCheck, ArrowUpRight, Leaf, Activity, Bell, Droplets, Target, Medal } from 'lucide-react'
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSupabase } from '../hooks/useSupabase'
@@ -16,7 +16,7 @@ const formatDate = (dateStr: string | null): string => {
 function ComplianceMetric({ title, stats, type, onClickParam }: { title: string, stats: any, type: 'licencas' | 'outorgas', onClickParam: string }) {
     const is100 = stats.compliance === 100
     const colorClass = stats.compliance >= 70 ? 'text-emerald-500' : stats.compliance >= 40 ? 'text-amber-500' : 'text-red-500'
-    const barColorClass = stats.compliance >= 70 ? 'bg-emerald-500' : stats.compliance >= 40 ? 'bg-amber-500' : 'bg-red-500'
+    const barColorClass = stats.compliance >= 70 ? 'stroke-emerald-500' : stats.compliance >= 40 ? 'stroke-amber-500' : 'stroke-red-500'
     const Icon = type === 'licencas' ? Leaf : Droplets
     const iconColor = type === 'licencas' ? 'text-emerald-500' : 'text-sky-500'
     const iconBg = type === 'licencas' ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'bg-sky-50 dark:bg-sky-500/10'
@@ -29,40 +29,51 @@ function ComplianceMetric({ title, stats, type, onClickParam }: { title: string,
                 </div>
             )}
             <div className="relative z-10 w-full flex flex-col h-full justify-between">
-                <div>
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className={`p-2.5 rounded-xl ${iconBg}`}>
-                            <Icon size={20} className={iconColor}/>
+                
+                <div className="flex items-start justify-between mb-4">
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className={`p-2 rounded-xl ${iconBg}`}>
+                                <Icon size={18} className={iconColor} />
+                            </div>
+                            <h3 className="font-bold text-slate-800 dark:text-white text-sm uppercase tracking-wide">
+                                {title}
+                            </h3>
                         </div>
-                        <h3 className="font-bold text-slate-800 dark:text-white text-base">
-                            {title}
-                        </h3>
-                    </div>
-                    <div className="flex items-baseline gap-2 mb-6">
-                        <span className={`text-5xl font-black tracking-tight leading-none ${colorClass}`}>{stats.compliance}%</span>
-                        <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Conforme</span>
-                    </div>
-                    
-                    <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-white/[0.04] mb-6 overflow-hidden shadow-inner">
-                        <div className={`h-full rounded-full ${barColorClass} transition-all duration-1000 relative overflow-hidden`} style={{ width: `${stats.compliance}%` }}>
-                            <div className="absolute inset-0 bg-white/20 w-full h-full transform -skew-x-12 translate-x-full animate-[shimmer_2s_infinite]" />
+                        <div className="flex items-baseline gap-1">
+                            <span className={`text-5xl font-black tracking-tight leading-none ${colorClass}`}>{stats.compliance}%</span>
                         </div>
+                        <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mt-2">Conformidade</span>
+                    </div>
+
+                    <div className="relative flex items-center justify-center w-[84px] h-[84px] shrink-0">
+                        <svg className="transform -rotate-90 w-full h-full" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="40" className="stroke-slate-100 dark:stroke-white/[0.04] fill-none" strokeWidth="12" />
+                            <circle 
+                                cx="50" cy="50" r="40" 
+                                className={`fill-none ${barColorClass} transition-all duration-1000 ease-out`} 
+                                strokeWidth="12" 
+                                strokeDasharray="251.3" 
+                                strokeDashoffset={251.3 - (stats.compliance / 100) * 251.3} 
+                                strokeLinecap="round" 
+                            />
+                        </svg>
                     </div>
                 </div>
 
-                <div className="flex items-center mt-2 bg-slate-50 dark:bg-white/[0.02] p-1.5 rounded-xl border border-slate-100 dark:border-white/5">
-                    <a href={`/licencas?${onClickParam}status=Válida`} className="flex flex-col items-start flex-1 px-3 py-1.5 rounded-lg hover:bg-white dark:hover:bg-white/5 transition-all cursor-pointer">
+                <div className="flex items-center mt-3 bg-slate-50 dark:bg-white/[0.02] p-1.5 rounded-xl border border-slate-100 dark:border-white/5">
+                    <a href={`/licencas?${onClickParam}status=Válida`} className="flex flex-col items-start flex-1 px-3 py-1.5 rounded-lg hover:bg-white dark:hover:bg-white/5 transition-all cursor-pointer border-r border-transparent">
                         <span className="text-[9px] uppercase font-bold text-emerald-600 dark:text-emerald-500 tracking-wider mb-1">Válidas</span>
                         <span className="text-xl font-bold text-slate-800 dark:text-white leading-none">{stats.validas}</span>
                     </a>
-                    
+
                     <div className="w-px h-8 bg-slate-200 dark:bg-slate-700/50 mx-1" />
 
                     <a href={`/licencas?${onClickParam}status=Vencendo`} className="flex flex-col items-start flex-1 px-3 py-1.5 rounded-lg hover:bg-white dark:hover:bg-white/5 transition-all cursor-pointer">
                         <span className="text-[9px] uppercase font-bold text-amber-500 tracking-wider mb-1">Vencendo</span>
                         <span className="text-xl font-bold text-slate-800 dark:text-white leading-none">{stats.vencendo}</span>
                     </a>
-                    
+
                     <div className="w-px h-8 bg-slate-200 dark:bg-slate-700/50 mx-1" />
 
                     <a href={`/licencas?${onClickParam}status=Vencida`} className="flex flex-col items-start flex-1 px-3 py-1.5 rounded-lg hover:bg-white dark:hover:bg-white/5 transition-all cursor-pointer">
@@ -152,9 +163,7 @@ export default function Dashboard() {
 
     const kpis = [
         { label: 'Total Clientes', value: stats.total_clientes, icon: Users, desc: 'Cadastrados no sistema', iconBg: 'bg-emerald-50 dark:bg-emerald-500/10', iconColor: 'text-emerald-500', path: '/clientes' },
-        { label: 'Licenças Ativas', value: stats.licencas_validas, icon: ShieldCheck, desc: 'Em conformidade', iconBg: 'bg-sky-50 dark:bg-sky-500/10', iconColor: 'text-sky-500', path: '/licencas?status=Válida' },
-        { label: 'Vencendo em 90 dias', value: stats.vencendo_90_dias, icon: AlertTriangle, desc: 'Requer atenção', iconBg: 'bg-amber-50 dark:bg-amber-500/10', iconColor: 'text-amber-500', path: '/licencas?status=Vencendo' },
-        { label: 'Total Processos', value: stats.total_licencas, icon: Activity, desc: 'Licenças registradas', iconBg: 'bg-violet-50 dark:bg-violet-500/10', iconColor: 'text-violet-500', path: '/licencas' },
+        { label: 'Atenção Necessária', value: alertItems.length, icon: AlertTriangle, desc: 'Alertas pendentes', iconBg: 'bg-amber-50 dark:bg-amber-500/10', iconColor: 'text-amber-500', path: '/notificacoes' },
     ]
 
     return (
@@ -195,7 +204,7 @@ export default function Dashboard() {
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <div>
                     <div className="flex items-center gap-2 text-emerald-500 mb-1"><Leaf size={18} /><span className="text-xs font-bold uppercase tracking-widest">EcoFin Manager</span></div>
-                    <h1 className="text-3xl font-extrabold tracking-tight">Olá, {userName} 👋</h1>
+                    <h1 className="text-3xl font-extrabold tracking-tight">Olá, {userName}</h1>
                     <p className="text-slate-400 text-sm mt-1">Monitoramento de licenciamento ambiental em tempo real.</p>
                 </div>
                 <div className="flex gap-1 bg-slate-100 dark:bg-white/[0.04] rounded-full p-1">
@@ -226,13 +235,13 @@ export default function Dashboard() {
                         {(stats.compliance_rate < 100 || statsOutorgas.compliance < 100) ? (
                             <div className="text-center mt-1">
                                 <span className="text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 py-3 px-4 rounded-xl flex items-center justify-center gap-2 w-full border border-amber-100 dark:border-amber-500/20 shadow-sm">
-                                    🚀 Rumo aos 100% de conformidade!
+                                    <Target size={14} /> Rumo aos 100% de conformidade
                                 </span>
                             </div>
                         ) : (
                             <div className="text-center mt-1">
                                 <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 py-3 px-4 rounded-xl flex items-center justify-center gap-2 w-full border border-emerald-100 dark:border-emerald-500/20 shadow-sm">
-                                    🏆 100% Garantido! Trabalho excelente.
+                                    <Medal size={14} /> 100% Garantido. Trabalho excelente.
                                 </span>
                             </div>
                         )}
