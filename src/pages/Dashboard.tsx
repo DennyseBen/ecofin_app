@@ -263,37 +263,6 @@ export default function Dashboard() {
                             </div>
                         ))}
                     </div>
-
-                    {/* Paineis de Conformidade Individuais */}
-                    <div className="lg:col-span-4 flex flex-col gap-4">
-                        <ComplianceMetric
-                            title="Conformidade Licenças"
-                            type="licencas"
-                            stats={{ compliance: stats.compliance_rate, validas: stats.licencas_validas, vencendo: stats.vencendo_90_dias, vencidas: stats.licencas_vencidas }}
-                            onClickParam=""
-                        />
-                        <ComplianceMetric
-                            title="Conformidade Outorgas"
-                            type="outorgas"
-                            stats={{ compliance: statsOutorgas.compliance, validas: statsOutorgas.validas, vencendo: statsOutorgas.vencendo, vencidas: statsOutorgas.vencidas }}
-                            onClickParam="tab=outorgas&"
-                        />
-
-                        {/* Mensagem Motivacional */}
-                        {(stats.compliance_rate < 100 || statsOutorgas.compliance < 100) ? (
-                            <div className="text-center mt-2">
-                                <span className="text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 w-full border border-amber-100 dark:border-amber-500/20 shadow-sm">
-                                    🚀 Rumo aos 100% de conformidade!
-                                </span>
-                            </div>
-                        ) : (
-                            <div className="text-center mt-2">
-                                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 w-full border border-emerald-100 dark:border-emerald-500/20 shadow-sm">
-                                    🏆 100% Garantido! Trabalho excelente.
-                                </span>
-                            </div>
-                        )}
-                    </div>
                 </div>
             )}
 
