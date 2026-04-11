@@ -1,4 +1,4 @@
-import { Users, AlertTriangle, ShieldCheck, ArrowUpRight, Leaf, Activity, Bell } from 'lucide-react'
+import { Users, AlertTriangle, ShieldCheck, ArrowUpRight, Leaf, Activity, Bell, Droplets } from 'lucide-react'
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSupabase } from '../hooks/useSupabase'
@@ -13,20 +13,63 @@ const formatDate = (dateStr: string | null): string => {
     return `${d}/${m}/${y}`
 }
 
-function ComplianceGauge({ value, title = "Conformidade" }: { value: number; title?: string }) {
-    const radius = 80
-    const circumference = Math.PI * radius
-    const offset = circumference - (value / 100) * circumference
-    const color = value >= 70 ? '#10b981' : value >= 40 ? '#f59e0b' : '#ef4444'
+function ComplianceMetric({ title, stats, type, onClickParam }: { title: string, stats: any, type: 'licencas' | 'outorgas', onClickParam: string }) {
+    const is100 = stats.compliance === 100
+    const colorClass = stats.compliance >= 70 ? 'text-emerald-500' : stats.compliance >= 40 ? 'text-amber-500' : 'text-red-500'
+    const barColorClass = stats.compliance >= 70 ? 'bg-emerald-500' : stats.compliance >= 40 ? 'bg-amber-500' : 'bg-red-500'
+    const Icon = type === 'licencas' ? Leaf : Droplets
+    const iconColor = type === 'licencas' ? 'text-emerald-500' : 'text-sky-500'
+    const iconBg = type === 'licencas' ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'bg-sky-50 dark:bg-sky-500/10'
+
     return (
-        <div className="relative flex flex-col items-center">
-            <svg className="w-full max-w-[160px] h-auto" viewBox="0 0 200 120">
-                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="currentColor" strokeWidth="12" className="text-slate-100 dark:text-white/[0.06]" strokeLinecap="round" />
-                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke={color} strokeWidth="12" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset} className="animate-gauge" style={{ filter: `drop-shadow(0 0 8px ${color}40)` }} />
-            </svg>
-            <div className="absolute bottom-2 flex flex-col items-center">
-                <span className="text-4xl font-extrabold" style={{ color }}>{value}%</span>
-                <span className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold mt-0.5">{title}</span>
+        <div className="card p-6 flex flex-col justify-between relative overflow-hidden transition-all hover:border-slate-300 dark:hover:border-white/20">
+            {is100 && (
+                <div className="absolute -top-4 -right-4 opacity-5 text-emerald-500 pointer-events-none">
+                    <ShieldCheck size={140} />
+                </div>
+            )}
+            <div className="relative z-10 w-full flex flex-col h-full justify-between">
+                <div>
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className={`p-2.5 rounded-xl ${iconBg}`}>
+                            <Icon size={20} className={iconColor}/>
+                        </div>
+                        <h3 className="font-bold text-slate-800 dark:text-white text-base">
+                            {title}
+                        </h3>
+                    </div>
+                    <div className="flex items-baseline gap-2 mb-6">
+                        <span className={`text-5xl font-black tracking-tight leading-none ${colorClass}`}>{stats.compliance}%</span>
+                        <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Conforme</span>
+                    </div>
+                    
+                    <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-white/[0.04] mb-6 overflow-hidden shadow-inner">
+                        <div className={`h-full rounded-full ${barColorClass} transition-all duration-1000 relative overflow-hidden`} style={{ width: `${stats.compliance}%` }}>
+                            <div className="absolute inset-0 bg-white/20 w-full h-full transform -skew-x-12 translate-x-full animate-[shimmer_2s_infinite]" />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex items-center mt-2 bg-slate-50 dark:bg-white/[0.02] p-1.5 rounded-xl border border-slate-100 dark:border-white/5">
+                    <a href={`/licencas?${onClickParam}status=Válida`} className="flex flex-col items-start flex-1 px-3 py-1.5 rounded-lg hover:bg-white dark:hover:bg-white/5 transition-all cursor-pointer">
+                        <span className="text-[9px] uppercase font-bold text-emerald-600 dark:text-emerald-500 tracking-wider mb-1">Válidas</span>
+                        <span className="text-xl font-bold text-slate-800 dark:text-white leading-none">{stats.validas}</span>
+                    </a>
+                    
+                    <div className="w-px h-8 bg-slate-200 dark:bg-slate-700/50 mx-1" />
+
+                    <a href={`/licencas?${onClickParam}status=Vencendo`} className="flex flex-col items-start flex-1 px-3 py-1.5 rounded-lg hover:bg-white dark:hover:bg-white/5 transition-all cursor-pointer">
+                        <span className="text-[9px] uppercase font-bold text-amber-500 tracking-wider mb-1">Vencendo</span>
+                        <span className="text-xl font-bold text-slate-800 dark:text-white leading-none">{stats.vencendo}</span>
+                    </a>
+                    
+                    <div className="w-px h-8 bg-slate-200 dark:bg-slate-700/50 mx-1" />
+
+                    <a href={`/licencas?${onClickParam}status=Vencida`} className="flex flex-col items-start flex-1 px-3 py-1.5 rounded-lg hover:bg-white dark:hover:bg-white/5 transition-all cursor-pointer">
+                        <span className="text-[9px] uppercase font-bold text-red-500 tracking-wider mb-1">Vencidas</span>
+                        <span className="text-xl font-bold text-slate-800 dark:text-white leading-none">{stats.vencidas}</span>
+                    </a>
+                </div>
             </div>
         </div>
     )
@@ -164,69 +207,81 @@ export default function Dashboard() {
 
             {(activeTab === 'Visão Geral' || activeTab === 'Vencimentos') && (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    {/* KPIs principais */}
-                    <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Paineis de Conformidade Individuais (AGORA NA ESQUERDA) */}
+                    <div className="lg:col-span-5 flex flex-col gap-5">
+                        <ComplianceMetric
+                            title="Conformidade Licenças"
+                            type="licencas"
+                            stats={{ compliance: stats.compliance_rate, validas: stats.licencas_validas, vencendo: stats.vencendo_90_dias, vencidas: stats.licencas_vencidas }}
+                            onClickParam=""
+                        />
+                        <ComplianceMetric
+                            title="Conformidade Outorgas"
+                            type="outorgas"
+                            stats={{ compliance: statsOutorgas.compliance, validas: statsOutorgas.validas, vencendo: statsOutorgas.vencendo, vencidas: statsOutorgas.vencidas }}
+                            onClickParam="tab=outorgas&"
+                        />
+
+                        {/* Mensagem Motivacional */}
+                        {(stats.compliance_rate < 100 || statsOutorgas.compliance < 100) ? (
+                            <div className="text-center mt-1">
+                                <span className="text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 py-3 px-4 rounded-xl flex items-center justify-center gap-2 w-full border border-amber-100 dark:border-amber-500/20 shadow-sm">
+                                    🚀 Rumo aos 100% de conformidade!
+                                </span>
+                            </div>
+                        ) : (
+                            <div className="text-center mt-1">
+                                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 py-3 px-4 rounded-xl flex items-center justify-center gap-2 w-full border border-emerald-100 dark:border-emerald-500/20 shadow-sm">
+                                    🏆 100% Garantido! Trabalho excelente.
+                                </span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* KPIs principais (AGORA NA DIREITA) */}
+                    <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {kpis.map((kpi, i) => (
-                            <div key={i} className="card-hover cursor-pointer animate-slide-up" style={{ animationDelay: `${i * 80}ms` }} onClick={() => navigate(kpi.path)}>
+                            <div key={i} className="card-hover cursor-pointer animate-slide-up flex flex-col justify-between" style={{ animationDelay: `${i * 80}ms` }} onClick={() => navigate(kpi.path)}>
                                 <div className="flex items-start justify-between">
-                                    <div className={`p-2.5 rounded-2xl ${kpi.iconBg}`}><kpi.icon size={20} className={kpi.iconColor} /></div>
-                                    <ArrowUpRight size={16} className="text-slate-300 dark:text-slate-600" />
+                                    <div className={`p-3 rounded-2xl ${kpi.iconBg}`}><kpi.icon size={22} className={kpi.iconColor} /></div>
+                                    <ArrowUpRight size={18} className="text-slate-300 dark:text-slate-600" />
                                 </div>
-                                <p className="text-3xl font-extrabold mt-4">{kpi.value}</p>
-                                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 mt-1">{kpi.label}</p>
-                                <p className="text-xs text-slate-400 mt-0.5">{kpi.desc}</p>
+                                <div className="mt-6">
+                                    <p className="text-4xl font-black">{kpi.value}</p>
+                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200 mt-2">{kpi.label}</p>
+                                    <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-400 mt-1">{kpi.desc}</p>
+                                </div>
                             </div>
                         ))}
                     </div>
 
                     {/* Paineis de Conformidade Individuais */}
                     <div className="lg:col-span-4 flex flex-col gap-4">
-                        {/* Licenças */}
-                        <div className="card flex flex-col items-center justify-center py-5">
-                            <ComplianceGauge value={stats.compliance_rate} title="Conformidade Licenças" />
-                            <div className="grid grid-cols-3 gap-2 mt-4 w-full px-2">
-                                <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?status=Válida')}>
-                                    <p className="text-sm font-bold text-emerald-500">{stats.licencas_validas}</p>
-                                    <p className="text-[9px] text-slate-400 uppercase tracking-wider">Válidas</p>
-                                </div>
-                                <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?status=Vencendo')}>
-                                    <p className="text-sm font-bold text-amber-500">{stats.vencendo_90_dias}</p>
-                                    <p className="text-[9px] text-slate-400 uppercase tracking-wider">Vencendo</p>
-                                </div>
-                                <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?status=Vencida')}>
-                                    <p className="text-sm font-bold text-red-500">{stats.licencas_vencidas}</p>
-                                    <p className="text-[9px] text-slate-400 uppercase tracking-wider">Vencidas</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Outorgas */}
-                        <div className="card flex flex-col items-center justify-center py-5">
-                            <ComplianceGauge value={statsOutorgas.compliance} title="Conformidade Outorgas" />
-                            <div className="grid grid-cols-3 gap-2 mt-4 w-full px-2">
-                                <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?tab=outorgas&status=Válida')}>
-                                    <p className="text-sm font-bold text-emerald-500">{statsOutorgas.validas}</p>
-                                    <p className="text-[9px] text-slate-400 uppercase tracking-wider">Válidas</p>
-                                </div>
-                                <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?tab=outorgas&status=Vencendo')}>
-                                    <p className="text-sm font-bold text-amber-500">{statsOutorgas.vencendo}</p>
-                                    <p className="text-[9px] text-slate-400 uppercase tracking-wider">Vencendo</p>
-                                </div>
-                                <div className="text-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/licencas?tab=outorgas&status=Vencida')}>
-                                    <p className="text-sm font-bold text-red-500">{statsOutorgas.vencidas}</p>
-                                    <p className="text-[9px] text-slate-400 uppercase tracking-wider">Vencidas</p>
-                                </div>
-                            </div>
-                        </div>
+                        <ComplianceMetric
+                            title="Conformidade Licenças"
+                            type="licencas"
+                            stats={{ compliance: stats.compliance_rate, validas: stats.licencas_validas, vencendo: stats.vencendo_90_dias, vencidas: stats.licencas_vencidas }}
+                            onClickParam=""
+                        />
+                        <ComplianceMetric
+                            title="Conformidade Outorgas"
+                            type="outorgas"
+                            stats={{ compliance: statsOutorgas.compliance, validas: statsOutorgas.validas, vencendo: statsOutorgas.vencendo, vencidas: statsOutorgas.vencidas }}
+                            onClickParam="tab=outorgas&"
+                        />
 
                         {/* Mensagem Motivacional */}
                         {(stats.compliance_rate < 100 || statsOutorgas.compliance < 100) ? (
-                            <div className="text-center">
-                                <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 py-1.5 px-3 rounded-lg inline-block w-full">🚀 Rumo aos 100%!</p>
+                            <div className="text-center mt-2">
+                                <span className="text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 w-full border border-amber-100 dark:border-amber-500/20 shadow-sm">
+                                    🚀 Rumo aos 100% de conformidade!
+                                </span>
                             </div>
                         ) : (
-                            <div className="text-center">
-                                <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 py-1.5 px-3 rounded-lg inline-block w-full">🏆 100% Garantido!</p>
+                            <div className="text-center mt-2">
+                                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 w-full border border-emerald-100 dark:border-emerald-500/20 shadow-sm">
+                                    🏆 100% Garantido! Trabalho excelente.
+                                </span>
                             </div>
                         )}
                     </div>
