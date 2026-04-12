@@ -111,9 +111,9 @@
     @apply inline-flex items-center justify-center gap-2 rounded-2xl bg-transparent text-slate-500 dark:text-slate-400 font-medium text-sm h-11 px-5 transition-all duration-200 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400;
   }
 
-  /* ═══ Cards — Activity Planner style: high radius, soft shadows, airy ═══ */
+  /* ═══ Cards — Activity Planner style: soft shadows, airy ═══ */
   .card {
-    @apply border rounded-2xl p-5 sm:p-7 transition-all duration-300;
+    @apply border rounded-lg p-5 sm:p-7 transition-all duration-300;
     background: var(--app-surface);
     border-color: var(--app-surface-border);
     box-shadow: var(--app-shadow);
