@@ -63,11 +63,15 @@ export default function Sidebar() {
 
             {/* Sidebar */}
             <aside
+                style={{
+                    background: 'var(--app-surface)',
+                    borderColor: 'var(--app-surface-border)'
+                }}
                 className={`
           fixed md:static inset-y-0 left-0 z-50
           w-[260px] flex-shrink-0 flex flex-col
-          bg-white/80 dark:bg-[#0d1a14]/90 backdrop-blur-xl
-          border-r border-slate-100 dark:border-white/[0.05]
+          backdrop-blur-xl
+          border-r
           transition-transform duration-300
           ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
@@ -125,7 +129,7 @@ export default function Sidebar() {
                         <Palette size={18} />
                         <span className="capitalize">Tema: {theme}</span>
                     </div>
-                    <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-100 dark:border-white/10">
+                    <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl border" style={{ background: 'var(--app-surface-hover)', borderColor: 'var(--app-surface-border)' }}>
                         {themeOptions.map(option => {
                             const active = theme === option.id
                             return (
@@ -143,7 +147,7 @@ export default function Sidebar() {
                             )
                         })}
                     </div>
-                    <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03]">
+                    <div className="flex items-center gap-3 p-3 rounded-2xl" style={{ background: 'var(--app-surface-hover)' }}>
                         {userAvatar ? (
                             <img src={userAvatar} alt={userName} className="w-9 h-9 rounded-xl object-cover shadow-sm" referrerPolicy="no-referrer" />
                         ) : (

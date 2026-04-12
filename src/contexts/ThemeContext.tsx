@@ -32,11 +32,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         const themeClasses = THEMES.map(t => `theme-${t}`)
 
         root.classList.remove(...themeClasses)
-        body.classList.remove(...themeClasses)
 
         const activeThemeClass = `theme-${theme}`
         root.classList.add(activeThemeClass)
-        body.classList.add(activeThemeClass)
 
         // Keep Tailwind dark variants active for dark visual systems.
         if (theme === 'moderno' || theme === 'galaxy') {

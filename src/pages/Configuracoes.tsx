@@ -201,7 +201,7 @@ export default function Configuracoes() {
             {/* Aparência */}
             <section className="card">
                 <div className="flex items-center gap-3 mb-6">
-                    {theme === 'dark' ? <Moon size={18} className="text-emerald-500" /> : <Sun size={18} className="text-emerald-500" />}
+                    {theme === 'moderno' || theme === 'galaxy' ? <Moon size={18} className="text-emerald-500" /> : <Sun size={18} className="text-emerald-500" />}
                     <h3 className="font-bold">Aparência</h3>
                 </div>
                 <div className="flex items-center justify-between">
@@ -210,7 +210,7 @@ export default function Configuracoes() {
                         <p className="text-xs text-slate-400">Alterne entre modo claro e escuro</p>
                     </div>
                     <button onClick={toggleTheme} className="relative w-12 h-7 rounded-full bg-slate-200 dark:bg-emerald-500 transition-colors">
-                        <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform ${theme === 'dark' ? 'translate-x-6' : 'translate-x-1'}`} />
+                        <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform ${theme === 'moderno' || theme === 'galaxy' ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
                 </div>
             </section>
