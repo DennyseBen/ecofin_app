@@ -8,10 +8,29 @@ self.addEventListener('install', (e) => {
             '/logo.png'
         ]))
     );
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', (e) => {
+    e.waitUntil(
+        caches.keys().then((names) =>
+            Promise.all(
+                names.map((name) => name !== CACHE_NAME ? caches.delete(name) : undefined)
+            )
+        )
+    );
+    self.clients.claim();
 });
 
 self.addEventListener('fetch', (e) => {
+    // Skip cross-origin and problematic requests
+    if (e.request.method !== 'GET' || !e.request.url.includes(self.location.origin)) {
+        return;
+    }
+
     e.respondWith(
-        caches.match(e.request).then((response) => response || fetch(e.request))
+        caches.match(e.request)
+            .then((response) => response || fetch(e.request))
+            .catch(() => caches.match('/index.html'))
     );
 });

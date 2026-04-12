@@ -94,7 +94,14 @@
       "mcp__claude_ai_Supabase__get_project",
       "mcp__claude_ai_Vercel__list_deployments",
       "mcp__claude_ai_Vercel__deploy_to_vercel",
-      "Bash(npx vercel:*)"
+      "Bash(npx vercel:*)",
+      "Bash(vercel deploy:*)",
+      "Bash(curl -I https://ecofinmanager.onoticial.com.br/)",
+      "Bash(curl -s https://ecofinmanager.onoticial.com.br/)",
+      "Bash(git rm:*)",
+      "Bash(git reset:*)",
+      "Bash(git restore:*)",
+      "Bash(curl -s -w \"\\\\nStatus: %{http_code}\\\\n\" -I https://ecofinmanager.onoticial.com.br/)"
     ]
   }
 }
