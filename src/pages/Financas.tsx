@@ -5,8 +5,6 @@ import { fetchContratos, fetchFaturas, insertContrato, updateContrato, deleteCon
 import type { ContratoMensal, FaturaNfe, Cliente, NfseStatus } from '../lib/types'
 import { isNfseConfigurado, getAmbiente } from '../lib/focusnfe'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
 
 // Utils
 const formatCurrency = (val: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
@@ -169,8 +167,13 @@ export default function Financas() {
         finally { setIsGenerating(false) }
     }
 
-    // PDF Generator
-    const generatePDF = (fatura: FaturaNfe) => {
+    // PDF Generator (lazy-loaded to reduce bundle size)
+    const generatePDF = async (fatura: FaturaNfe) => {
+        const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+            import('jspdf'),
+            import('jspdf-autotable')
+        ])
+
         const doc = new jsPDF()
         const clienteRecord = clientes.find(c => c.id === fatura.cliente_id)
 
@@ -423,7 +426,7 @@ export default function Financas() {
                                                     </select>
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
-                                                    <button className="flex items-center justify-end gap-1.5 text-xs font-bold text-emerald-500 hover:underline ml-auto" onClick={() => generatePDF(f)}><Download size={14} /> PDF</button>
+                                                    <button className="flex items-center justify-end gap-1.5 text-xs font-bold text-emerald-500 hover:underline ml-auto" onClick={() => generatePDF(f).catch(err => alert('Erro ao gerar PDF: ' + err.message))}><Download size={14} /> PDF</button>
                                                 </td>
                                             </tr>
                                         ))}

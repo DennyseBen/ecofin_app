@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EcoFin Manager - Debug</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0a1410;
+            color: #e6f3eb;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #10b981;
+            border-bottom: 2px solid #10b981;
+            padding-bottom: 10px;
+        }
+        .check {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 4px solid #10b981;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .check.error {
+            border-left-color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+        .check.warning {
+            border-left-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+        }
+        code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: "Courier New", monospace;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            background: rgba(16, 185, 129, 0.15);
+        }
+        pre {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 EcoFin Manager - Diagnóstico</h1>
+
+        <div id="status-container"></div>
+
+        <h2>Verificações realizadas:</h2>
+        <div id="checks"></div>
+
+        <h2>Console (últimos 50 logs):</h2>
+        <pre id="console-logs"></pre>
+
+        <div class="status">
+            <p><strong>Próximos passos:</strong></p>
+            <ol>
+                <li>Abra o DevTools (F12)</li>
+                <li>Vá para a aba "Console"</li>
+                <li>Procure por mensagens de erro em vermelho</li>
+                <li>Verifique a aba "Network" para 404s ou timeouts</li>
+                <li>Compartilhe os erros encontrados</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const checks = [];
+        const consoleLogs = [];
+
+        // Interceptar console
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        console.log = function(...args) {
+            consoleLogs.push(`[LOG] ${args.join(' ')}`);
+            originalLog.apply(console, args);
+        };
+
+        console.error = function(...args) {
+            consoleLogs.push(`[ERROR] ${args.join(' ')}`);
+            originalError.apply(console, args);
+        };
+
+        console.warn = function(...args) {
+            consoleLogs.push(`[WARN] ${args.join(' ')}`);
+            originalWarn.apply(console, args);
+        };
+
+        function addCheck(name, passed, message) {
+            checks.push({ name, passed, message });
+        }
+
+        // Check 1: JavaScript habilitado
+        addCheck('JavaScript', true, 'JavaScript está habilitado ✓');
+
+        // Check 2: DOM pronto
+        addCheck('DOM', document.readyState === 'loading' ? false : true,
+            `DOM State: ${document.readyState}`);
+
+        // Check 3: Elemento root
+        const rootElement = document.getElementById('root');
+        addCheck('Elemento #root', !!rootElement,
+            rootElement ? 'Elemento root encontrado ✓' : 'Elemento root NÃO encontrado ✗');
+
+        // Check 4: LocalStorage
+        let localStorageWorks = true;
+        try {
+            localStorage.setItem('_test', '1');
+            localStorage.removeItem('_test');
+        } catch {
+            localStorageWorks = false;
+        }
+        addCheck('LocalStorage', localStorageWorks,
+            localStorageWorks ? 'LocalStorage funcional ✓' : 'LocalStorage desabilitado ✗');
+
+        // Check 5: Supabase configurado
+        const supabaseUrl = 'https://yhpopgxhqtfhghqzswbn.supabase.co';
+        addCheck('Supabase', true, `URL: ${supabaseUrl}`);
+
+        // Check 6: Assets carregados
+        const scripts = document.querySelectorAll('script[src*="/assets/"]');
+        const links = document.querySelectorAll('link[href*="/assets/"]');
+        addCheck('Assets (initial)', scripts.length > 0 || links.length > 0,
+            `Scripts: ${scripts.length}, CSS: ${links.length}`);
+
+        // Render checks
+        const checksHtml = checks.map(check => `
+            <div class="check ${check.passed ? '' : 'error'}">
+                <strong>${check.name}</strong>: ${check.message}
+            </div>
+        `).join('');
+
+        document.getElementById('checks').innerHTML = checksHtml;
+
+        // Monitor para carregamento do app
+        const maxWait = 15000; // 15 segundos
+        const checkInterval = setInterval(() => {
+            const consoleLogs = document.getElementById('console-logs');
+            consoleLogs.textContent = consoleLogs.slice(-50).join('\n');
+        }, 500);
+
+        setTimeout(() => {
+            clearInterval(checkInterval);
+
+            const appLoaded = document.querySelector('div[class*="theme-"], [role="main"], .sidebar');
+
+            if (appLoaded) {
+                document.getElementById('status-container').innerHTML = `
+                    <div class="status" style="background: rgba(34, 197, 94, 0.15); border-left: 4px solid #22c55e;">
+                        <strong style="color: #22c55e;">✓ App carregado com sucesso!</strong>
+                    </div>
+                `;
+            } else {
+                document.getElementById('status-container').innerHTML = `
+                    <div class="status" style="background: rgba(239, 68, 68, 0.15); border-left: 4px solid #ef4444;">
+                        <strong style="color: #ef4444;">✗ App não carregou após ${maxWait/1000}s</strong>
+                        <p>Verifique o console (F12) para erros</p>
+                    </div>
+                `;
+            }
+        }, maxWait);
+
+        console.log('🔍 Página de diagnóstico ativa - monitorando carregamento...');
+    </script>
+</body>
+</html>
