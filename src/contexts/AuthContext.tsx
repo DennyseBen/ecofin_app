@@ -84,15 +84,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            loadProfile(session?.user ?? null)
-        })
+        let isMounted = true
+
+        const initAuth = async () => {
+            try {
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Auth session timeout')), 5000)
+                )
+
+                const sessionPromise = supabase.auth.getSession().then(({ data: { session } }) => {
+                    if (isMounted) loadProfile(session?.user ?? null)
+                })
+
+                await Promise.race([sessionPromise, timeoutPromise])
+            } catch (error) {
+                console.error('Error initializing auth:', error)
+                if (isMounted) {
+                    setUser(null)
+                    setProfile(null)
+                    setLoading(false)
+                }
+            }
+        }
+
+        initAuth()
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            loadProfile(session?.user ?? null)
+            if (isMounted) loadProfile(session?.user ?? null)
         })
 
-        return () => subscription.unsubscribe()
+        return () => {
+            isMounted = false
+            subscription.unsubscribe()
+        }
     }, [])
 
     const refreshProfile = async () => {

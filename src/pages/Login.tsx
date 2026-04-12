@@ -18,8 +18,11 @@ export default function Login() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#0a1410]">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a1410] via-[#0d1a14] to-[#081210]">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+                    <p className="text-white/60 text-sm">Carregando...</p>
+                </div>
             </div>
         )
     }
