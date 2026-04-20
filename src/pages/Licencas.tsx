@@ -246,9 +246,11 @@ export default function Licencas() {
     const filteredLicencas = useMemo(() => {
         return licencas.filter(c => {
             const s = search.toLowerCase()
+            const sCnpj = s.replace(/\D/g, '')
             const matchSearch = String(c.razao_social || '').toLowerCase().includes(s) ||
                 String(c.pasta || '').includes(s) ||
-                String(c.atividade_licenciada || '').toLowerCase().includes(s)
+                String(c.atividade_licenciada || '').toLowerCase().includes(s) ||
+                (sCnpj.length > 0 && String(c.cnpj || '').replace(/\D/g, '').includes(sCnpj))
             const matchType = filterType === 'all' || normalizeTipo(c.tipo) === filterType
             const computed = computeStatus(c)
             const matchStatus = filterStatus === 'all' || computed === filterStatus
@@ -260,9 +262,11 @@ export default function Licencas() {
     const filteredOutorgas = useMemo(() => {
         return outorgas.filter(o => {
             const s = search.toLowerCase()
+            const sCnpj = s.replace(/\D/g, '')
             const matchSearch = String(o.razao_social || '').toLowerCase().includes(s) ||
                 String(o.tipo || '').toLowerCase().includes(s) ||
-                String(o.numero_outorga || '').toLowerCase().includes(s)
+                String(o.numero_outorga || '').toLowerCase().includes(s) ||
+                (sCnpj.length > 0 && String(o.cnpj || '').replace(/\D/g, '').includes(sCnpj))
             const matchStatus = filterStatus === 'all' || computeStatus(o) === filterStatus
             const matchRenovar = !filterRenovar || isInAlertZone(o)
             return matchSearch && matchStatus && matchRenovar
@@ -441,7 +445,7 @@ export default function Licencas() {
             <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
                     <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300" />
-                    <input className="form-input pl-10" placeholder="Pesquisar..." value={search} onChange={e => setSearch(e.target.value)} />
+                    <input className="form-input pl-10" placeholder="Pesquisar por empresa, pasta ou CNPJ..." value={search} onChange={e => setSearch(e.target.value)} />
                 </div>
                 {activeTab === 'Licenças' && (
                     <select className="form-select w-full sm:w-44" value={filterType} onChange={e => setFilterType(e.target.value)}>
