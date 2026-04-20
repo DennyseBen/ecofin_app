@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useRealtime } from '../hooks/useRealtime'
-import { Search, Plus, FileText, Calendar, Building2, X, Edit2, Trash2, Save, ExternalLink, Eye, Droplets, AlertTriangle, RotateCcw, ChevronDown, ChevronUp, ClipboardList, Paperclip, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, Plus, FileText, Calendar, Building2, X, Edit2, Trash2, Save, ExternalLink, Eye, Droplets, AlertTriangle, RotateCcw, ChevronDown, ChevronUp, ClipboardList, Paperclip, Loader2, ChevronLeft, ChevronRight, Download } from 'lucide-react'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import { useSearchParams } from 'react-router-dom'
 import { useSupabase } from '../hooks/useSupabase'
 import { fetchLicencas, insertLicenca, updateLicenca, deleteLicenca, fetchClientes, fetchOutorgas, insertOutorga, updateOutorga, deleteOutorga, consultarCNPJ } from '../lib/api'
@@ -12,6 +14,133 @@ const formatDate = (d: string | null) => {
     if (!d) return '—'
     const [y, m, day] = d.split('T')[0].split('-')
     return `${day}/${m}/${y}`
+}
+
+function fmtMonthYear(d: string | null): string {
+    if (!d) return ''
+    const [y, m] = d.split('T')[0].split('-')
+    return `${m}/${y}`
+}
+
+function exportRelatorio(licencas: Licenca[], outorgas: Outorga[]) {
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+    const pageW = doc.internal.pageSize.getWidth()
+    const today = new Date()
+    const mesAno = today.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase()
+
+    const headerFill: [number, number, number] = [74, 95, 75]
+    const alertFill: [number, number, number] = [255, 237, 213]
+    const alertText: [number, number, number] = [180, 60, 20]
+
+    // Title
+    doc.setFontSize(13)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`RELATÓRIO DE RENOVAÇÕES — ${mesAno}`, pageW / 2, 14, { align: 'center' })
+    doc.setFontSize(8)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(120)
+    doc.text(`Gerado em ${today.toLocaleDateString('pt-BR')}`, pageW / 2, 20, { align: 'center' })
+    doc.setTextColor(0)
+
+    // ── Licenças ──
+    if (licencas.length > 0) {
+        doc.setFontSize(10)
+        doc.setFont('helvetica', 'bold')
+        doc.text('Licenças', 14, 28)
+
+        autoTable(doc, {
+            startY: 31,
+            head: [['Processos', 'Razão Social', 'Cidade', 'RIAA', 'Órgão', 'Renovação', 'Técnico', 'Verificar']],
+            body: licencas.map(l => {
+                const inAlert = isInAlertZone(l)
+                return {
+                    cells: [
+                        l.processo || (l.pasta ? String(l.pasta) : ''),
+                        l.razao_social,
+                        l.cidade || '',
+                        fmtMonthYear(l.data_riaa),
+                        l.departamento || '',
+                        formatDate(l.data_renovacao),
+                        '',
+                        '',
+                    ],
+                    isAlert: inAlert,
+                }
+            }).map(r => r.cells),
+            didParseCell: (data) => {
+                if (data.section === 'body') {
+                    const l = licencas[data.row.index]
+                    if (l && isInAlertZone(l)) {
+                        data.cell.styles.fillColor = alertFill
+                        data.cell.styles.textColor = alertText
+                        data.cell.styles.fontStyle = 'bold'
+                    }
+                }
+            },
+            headStyles: {
+                fillColor: headerFill,
+                textColor: [255, 255, 255],
+                fontStyle: 'bold',
+                halign: 'center',
+                fontSize: 8,
+            },
+            bodyStyles: { halign: 'center', fontSize: 7.5, cellPadding: 2 },
+            columnStyles: {
+                1: { halign: 'left', cellWidth: 60 },
+                2: { cellWidth: 36 },
+            },
+            alternateRowStyles: { fillColor: [248, 250, 248] },
+        })
+    }
+
+    // ── Outorgas ──
+    if (outorgas.length > 0) {
+        const afterLic = (doc as any).lastAutoTable?.finalY ?? 30
+        doc.setFontSize(10)
+        doc.setFont('helvetica', 'bold')
+        doc.text('Outorgas', 14, afterLic + 10)
+
+        autoTable(doc, {
+            startY: afterLic + 13,
+            head: [['Processos', 'Razão Social', 'Cidade', 'Relatório', 'Outorga', 'Renovação', 'Técnico', 'Verificar']],
+            body: outorgas.map(o => [
+                o.numero_outorga || '',
+                o.razao_social,
+                '',
+                fmtMonthYear(o.data_riaa),
+                o.tipo,
+                formatDate(o.data_renovacao),
+                '',
+                '',
+            ]),
+            didParseCell: (data) => {
+                if (data.section === 'body') {
+                    const o = outorgas[data.row.index]
+                    if (o && isInAlertZone(o)) {
+                        data.cell.styles.fillColor = alertFill
+                        data.cell.styles.textColor = alertText
+                        data.cell.styles.fontStyle = 'bold'
+                    }
+                }
+            },
+            headStyles: {
+                fillColor: headerFill,
+                textColor: [255, 255, 255],
+                fontStyle: 'bold',
+                halign: 'center',
+                fontSize: 8,
+            },
+            bodyStyles: { halign: 'center', fontSize: 7.5, cellPadding: 2 },
+            columnStyles: {
+                1: { halign: 'left', cellWidth: 60 },
+                2: { cellWidth: 36 },
+            },
+            alternateRowStyles: { fillColor: [248, 250, 248] },
+        })
+    }
+
+    const filename = `renovacoes-${today.toISOString().slice(0, 7)}.pdf`
+    doc.save(filename)
 }
 
 function computeRenovacaoDate(validade: string | null, tipo: string): string | null {
@@ -425,6 +554,13 @@ export default function Licencas() {
                             A Renovar ({alertCount})
                         </button>
                     )}
+                    <button
+                        onClick={() => exportRelatorio(filteredLicencas, filteredOutorgas)}
+                        className="btn-ghost border border-slate-200 dark:border-white/10"
+                        title="Exportar tabela atual como PDF"
+                    >
+                        <Download size={16} /> Exportar PDF
+                    </button>
                     <button className="btn-primary" onClick={openNew}>
                         <Plus size={18} /> {activeTab === 'Outorgas' ? 'Nova Outorga' : 'Nova Licença'}
                     </button>
