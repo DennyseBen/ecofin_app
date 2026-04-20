@@ -276,6 +276,7 @@ export default function Licencas() {
     const [filterType, setFilterType] = useState(searchParams.get('tipo') || 'all')
     const [filterStatus, setFilterStatus] = useState(searchParams.get('status') || 'all')
     const [filterRenovar, setFilterRenovar] = useState(false)
+    const [filterDias, setFilterDias] = useState<number | null>(null)
     const [page, setPage] = useState(1)
     const PAGE_SIZE = 30
     const [selected, setSelected] = useState<Licenca | null>(null)
@@ -384,9 +385,10 @@ export default function Licencas() {
             const computed = computeStatus(c)
             const matchStatus = filterStatus === 'all' || computed === filterStatus
             const matchRenovar = !filterRenovar || isInAlertZone(c)
-            return matchSearch && matchType && matchStatus && matchRenovar
+            const matchDias = filterDias === null || (getDaysRemaining(c) !== null && getDaysRemaining(c)! <= filterDias)
+            return matchSearch && matchType && matchStatus && matchRenovar && matchDias
         })
-    }, [licencas, search, filterType, filterStatus, filterRenovar])
+    }, [licencas, search, filterType, filterStatus, filterRenovar, filterDias])
 
     const filteredOutorgas = useMemo(() => {
         return outorgas.filter(o => {
@@ -398,9 +400,10 @@ export default function Licencas() {
                 (sCnpj.length > 0 && String(o.cnpj || '').replace(/\D/g, '').includes(sCnpj))
             const matchStatus = filterStatus === 'all' || computeStatus(o) === filterStatus
             const matchRenovar = !filterRenovar || isInAlertZone(o)
-            return matchSearch && matchStatus && matchRenovar
+            const matchDias = filterDias === null || (getDaysRemaining(o) !== null && getDaysRemaining(o)! <= filterDias)
+            return matchSearch && matchStatus && matchRenovar && matchDias
         })
-    }, [outorgas, search, filterStatus, filterRenovar])
+    }, [outorgas, search, filterStatus, filterRenovar, filterDias])
 
     const activeFiltered = activeTab === 'Licenças' ? filteredLicencas : filteredOutorgas
     const totalPages = Math.ceil(activeFiltered.length / PAGE_SIZE)
@@ -408,7 +411,7 @@ export default function Licencas() {
 
     useEffect(() => {
         setPage(1)
-    }, [search, filterType, filterStatus, filterRenovar, activeTab])
+    }, [search, filterType, filterStatus, filterRenovar, filterDias, activeTab])
 
     const alertCount = useMemo(() => {
         return licencas.filter(isInAlertZone).length + outorgas.filter(isInAlertZone).length
@@ -594,6 +597,18 @@ export default function Licencas() {
                     <option value="Válida">Válida</option>
                     <option value="Vencendo">Vencendo</option>
                     <option value="Vencida">Vencida</option>
+                </select>
+                <select
+                    className="form-select w-full sm:w-44"
+                    value={filterDias ?? ''}
+                    onChange={e => setFilterDias(e.target.value === '' ? null : Number(e.target.value))}
+                >
+                    <option value="">Todos os prazos</option>
+                    <option value="60">Vence em 60 dias</option>
+                    <option value="90">Vence em 90 dias</option>
+                    <option value="120">Vence em 120 dias</option>
+                    <option value="150">Vence em 150 dias</option>
+                    <option value="180">Vence em 180 dias</option>
                 </select>
             </div>
 
