@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ecofin-cache-v3';
+const CACHE_NAME = 'ecofin-cache-v4';
 const STATIC_ASSETS = ['/logo.png'];
 
 self.addEventListener('install', (e) => {
@@ -29,7 +29,6 @@ self.addEventListener('fetch', (e) => {
         url.pathname === '/' || url.pathname === '/index.html';
 
     if (isHTML) {
-        // Network-first for HTML: always get the latest index.html
         e.respondWith(
             fetch(e.request)
                 .catch(() => caches.match('/index.html'))
@@ -37,7 +36,6 @@ self.addEventListener('fetch', (e) => {
         return;
     }
 
-    // Cache-first for hashed static assets (JS, CSS, images)
     e.respondWith(
         caches.match(e.request).then((cached) => {
             if (cached) return cached;
