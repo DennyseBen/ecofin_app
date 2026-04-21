@@ -378,6 +378,7 @@ export default function Licencas() {
             const s = search.toLowerCase()
             const sCnpj = s.replace(/\D/g, '')
             const matchSearch = String(c.razao_social || '').toLowerCase().includes(s) ||
+                String(c.cnpj || '').toLowerCase().includes(s) ||
                 String(c.pasta || '').includes(s) ||
                 String(c.atividade_licenciada || '').toLowerCase().includes(s) ||
                 (sCnpj.length > 0 && String(c.cnpj || '').replace(/\D/g, '').includes(sCnpj))
@@ -395,6 +396,7 @@ export default function Licencas() {
             const s = search.toLowerCase()
             const sCnpj = s.replace(/\D/g, '')
             const matchSearch = String(o.razao_social || '').toLowerCase().includes(s) ||
+                String(o.cnpj || '').toLowerCase().includes(s) ||
                 String(o.tipo || '').toLowerCase().includes(s) ||
                 String(o.numero_outorga || '').toLowerCase().includes(s) ||
                 (sCnpj.length > 0 && String(o.cnpj || '').replace(/\D/g, '').includes(sCnpj))
