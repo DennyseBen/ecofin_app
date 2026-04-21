@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ecofin-cache-v2';
+const CACHE_NAME = 'ecofin-cache-v3';
 const STATIC_ASSETS = ['/logo.png'];
 
 self.addEventListener('install', (e) => {
