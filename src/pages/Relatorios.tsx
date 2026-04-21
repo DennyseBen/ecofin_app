@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Search, Download, FileText, Calendar, Building2, AlertCircle } from 'lucide-react'
+import { Search, Download, FileText, Calendar, Building2, AlertCircle, Printer } from 'lucide-react'
 import { useSupabase } from '../hooks/useSupabase'
 import { fetchLicencas, fetchOutorgas, fetchClientes } from '../lib/api'
 import type { Licenca, Outorga } from '../lib/types'
@@ -19,6 +19,7 @@ interface RelatorioItem {
     cnpj: string | null
     tipo_documento: string
     validade: string | null
+    data_renovacao: string | null
     dias_restantes: number
     processo?: string | null
     numero_outorga?: string | null
@@ -50,10 +51,13 @@ export default function Relatorios() {
 
         // Processar licenças
         licencas.forEach(lic => {
-            if (!lic.validade) return
-            const valDate = new Date(lic.validade)
-            valDate.setHours(0, 0, 0, 0)
-            const diasRestantes = Math.floor((valDate.getTime() - today.getTime()) / 86400000)
+            // Usar data_renovacao se existir, senão calcular pela validade
+            const dataRef = lic.data_renovacao || lic.validade
+            if (!dataRef) return
+
+            const refDate = new Date(dataRef)
+            refDate.setHours(0, 0, 0, 0)
+            const diasRestantes = Math.floor((refDate.getTime() - today.getTime()) / 86400000)
 
             // Filtrar: entre hoje e prazo limite
             if (diasRestantes >= 0 && diasRestantes <= prazoLimit) {
@@ -64,6 +68,7 @@ export default function Relatorios() {
                     cnpj: lic.cnpj,
                     tipo_documento: lic.tipo,
                     validade: lic.validade,
+                    data_renovacao: lic.data_renovacao,
                     dias_restantes: diasRestantes,
                     processo: lic.processo
                 })
@@ -72,10 +77,13 @@ export default function Relatorios() {
 
         // Processar outorgas
         outorgas.forEach(out => {
-            if (!out.validade) return
-            const valDate = new Date(out.validade)
-            valDate.setHours(0, 0, 0, 0)
-            const diasRestantes = Math.floor((valDate.getTime() - today.getTime()) / 86400000)
+            // Usar data_renovacao se existir, senão calcular pela validade
+            const dataRef = out.data_renovacao || out.validade
+            if (!dataRef) return
+
+            const refDate = new Date(dataRef)
+            refDate.setHours(0, 0, 0, 0)
+            const diasRestantes = Math.floor((refDate.getTime() - today.getTime()) / 86400000)
 
             if (diasRestantes >= 0 && diasRestantes <= prazoLimit) {
                 result.push({
@@ -85,6 +93,7 @@ export default function Relatorios() {
                     cnpj: out.cnpj,
                     tipo_documento: out.tipo,
                     validade: out.validade,
+                    data_renovacao: out.data_renovacao,
                     dias_restantes: diasRestantes,
                     numero_outorga: out.numero_outorga
                 })
@@ -137,29 +146,35 @@ export default function Relatorios() {
             item.cnpj || '—',
             item.tipo_documento,
             item.processo || item.numero_outorga || '—',
+            formatDate(item.data_renovacao),
             formatDate(item.validade),
             item.dias_restantes.toString()
         ])
 
         autoTable(doc, {
-            head: [['Tipo', 'Razão Social', 'CNPJ', 'Documento', 'Processo/Nº', 'Validade', 'Dias']],
+            head: [['Tipo', 'Razão Social', 'CNPJ', 'Documento', 'Processo/Nº', 'Renovação', 'Validade', 'Dias']],
             body: tableData,
             startY: 45,
-            styles: { fontSize: 8, cellPadding: 2 },
+            styles: { fontSize: 7, cellPadding: 1.5 },
             headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
             alternateRowStyles: { fillColor: [245, 245, 245] },
             columnStyles: {
-                0: { cellWidth: 25 },
-                1: { cellWidth: 65 },
-                2: { cellWidth: 35 },
-                3: { cellWidth: 40 },
-                4: { cellWidth: 35 },
-                5: { cellWidth: 28 },
-                6: { cellWidth: 18, halign: 'center' }
+                0: { cellWidth: 22 },
+                1: { cellWidth: 58 },
+                2: { cellWidth: 30 },
+                3: { cellWidth: 35 },
+                4: { cellWidth: 30 },
+                5: { cellWidth: 24 },
+                6: { cellWidth: 24 },
+                7: { cellWidth: 16, halign: 'center' }
             }
         })
 
         doc.save(`relatorio_vencimentos_${prazo}dias_${new Date().toISOString().split('T')[0]}.pdf`)
+    }
+
+    const handlePrint = () => {
+        window.print()
     }
 
     return (
@@ -230,14 +245,24 @@ export default function Relatorios() {
                             {filtered.length === 1 ? 'alerta encontrado' : 'alertas encontrados'}
                         </span>
                     </div>
-                    <button
-                        onClick={generatePDF}
-                        disabled={filtered.length === 0}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 text-white font-bold text-sm hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-emerald-500/30"
-                    >
-                        <Download size={16} />
-                        Exportar PDF
-                    </button>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handlePrint}
+                            disabled={filtered.length === 0}
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-500 text-white font-bold text-sm hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-slate-500/30"
+                        >
+                            <Printer size={16} />
+                            Imprimir
+                        </button>
+                        <button
+                            onClick={generatePDF}
+                            disabled={filtered.length === 0}
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 text-white font-bold text-sm hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-emerald-500/30"
+                        >
+                            <Download size={16} />
+                            Exportar PDF
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -264,6 +289,7 @@ export default function Relatorios() {
                                     <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">CNPJ</th>
                                     <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Documento</th>
                                     <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Processo/Nº</th>
+                                    <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Renovação</th>
                                     <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Validade</th>
                                     <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Dias Restantes</th>
                                 </tr>
@@ -294,6 +320,14 @@ export default function Relatorios() {
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-2 text-sm">
+                                                <Calendar size={14} className="text-amber-500" />
+                                                <span className="font-semibold text-amber-700 dark:text-amber-400">
+                                                    {formatDate(item.data_renovacao)}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                                                 <Calendar size={14} className="text-slate-400" />
                                                 {formatDate(item.validade)}
                                             </div>
