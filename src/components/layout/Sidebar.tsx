@@ -3,7 +3,7 @@ import { useTheme } from '../../contexts/ThemeContext'
 import { useAuth } from '../../contexts/AuthContext'
 import {
     LayoutDashboard, Users, FileText, Wallet, ClipboardList,
-    Settings, Bell, Palette,
+    Settings, Bell, Palette, BarChart3,
     Menu, X, LogOut, ShieldCheck
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
@@ -31,6 +31,7 @@ export default function Sidebar() {
         { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
         { to: '/clientes', icon: Users, label: 'Clientes' },
         { to: '/licencas', icon: FileText, label: 'Licenças' },
+        { to: '/relatorios', icon: BarChart3, label: 'Relatórios' },
         { to: '/notificacoes', icon: Bell, label: 'Notificações', badge: alertCount > 0 ? alertCount : undefined },
         { to: '/financeiro', icon: Wallet, label: 'Finanças' },
         { to: '/processos', icon: ClipboardList, label: 'Processos' },

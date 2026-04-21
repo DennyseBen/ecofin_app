@@ -247,6 +247,7 @@ export default function Licencas() {
         return licencas.filter(c => {
             const s = search.toLowerCase()
             const matchSearch = String(c.razao_social || '').toLowerCase().includes(s) ||
+                String(c.cnpj || '').toLowerCase().includes(s) ||
                 String(c.pasta || '').includes(s) ||
                 String(c.atividade_licenciada || '').toLowerCase().includes(s)
             const matchType = filterType === 'all' || normalizeTipo(c.tipo) === filterType
@@ -261,6 +262,7 @@ export default function Licencas() {
         return outorgas.filter(o => {
             const s = search.toLowerCase()
             const matchSearch = String(o.razao_social || '').toLowerCase().includes(s) ||
+                String(o.cnpj || '').toLowerCase().includes(s) ||
                 String(o.tipo || '').toLowerCase().includes(s) ||
                 String(o.numero_outorga || '').toLowerCase().includes(s)
             const matchStatus = filterStatus === 'all' || computeStatus(o) === filterStatus
