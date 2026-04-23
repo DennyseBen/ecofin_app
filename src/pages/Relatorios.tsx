@@ -104,9 +104,11 @@ export default function Relatorios() {
     const filtered = useMemo(() => {
         if (!search) return items
         const s = search.toLowerCase()
+        const sCnpj = s.replace(/\D/g, '')
         return items.filter(item =>
             item.razao_social.toLowerCase().includes(s) ||
-            (item.cnpj && item.cnpj.toLowerCase().includes(s))
+            (item.cnpj && item.cnpj.toLowerCase().includes(s)) ||
+            (sCnpj.length > 0 && (item.cnpj || '').replace(/\D/g, '').includes(sCnpj))
         )
     }, [items, search])
 
