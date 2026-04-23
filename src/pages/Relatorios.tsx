@@ -10,7 +10,7 @@ const formatDate = (d: string | null) => {
     return `${day}/${m}/${y}`
 }
 
-type PrazoOption = '60' | '120' | '180'
+type PrazoOption = '30' | '60' | '120' | '180'
 
 interface RelatorioItem {
     id: number
@@ -27,7 +27,7 @@ interface RelatorioItem {
 
 export default function Relatorios() {
     const [search, setSearch] = useState('')
-    const [prazo, setPrazo] = useState<PrazoOption>('120')
+    const [prazo, setPrazo] = useState<PrazoOption>('60')
 
     const { data: licencas, loading: loadingLic } = useSupabase(fetchLicencas, [])
     const { data: outorgas, loading: loadingOut } = useSupabase(fetchOutorgas, [])
@@ -36,9 +36,10 @@ export default function Relatorios() {
     const loading = loadingLic || loadingOut
 
     const prazoConfig = {
+        '30': { label: 'Urgente', dias: 30 },
         '60': { label: 'Curto prazo', dias: 60 },
-        '120': { label: 'Prazo padrão', dias: 120 },
-        '180': { label: 'Outorgas hídricas', dias: 180 }
+        '120': { label: 'Médio prazo', dias: 120 },
+        '180': { label: 'Longo prazo', dias: 180 }
     }
 
     // Processar dados
@@ -49,17 +50,14 @@ export default function Relatorios() {
 
         const result: RelatorioItem[] = []
 
-        // Processar licenças
+        // Processar licenças — filtrar APENAS pela data de renovação
         licencas.forEach(lic => {
-            // Usar data_renovacao se existir, senão calcular pela validade
-            const dataRef = lic.data_renovacao || lic.validade
-            if (!dataRef) return
+            if (!lic.data_renovacao) return
 
-            const refDate = new Date(dataRef)
+            const refDate = new Date(lic.data_renovacao)
             refDate.setHours(0, 0, 0, 0)
             const diasRestantes = Math.floor((refDate.getTime() - today.getTime()) / 86400000)
 
-            // Filtrar: entre hoje e prazo limite
             if (diasRestantes >= 0 && diasRestantes <= prazoLimit) {
                 result.push({
                     id: lic.id,
@@ -75,13 +73,11 @@ export default function Relatorios() {
             }
         })
 
-        // Processar outorgas
+        // Processar outorgas — filtrar APENAS pela data de renovação
         outorgas.forEach(out => {
-            // Usar data_renovacao se existir, senão calcular pela validade
-            const dataRef = out.data_renovacao || out.validade
-            if (!dataRef) return
+            if (!out.data_renovacao) return
 
-            const refDate = new Date(dataRef)
+            const refDate = new Date(out.data_renovacao)
             refDate.setHours(0, 0, 0, 0)
             const diasRestantes = Math.floor((refDate.getTime() - today.getTime()) / 86400000)
 
@@ -133,7 +129,7 @@ export default function Relatorios() {
 
         doc.setFontSize(12)
         doc.setFont('helvetica', 'normal')
-        doc.text(`Relatório de Vencimentos - ${prazoConfig[prazo].label} (${prazoConfig[prazo].dias} dias)`, 15, 24)
+        doc.text(`Relatório de Renovações - ${prazoConfig[prazo].label} (${prazoConfig[prazo].dias} dias)`, 15, 24)
 
         doc.setFontSize(9)
         doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 15, 30)
@@ -170,7 +166,7 @@ export default function Relatorios() {
             }
         })
 
-        doc.save(`relatorio_vencimentos_${prazo}dias_${new Date().toISOString().split('T')[0]}.pdf`)
+        doc.save(`relatorio_renovacoes_${prazo}dias_${new Date().toISOString().split('T')[0]}.pdf`)
     }
 
     const handlePrint = () => {
@@ -187,7 +183,7 @@ export default function Relatorios() {
                         Relatórios
                     </h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                        Acompanhamento de licenças e outorgas por prazo de vencimento
+                        Acompanhamento de licenças e outorgas por prazo de renovação
                     </p>
                 </div>
             </div>
@@ -291,7 +287,7 @@ export default function Relatorios() {
                                     <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Processo/Nº</th>
                                     <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Renovação</th>
                                     <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Validade</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Dias Restantes</th>
+                                    <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Dias p/ Renovação</th>
                                 </tr>
                             </thead>
                             <tbody>
