@@ -124,7 +124,7 @@ export default function Financeiro() {
             {/* Modal: Nova/Editar Transação */}
             {(showNew || editing) && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => { setShowNew(false); setEditing(null) }}>
-                    <div className="bg-white dark:bg-[#0d1a14] rounded-3xl border border-slate-100 dark:border-white/[0.06] w-full max-w-lg p-8 shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
+                    <div className="bg-white dark:bg-[#0f172a] rounded-3xl border border-slate-100 dark:border-white/[0.06] w-full max-w-lg p-8 shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
                         <h2 className="text-xl font-extrabold mb-6">{editing ? 'Editar Transação' : 'Nova Transação'}</h2>
                         <div className="space-y-4">
                             <div><label className="text-xs font-semibold text-slate-500 mb-1 block">Descrição *</label><input className="form-input" value={form.descricao || ''} onChange={e => setForm((f: any) => ({ ...f, descricao: e.target.value }))} /></div>

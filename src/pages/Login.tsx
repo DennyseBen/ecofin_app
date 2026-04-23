@@ -18,7 +18,7 @@ export default function Login() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a1410] via-[#0d1a14] to-[#081210]">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0b1220] via-[#0f172a] to-[#081210]">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
                     <p className="text-white/60 text-sm">Carregando...</p>
@@ -59,7 +59,7 @@ export default function Login() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a1410] via-[#0d1a14] to-[#081210] p-4">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0b1220] via-[#0f172a] to-[#081210] p-4">
             <div className="w-full max-w-md">
                 <div className="text-center mb-8">
                     <div className="w-20 h-20 rounded-3xl bg-white/5 flex items-center justify-center mx-auto mb-4 overflow-hidden">
@@ -69,7 +69,7 @@ export default function Login() {
                     <p className="text-slate-400 text-sm mt-2">Gestão de licenciamento ambiental</p>
                 </div>
 
-                <div className="bg-[#0d1a14] border border-white/[0.06] rounded-3xl p-8 shadow-2xl">
+                <div className="bg-[#0f172a] border border-white/[0.06] rounded-3xl p-8 shadow-2xl">
                     <h2 className="text-xl font-bold text-white text-center mb-1">
                         {isForgotPassword ? 'Redefinir Senha' : isSignUp ? 'Criar Conta' : 'Bem-vindo'}
                     </h2>

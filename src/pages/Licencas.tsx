@@ -759,8 +759,8 @@ export default function Licencas() {
             {selected && (
                 <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setSelected(null)}>
                     <div className="absolute inset-0 bg-black/30" />
-                    <div className="relative w-full max-w-xl bg-white dark:bg-[#0d1a14] border-l border-slate-100 dark:border-white/[0.06] shadow-2xl h-full overflow-y-auto animate-slide-in-left" onClick={e => e.stopPropagation()}>
-                        <div className="sticky top-0 bg-white/95 dark:bg-[#0d1a14]/95 backdrop-blur-md border-b border-slate-100 dark:border-white/[0.06] p-6 z-10">
+                    <div className="relative w-full max-w-xl bg-white dark:bg-[#0f172a] border-l border-slate-100 dark:border-white/[0.06] shadow-2xl h-full overflow-y-auto animate-slide-in-left" onClick={e => e.stopPropagation()}>
+                        <div className="sticky top-0 bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-md border-b border-slate-100 dark:border-white/[0.06] p-6 z-10">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <div className="flex items-center gap-2 text-emerald-500 mb-1"><FileText size={16} /><span className="text-xs font-bold uppercase tracking-widest">{selected.tipo}</span></div>
@@ -878,8 +878,8 @@ export default function Licencas() {
             {selectedOutorga && (
                 <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setSelectedOutorga(null)}>
                     <div className="absolute inset-0 bg-black/30" />
-                    <div className="relative w-full max-w-xl bg-white dark:bg-[#0d1a14] border-l border-slate-100 dark:border-white/[0.06] shadow-2xl h-full overflow-y-auto animate-slide-in-left" onClick={e => e.stopPropagation()}>
-                        <div className="sticky top-0 bg-white/95 dark:bg-[#0d1a14]/95 backdrop-blur-md border-b border-slate-100 dark:border-white/[0.06] p-6 z-10">
+                    <div className="relative w-full max-w-xl bg-white dark:bg-[#0f172a] border-l border-slate-100 dark:border-white/[0.06] shadow-2xl h-full overflow-y-auto animate-slide-in-left" onClick={e => e.stopPropagation()}>
+                        <div className="sticky top-0 bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-md border-b border-slate-100 dark:border-white/[0.06] p-6 z-10">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <div className="flex items-center gap-2 text-sky-500 mb-1"><Droplets size={16} /><span className="text-xs font-bold uppercase tracking-widest">Outorga</span></div>
@@ -995,7 +995,7 @@ export default function Licencas() {
             {/* Modal: Nova Licença / Outorga */}
             {showNew && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowNew(false)}>
-                    <div className="bg-white dark:bg-[#0d1a14] rounded-3xl border border-slate-100 dark:border-white/[0.06] w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 shadow-2xl animate-fade-in" onClick={e => e.stopPropagation()}>
+                    <div className="bg-white dark:bg-[#0f172a] rounded-3xl border border-slate-100 dark:border-white/[0.06] w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 shadow-2xl animate-fade-in" onClick={e => e.stopPropagation()}>
                         <h2 className="text-xl font-extrabold mb-6">{activeTab === 'Outorgas' ? 'Nova Outorga' : 'Nova Licença'}</h2>
                         {activeTab === 'Licenças' ? (
                             <div className="space-y-4">

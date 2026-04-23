@@ -132,7 +132,7 @@ export default function FineChat() {
             )}
 
             {isOpen && (
-                <div className="fixed bottom-6 right-6 w-96 h-[560px] bg-white dark:bg-[#0d1a14] rounded-3xl shadow-2xl border border-slate-100 dark:border-white/[0.06] flex flex-col overflow-hidden z-50 animate-slide-up">
+                <div className="fixed bottom-6 right-6 w-96 h-[560px] bg-white dark:bg-[#0f172a] rounded-3xl shadow-2xl border border-slate-100 dark:border-white/[0.06] flex flex-col overflow-hidden z-50 animate-slide-up">
                     {/* Header */}
                     <div className="p-4 bg-indigo-500 text-white flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-2">
@@ -196,7 +196,7 @@ export default function FineChat() {
                     </div>
 
                     {/* Input */}
-                    <div className="p-3 border-t border-slate-100 dark:border-white/[0.06] bg-white dark:bg-[#0d1a14] shrink-0">
+                    <div className="p-3 border-t border-slate-100 dark:border-white/[0.06] bg-white dark:bg-[#0f172a] shrink-0">
                         <div className="flex gap-2">
                             <input
                                 className="form-input flex-1 text-xs"

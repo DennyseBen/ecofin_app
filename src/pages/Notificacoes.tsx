@@ -155,9 +155,9 @@ function RuleFormPanel({
             <div className="flex-1 bg-black/40" onClick={onClose} />
 
             {/* Panel */}
-            <div className="w-full max-w-md bg-white dark:bg-[#0d1a14] shadow-2xl flex flex-col overflow-y-auto animate-slide-up">
+            <div className="w-full max-w-md bg-white dark:bg-[#0f172a] shadow-2xl flex flex-col overflow-y-auto animate-slide-up">
                 {/* Header */}
-                <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-white/[0.06] sticky top-0 bg-white dark:bg-[#0d1a14] z-10">
+                <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-white/[0.06] sticky top-0 bg-white dark:bg-[#0f172a] z-10">
                     <div className="flex items-center gap-2">
                         <Zap size={18} className="text-emerald-500" />
                         <h2 className="font-bold text-base">
@@ -294,7 +294,7 @@ function RuleFormPanel({
                 </div>
 
                 {/* Footer */}
-                <div className="p-5 border-t border-slate-100 dark:border-white/[0.06] flex gap-3 sticky bottom-0 bg-white dark:bg-[#0d1a14]">
+                <div className="p-5 border-t border-slate-100 dark:border-white/[0.06] flex gap-3 sticky bottom-0 bg-white dark:bg-[#0f172a]">
                     {form.custom && onDelete && !form.id.includes('new') && (
                         <button
                             onClick={() => { onDelete(form.id); onClose() }}

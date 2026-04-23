@@ -256,7 +256,7 @@ export default function Processos() {
             {/* Modal: Novo Processo */}
             {showNew && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowNew(false)}>
-                    <div className="bg-white dark:bg-[#0d1a14] rounded-3xl border border-slate-100 dark:border-white/[0.06] w-full max-w-lg p-8 shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
+                    <div className="bg-white dark:bg-[#0f172a] rounded-3xl border border-slate-100 dark:border-white/[0.06] w-full max-w-lg p-8 shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center gap-2 text-emerald-500 mb-1">
                             <Plus size={18} />
                             <span className="text-[10px] font-bold uppercase tracking-widest">Novo Processo</span>
@@ -271,7 +271,7 @@ export default function Processos() {
                                     <input className="form-input pl-10" placeholder="Digite para buscar..." value={newClient} onChange={e => handleClientSearch(e.target.value)} />
                                 </div>
                                 {clientSuggestions.length > 0 && (
-                                    <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-[#0d1a14] border border-slate-100 dark:border-white/[0.08] rounded-2xl shadow-xl z-10 max-h-40 overflow-y-auto">
+                                    <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-[#0f172a] border border-slate-100 dark:border-white/[0.08] rounded-2xl shadow-xl z-10 max-h-40 overflow-y-auto">
                                         {clientSuggestions.map((n, i) => (
                                             <button key={i} className="w-full text-left px-4 py-2 text-sm hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-500 transition-colors" onClick={() => { setNewClient(n); setClientSuggestions([]) }}>
                                                 {n}
@@ -310,11 +310,11 @@ export default function Processos() {
                 <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setSelected(null)}>
                     <div className="absolute inset-0 bg-black/30" />
                     <div
-                        className="relative w-full max-w-xl bg-white dark:bg-[#0d1a14] border-l border-slate-100 dark:border-white/[0.06] shadow-2xl h-full overflow-y-auto animate-slide-in-left"
+                        className="relative w-full max-w-xl bg-white dark:bg-[#0f172a] border-l border-slate-100 dark:border-white/[0.06] shadow-2xl h-full overflow-y-auto animate-slide-in-left"
                         onClick={e => e.stopPropagation()}
                     >
                         {/* Header */}
-                        <div className="sticky top-0 bg-white/95 dark:bg-[#0d1a14]/95 backdrop-blur-md border-b border-slate-100 dark:border-white/[0.06] p-6 z-10">
+                        <div className="sticky top-0 bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-md border-b border-slate-100 dark:border-white/[0.06] p-6 z-10">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <div className="flex items-center gap-2 text-emerald-500 mb-1">

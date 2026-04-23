@@ -46,9 +46,9 @@ export default function ResetPassword() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a1410] via-[#0d1a14] to-[#081210] p-4">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0b1220] via-[#0f172a] to-[#081210] p-4">
             <div className="w-full max-w-md">
-                <div className="bg-[#0d1a14] border border-white/[0.06] rounded-3xl p-8 shadow-2xl">
+                <div className="bg-[#0f172a] border border-white/[0.06] rounded-3xl p-8 shadow-2xl">
                     <h2 className="text-xl font-bold text-white text-center mb-1">
                         Nova Senha
                     </h2>

@@ -392,7 +392,7 @@ export default function Financas() {
                     <div className="card !p-0 overflow-hidden">
                         <div className="p-4 border-b border-slate-100 dark:border-white/[0.04] bg-slate-50/50 dark:bg-white/[0.02] flex items-center justify-between">
                             <h3 className="font-bold flex items-center gap-2"><FileText size={16} /> Central de Faturas Gerdas</h3>
-                            <button className="p-2 bg-white dark:bg-[#0d1a14] shadow-sm rounded-lg" onClick={() => refetchFaturas()}><RefreshCw size={14} className="text-slate-400" /></button>
+                            <button className="p-2 bg-white dark:bg-[#0f172a] shadow-sm rounded-lg" onClick={() => refetchFaturas()}><RefreshCw size={14} className="text-slate-400" /></button>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
@@ -489,7 +489,7 @@ export default function Financas() {
                     <div className="card !p-0 overflow-hidden">
                         <div className="p-4 border-b border-slate-100 dark:border-white/[0.04] bg-slate-50/50 dark:bg-white/[0.02] flex items-center justify-between">
                             <h3 className="font-bold flex items-center gap-2"><FileText size={16} /> Notas Fiscais de Serviço</h3>
-                            <button className="p-2 bg-white dark:bg-[#0d1a14] shadow-sm rounded-lg" onClick={refetchFaturas}><RefreshCw size={14} className="text-slate-400" /></button>
+                            <button className="p-2 bg-white dark:bg-[#0f172a] shadow-sm rounded-lg" onClick={refetchFaturas}><RefreshCw size={14} className="text-slate-400" /></button>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
@@ -596,7 +596,7 @@ export default function Financas() {
                 const [ano, mes] = nfsePreview.competencia.split('-')
                 return (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div className="bg-white dark:bg-[#0d1a14] rounded-3xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
+                        <div className="bg-white dark:bg-[#0f172a] rounded-3xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
                             <div className="p-6 border-b border-slate-100 dark:border-white/[0.06]">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-violet-100 dark:bg-violet-500/20 rounded-xl"><Send size={18} className="text-violet-500" /></div>
@@ -685,7 +685,7 @@ export default function Financas() {
 
             {showContratoModal && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-[#0d1a14] rounded-3xl w-full max-w-md p-8 shadow-2xl">
+                    <div className="bg-white dark:bg-[#0f172a] rounded-3xl w-full max-w-md p-8 shadow-2xl">
                         <h2 className="text-xl font-bold mb-6">Criar Contrato (Mensalidade)</h2>
                         <div className="space-y-4">
                             <div>

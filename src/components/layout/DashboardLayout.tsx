@@ -9,7 +9,7 @@ export default function DashboardLayout() {
             <Sidebar />
             <main className="flex-1 flex flex-col overflow-hidden">
                 <Header />
-                <div className="flex-1 overflow-y-auto p-5 md:p-8">
+                <div className="flex-1 overflow-y-auto" style={{ padding: '24px 28px 40px' }}>
                     <Outlet />
                 </div>
                 <FineChat />
