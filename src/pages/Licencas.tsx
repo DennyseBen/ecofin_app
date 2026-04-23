@@ -301,7 +301,7 @@ export default function Licencas() {
                     ...f,
                     cnpj: raw,
                     ...(data.razao_social && !f.razao_social ? { razao_social: data.razao_social } : {}),
-                    ...(activeTab === 'Licenças' && data.cidade && !f.cidade ? { cidade: data.cidade } : {}),
+                    ...(activeTab === 'Licenças' && data.cidade ? { cidade: data.cidade } : {}),
                 }))
             } catch {
                 // silently ignore — CNPJ may not be in API
@@ -422,10 +422,10 @@ export default function Licencas() {
     // Auto-fill from CNPJ or Razao Social
     useEffect(() => {
         if (!form.razao_social && !form.cnpj) return
-        const match = clientes.find(c =>
-            (form.razao_social && c.razao_social === form.razao_social) ||
-            (form.cnpj && c.cnpj === form.cnpj)
-        )
+        // Prioritize CNPJ match (branch-specific) before razao_social (too broad for multi-branch companies)
+        const match =
+            (form.cnpj ? clientes.find(c => c.cnpj && c.cnpj === form.cnpj) : null) ||
+            (form.razao_social ? clientes.find(c => c.razao_social === form.razao_social) : null)
         if (match) {
             setForm((prev: any) => ({
                 ...prev,
