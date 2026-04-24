@@ -42,63 +42,60 @@ export default function Relatorios() {
         '180': { label: 'Longo prazo', dias: 180 }
     }
 
-    // Processar dados
-    const items = useMemo((): RelatorioItem[] => {
+    // Processar TODOS os itens com data_renovacao (até 180 dias) — usado para contagens e PDF
+    const allItems = useMemo((): RelatorioItem[] => {
         const today = new Date()
         today.setHours(0, 0, 0, 0)
-        const prazoLimit = prazoConfig[prazo].dias
-
         const result: RelatorioItem[] = []
 
-        // Processar licenças — filtrar APENAS pela data de renovação
         licencas.forEach(lic => {
             if (!lic.data_renovacao) return
-
             const refDate = new Date(lic.data_renovacao)
             refDate.setHours(0, 0, 0, 0)
             const diasRestantes = Math.floor((refDate.getTime() - today.getTime()) / 86400000)
-
-            if (diasRestantes >= 0 && diasRestantes <= prazoLimit) {
+            if (diasRestantes >= 0 && diasRestantes <= 180) {
                 result.push({
-                    id: lic.id,
-                    tipo: 'Licença',
-                    razao_social: lic.razao_social,
-                    cnpj: lic.cnpj,
-                    tipo_documento: lic.tipo,
-                    validade: lic.validade,
-                    data_renovacao: lic.data_renovacao,
-                    dias_restantes: diasRestantes,
+                    id: lic.id, tipo: 'Licença', razao_social: lic.razao_social,
+                    cnpj: lic.cnpj, tipo_documento: lic.tipo, validade: lic.validade,
+                    data_renovacao: lic.data_renovacao, dias_restantes: diasRestantes,
                     processo: lic.processo
                 })
             }
         })
 
-        // Processar outorgas — filtrar APENAS pela data de renovação
         outorgas.forEach(out => {
             if (!out.data_renovacao) return
-
             const refDate = new Date(out.data_renovacao)
             refDate.setHours(0, 0, 0, 0)
             const diasRestantes = Math.floor((refDate.getTime() - today.getTime()) / 86400000)
-
-            if (diasRestantes >= 0 && diasRestantes <= prazoLimit) {
+            if (diasRestantes >= 0 && diasRestantes <= 180) {
                 result.push({
-                    id: out.id,
-                    tipo: 'Outorga',
-                    razao_social: out.razao_social,
-                    cnpj: out.cnpj,
-                    tipo_documento: out.tipo,
-                    validade: out.validade,
-                    data_renovacao: out.data_renovacao,
-                    dias_restantes: diasRestantes,
+                    id: out.id, tipo: 'Outorga', razao_social: out.razao_social,
+                    cnpj: out.cnpj, tipo_documento: out.tipo, validade: out.validade,
+                    data_renovacao: out.data_renovacao, dias_restantes: diasRestantes,
                     numero_outorga: out.numero_outorga
                 })
             }
         })
 
-        // Ordenar por dias restantes (mais próximo primeiro)
         return result.sort((a, b) => a.dias_restantes - b.dias_restantes)
-    }, [licencas, outorgas, prazo])
+    }, [licencas, outorgas])
+
+    // Contagem por prazo (cumulativo: 0 a N dias)
+    const prazoCounts = useMemo(() => {
+        const counts: Record<PrazoOption, number> = { '30': 0, '60': 0, '120': 0, '180': 0 }
+        for (const key of Object.keys(counts) as PrazoOption[]) {
+            const limit = prazoConfig[key].dias
+            counts[key] = allItems.filter(i => i.dias_restantes <= limit).length
+        }
+        return counts
+    }, [allItems])
+
+    // Itens filtrados pelo prazo selecionado (tela)
+    const items = useMemo((): RelatorioItem[] => {
+        const limit = prazoConfig[prazo].dias
+        return allItems.filter(i => i.dias_restantes <= limit)
+    }, [allItems, prazo])
 
     // Filtrar por busca (razão social ou CNPJ)
     const filtered = useMemo(() => {
@@ -131,14 +128,14 @@ export default function Relatorios() {
 
         doc.setFontSize(12)
         doc.setFont('helvetica', 'normal')
-        doc.text(`Relatório de Renovações - ${prazoConfig[prazo].label} (${prazoConfig[prazo].dias} dias)`, 15, 24)
+        doc.text('Relatório de Renovações — Todos os prazos (até 180 dias)', 15, 24)
 
         doc.setFontSize(9)
         doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 15, 30)
-        doc.text(`Total de alertas: ${filtered.length}`, 230, 30)
+        doc.text(`Total de alertas: ${allItems.length}`, 230, 30)
 
-        // Tabela
-        const tableData = filtered.map(item => [
+        // Tabela — exporta TODOS os itens (0-180 dias)
+        const tableData = allItems.map(item => [
             item.tipo,
             item.razao_social,
             item.cnpj || '—',
@@ -168,7 +165,7 @@ export default function Relatorios() {
             }
         })
 
-        doc.save(`relatorio_renovacoes_${prazo}dias_${new Date().toISOString().split('T')[0]}.pdf`)
+        doc.save(`relatorio_renovacoes_180dias_${new Date().toISOString().split('T')[0]}.pdf`)
     }
 
     const handlePrint = () => {
@@ -215,7 +212,7 @@ export default function Relatorios() {
                         <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                             Filtrar por prazo
                         </label>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-4 gap-2">
                             {(Object.keys(prazoConfig) as PrazoOption[]).map(key => (
                                 <button
                                     key={key}
@@ -228,6 +225,9 @@ export default function Relatorios() {
                                 >
                                     <div>{prazoConfig[key].dias} dias</div>
                                     <div className="text-[10px] opacity-80">{prazoConfig[key].label}</div>
+                                    <div className={`text-[10px] mt-1 font-semibold ${prazo === key ? 'text-emerald-100' : 'text-slate-400 dark:text-slate-500'}`}>
+                                        {prazoCounts[key]} {prazoCounts[key] === 1 ? 'alerta' : 'alertas'}
+                                    </div>
                                 </button>
                             ))}
                         </div>

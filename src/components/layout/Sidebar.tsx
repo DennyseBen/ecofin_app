@@ -79,15 +79,14 @@ export default function Sidebar() {
                 {/* Logo */}
                 <div style={{ padding: '22px 20px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{
-                            width: 34, height: 34, borderRadius: 9,
-                            background: `linear-gradient(135deg, var(--primary-bright), var(--primary))`,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            boxShadow: `0 4px 12px -4px var(--primary)`,
-                            flexShrink: 0,
-                        }}>
-                            <Leaf size={17} strokeWidth={2.25} style={{ color: 'var(--primary-ink)' }} />
-                        </div>
+                        <img
+                            src="/logo.png"
+                            alt="EcoFin"
+                            style={{
+                                width: 34, height: 34, borderRadius: 9,
+                                objectFit: 'contain', flexShrink: 0,
+                            }}
+                        />
                         <div>
                             <div style={{ color: 'var(--text-bright)', fontWeight: 700, fontSize: 16, letterSpacing: -0.3, lineHeight: 1 }}>EcoFin</div>
                             <div style={{ color: 'var(--text-dim)', fontSize: 10.5, letterSpacing: 1.2, textTransform: 'uppercase', marginTop: 3, fontWeight: 500 }}>Manager</div>
