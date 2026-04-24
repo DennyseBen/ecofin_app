@@ -148,13 +148,6 @@ export default function Dashboard() {
             colorSoft: 'var(--amber-soft)', colorRing: 'var(--amber-ring)',
             path: '/notificacoes',
         },
-        {
-            label: 'Conformidade', value: stats.compliance_rate + '%', desc: 'Taxa de licenças válidas',
-            icon: Activity, color: 'var(--violet-fg)',
-            colorSoft: 'var(--violet-soft)', colorRing: 'var(--violet-ring)',
-            path: '/licencas',
-            delta: stats.compliance_rate >= 90 ? 'Excelente' : undefined,
-        },
     ]
 
     return (
@@ -193,7 +186,7 @@ export default function Dashboard() {
             </div>
 
             {/* KPI Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
                 {kpis.map(k => <KpiCard key={k.label} {...k} />)}
             </div>
 

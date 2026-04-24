@@ -116,26 +116,76 @@ export default function Relatorios() {
         ])
 
         const doc = new jsPDF('landscape')
+        const pageW = doc.internal.pageSize.getWidth()
+        const pageH = doc.internal.pageSize.getHeight()
+        const prazoDias = prazoConfig[prazo].dias
+        const prazoLabel = prazoConfig[prazo].label
 
-        // Header
+        // --- Header elegante ---
         doc.setFillColor(16, 185, 129)
-        doc.rect(0, 0, 297, 35, 'F')
+        doc.rect(0, 0, pageW, 42, 'F')
+
+        // Faixa decorativa inferior
+        doc.setFillColor(13, 148, 103)
+        doc.rect(0, 38, pageW, 4, 'F')
 
         doc.setTextColor(255, 255, 255)
-        doc.setFontSize(20)
+        doc.setFontSize(22)
         doc.setFont('helvetica', 'bold')
-        doc.text('EcoFin Manager', 15, 15)
+        doc.text('EcoFin Manager', 15, 16)
 
-        doc.setFontSize(12)
+        doc.setFontSize(11)
         doc.setFont('helvetica', 'normal')
-        doc.text('Relatório de Renovações — Todos os prazos (até 180 dias)', 15, 24)
+        doc.text(`Relatório de Renovações — ${prazoLabel} (${prazoDias} dias)`, 15, 26)
 
         doc.setFontSize(9)
-        doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 15, 30)
-        doc.text(`Total de alertas: ${allItems.length}`, 230, 30)
+        doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 15, 34)
 
-        // Tabela — exporta TODOS os itens (0-180 dias)
-        const tableData = allItems.map(item => [
+        // Badge de total à direita
+        const totalText = `${filtered.length} alerta${filtered.length !== 1 ? 's' : ''}`
+        const tw = doc.getTextWidth(totalText) + 12
+        doc.setFillColor(255, 255, 255)
+        doc.roundedRect(pageW - tw - 15, 28, tw, 10, 2, 2, 'F')
+        doc.setTextColor(16, 185, 129)
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(9)
+        doc.text(totalText, pageW - tw - 15 + 6, 34.5)
+
+        // --- Resumo por prazo ---
+        const summaryY = 52
+        doc.setTextColor(60, 60, 60)
+        doc.setFontSize(10)
+        doc.setFont('helvetica', 'bold')
+        doc.text('Resumo por Prazo de Renovação', 15, summaryY)
+
+        const boxW = 60
+        const boxH = 18
+        const boxGap = 8
+        const boxStartX = 15
+        const boxY = summaryY + 4
+
+        const prazoKeys: PrazoOption[] = ['30', '60', '120', '180']
+        prazoKeys.forEach((key, idx) => {
+            const x = boxStartX + idx * (boxW + boxGap)
+            const isSelected = key === prazo
+            if (isSelected) {
+                doc.setFillColor(16, 185, 129)
+                doc.setTextColor(255, 255, 255)
+            } else {
+                doc.setFillColor(245, 245, 245)
+                doc.setTextColor(80, 80, 80)
+            }
+            doc.roundedRect(x, boxY, boxW, boxH, 3, 3, 'F')
+            doc.setFontSize(10)
+            doc.setFont('helvetica', 'bold')
+            doc.text(`${prazoConfig[key].dias} dias`, x + 4, boxY + 7)
+            doc.setFontSize(8)
+            doc.setFont('helvetica', 'normal')
+            doc.text(`${prazoCounts[key]} alerta${prazoCounts[key] !== 1 ? 's' : ''} · ${prazoConfig[key].label}`, x + 4, boxY + 13)
+        })
+
+        // --- Tabela detalhada ---
+        const tableData = filtered.map(item => [
             item.tipo,
             item.razao_social,
             item.cnpj || '—',
@@ -143,29 +193,55 @@ export default function Relatorios() {
             item.processo || item.numero_outorga || '—',
             formatDate(item.data_renovacao),
             formatDate(item.validade),
-            item.dias_restantes.toString()
+            `${item.dias_restantes}d`
         ])
 
         autoTable(doc, {
-            head: [['Tipo', 'Razão Social', 'CNPJ', 'Documento', 'Processo/Nº', 'Renovação', 'Validade', 'Dias']],
+            head: [['Tipo', 'Razão Social', 'CNPJ', 'Documento', 'Processo/Nº', 'Renovação', 'Validade', 'Dias p/ Renov.']],
             body: tableData,
-            startY: 45,
-            styles: { fontSize: 7, cellPadding: 1.5 },
-            headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
-            alternateRowStyles: { fillColor: [245, 245, 245] },
+            startY: boxY + boxH + 10,
+            styles: { fontSize: 7.5, cellPadding: 2.5, lineColor: [230, 230, 230], lineWidth: 0.2 },
+            headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+            alternateRowStyles: { fillColor: [250, 250, 250] },
             columnStyles: {
                 0: { cellWidth: 22 },
-                1: { cellWidth: 58 },
-                2: { cellWidth: 30 },
-                3: { cellWidth: 35 },
+                1: { cellWidth: 56 },
+                2: { cellWidth: 32 },
+                3: { cellWidth: 32 },
                 4: { cellWidth: 30 },
                 5: { cellWidth: 24 },
                 6: { cellWidth: 24 },
-                7: { cellWidth: 16, halign: 'center' }
-            }
+                7: { cellWidth: 20, halign: 'center', fontStyle: 'bold' }
+            },
+            didParseCell: (data: any) => {
+                // Colorir a coluna "Dias" conforme urgência
+                if (data.section === 'body' && data.column.index === 7) {
+                    const dias = parseInt(data.cell.raw as string)
+                    if (dias <= 30) {
+                        data.cell.styles.textColor = [220, 38, 38]
+                    } else if (dias <= 60) {
+                        data.cell.styles.textColor = [217, 119, 6]
+                    } else {
+                        data.cell.styles.textColor = [22, 163, 74]
+                    }
+                }
+            },
         })
 
-        doc.save(`relatorio_renovacoes_180dias_${new Date().toISOString().split('T')[0]}.pdf`)
+        // --- Rodapé ---
+        const totalPages = (doc as any).internal.getNumberOfPages()
+        for (let i = 1; i <= totalPages; i++) {
+            doc.setPage(i)
+            doc.setFillColor(245, 245, 245)
+            doc.rect(0, pageH - 12, pageW, 12, 'F')
+            doc.setFontSize(7.5)
+            doc.setTextColor(140, 140, 140)
+            doc.setFont('helvetica', 'normal')
+            doc.text('EcoFin Manager — Relatório de Renovações', 15, pageH - 5)
+            doc.text(`Página ${i} de ${totalPages}`, pageW - 40, pageH - 5)
+        }
+
+        doc.save(`relatorio_renovacoes_${prazo}dias_${new Date().toISOString().split('T')[0]}.pdf`)
     }
 
     const handlePrint = () => {

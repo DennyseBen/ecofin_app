@@ -83,8 +83,10 @@ export default function Sidebar() {
                             src="/logo.png"
                             alt="EcoFin"
                             style={{
-                                width: 34, height: 34, borderRadius: 9,
-                                objectFit: 'contain', flexShrink: 0,
+                                width: 38, height: 38, borderRadius: 10,
+                                objectFit: 'cover', objectPosition: 'center',
+                                flexShrink: 0,
+                                background: 'var(--surface)',
                             }}
                         />
                         <div>
