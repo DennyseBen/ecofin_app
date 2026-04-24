@@ -12,6 +12,18 @@ const formatDate = (d: string | null) => {
     return `${day}/${m}/${y}`
 }
 
+/**
+ * Retorna data_renovacao do banco, ou calcula: validade − leadDays do tipo.
+ */
+function resolveRenovacao(dataRenovacao: string | null, validade: string | null, tipo: string): string | null {
+    if (dataRenovacao) return dataRenovacao
+    if (!validade) return null
+    const leadDays = getRenovacaoLeadDays(tipo)
+    const valDate = new Date(validade)
+    valDate.setDate(valDate.getDate() - leadDays)
+    return valDate.toISOString().split('T')[0]
+}
+
 // ── Regras idênticas às de Notificações ──────────────────────────────────────
 type RegraId = 'curto' | 'padrao' | 'outorgas'
 
@@ -99,7 +111,7 @@ export default function Relatorios() {
                 orgao: lic.departamento ?? null,
                 tipo_documento: lic.tipo,
                 validade: lic.validade,
-                data_renovacao: lic.data_renovacao,
+                data_renovacao: resolveRenovacao(lic.data_renovacao, lic.validade, lic.tipo),
                 dias_restantes: getDaysRemaining(lic),
                 processo: lic.processo ?? null,
                 numero_outorga: null,
@@ -119,7 +131,7 @@ export default function Relatorios() {
                 orgao: out.orgao ?? null,
                 tipo_documento: out.tipo,
                 validade: out.validade,
-                data_renovacao: out.data_renovacao,
+                data_renovacao: resolveRenovacao(out.data_renovacao, out.validade, out.tipo),
                 dias_restantes: getDaysRemaining(out),
                 processo: null,
                 numero_outorga: out.numero_outorga ?? null,
