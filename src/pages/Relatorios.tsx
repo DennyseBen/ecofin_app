@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react'
-import { Search, Download, FileText, Calendar, Building2, AlertCircle, Printer } from 'lucide-react'
+import { useState, useMemo, useCallback } from 'react'
+import { Search, Download, FileText, Calendar, Building2, AlertCircle, Printer, MapPin } from 'lucide-react'
 import { useSupabase } from '../hooks/useSupabase'
-import { fetchLicencas, fetchOutorgas, fetchClientes } from '../lib/api'
+import { useRealtime } from '../hooks/useRealtime'
+import { fetchLicencas, fetchOutorgas } from '../lib/api'
 import type { Licenca, Outorga } from '../lib/types'
 
 const formatDate = (d: string | null) => {
@@ -12,92 +13,116 @@ const formatDate = (d: string | null) => {
 
 type PrazoOption = '30' | '60' | '120' | '180'
 
+const PRAZO_CONFIG: Record<PrazoOption, { label: string; dias: number }> = {
+    '30': { label: 'Urgente', dias: 30 },
+    '60': { label: 'Curto prazo', dias: 60 },
+    '120': { label: 'Médio prazo', dias: 120 },
+    '180': { label: 'Longo prazo', dias: 180 },
+}
+
+const PRAZO_KEYS: PrazoOption[] = ['30', '60', '120', '180']
+
 interface RelatorioItem {
     id: number
     tipo: 'Licença' | 'Outorga'
     razao_social: string
     cnpj: string | null
+    cidade: string | null
+    orgao: string | null
     tipo_documento: string
     validade: string | null
     data_renovacao: string | null
     dias_restantes: number
-    processo?: string | null
-    numero_outorga?: string | null
+    processo: string | null
+    numero_outorga: string | null
+}
+
+/**
+ * Converte uma licença ou outorga com data_renovacao num RelatorioItem.
+ * Retorna null se não houver data_renovacao ou se estiver fora da janela de 180 dias.
+ */
+function toRelatorioItem(
+    source: Licenca | Outorga,
+    tipo: 'Licença' | 'Outorga',
+    today: Date,
+): RelatorioItem | null {
+    if (!source.data_renovacao) return null
+
+    const refDate = new Date(source.data_renovacao)
+    refDate.setHours(0, 0, 0, 0)
+    const diasRestantes = Math.floor((refDate.getTime() - today.getTime()) / 86400000)
+
+    if (diasRestantes < 0 || diasRestantes > 180) return null
+
+    const isLicenca = tipo === 'Licença'
+    const lic = source as Licenca
+    const out = source as Outorga
+
+    return {
+        id: source.id,
+        tipo,
+        razao_social: source.razao_social,
+        cnpj: source.cnpj,
+        cidade: isLicenca ? (lic.cidade ?? null) : null,
+        orgao: isLicenca ? (lic.departamento ?? null) : (out.orgao ?? null),
+        tipo_documento: source.tipo,
+        validade: source.validade,
+        data_renovacao: source.data_renovacao,
+        dias_restantes: diasRestantes,
+        processo: isLicenca ? (lic.processo ?? null) : null,
+        numero_outorga: isLicenca ? null : (out.numero_outorga ?? null),
+    }
 }
 
 export default function Relatorios() {
     const [search, setSearch] = useState('')
     const [prazo, setPrazo] = useState<PrazoOption>('60')
 
-    const { data: licencas, loading: loadingLic } = useSupabase(fetchLicencas, [])
-    const { data: outorgas, loading: loadingOut } = useSupabase(fetchOutorgas, [])
-    const { data: clientes } = useSupabase(fetchClientes, [])
+    const { data: licencas, loading: loadingLic, refetch: refetchLic } = useSupabase(fetchLicencas, [])
+    const { data: outorgas, loading: loadingOut, refetch: refetchOut } = useSupabase(fetchOutorgas, [])
+
+    const refetchAll = useCallback(() => { refetchLic(); refetchOut() }, [refetchLic, refetchOut])
+    useRealtime(['licencas', 'outorgas'], refetchAll)
 
     const loading = loadingLic || loadingOut
 
-    const prazoConfig = {
-        '30': { label: 'Urgente', dias: 30 },
-        '60': { label: 'Curto prazo', dias: 60 },
-        '120': { label: 'Médio prazo', dias: 120 },
-        '180': { label: 'Longo prazo', dias: 180 }
-    }
-
-    // Processar TODOS os itens com data_renovacao (até 180 dias) — usado para contagens e PDF
+    // ── Todos os itens com data_renovacao (0-180 dias), ordenados por urgência ──
     const allItems = useMemo((): RelatorioItem[] => {
         const today = new Date()
         today.setHours(0, 0, 0, 0)
+
         const result: RelatorioItem[] = []
 
-        licencas.forEach(lic => {
-            if (!lic.data_renovacao) return
-            const refDate = new Date(lic.data_renovacao)
-            refDate.setHours(0, 0, 0, 0)
-            const diasRestantes = Math.floor((refDate.getTime() - today.getTime()) / 86400000)
-            if (diasRestantes >= 0 && diasRestantes <= 180) {
-                result.push({
-                    id: lic.id, tipo: 'Licença', razao_social: lic.razao_social,
-                    cnpj: lic.cnpj, tipo_documento: lic.tipo, validade: lic.validade,
-                    data_renovacao: lic.data_renovacao, dias_restantes: diasRestantes,
-                    processo: lic.processo
-                })
-            }
-        })
+        for (const lic of licencas) {
+            const item = toRelatorioItem(lic, 'Licença', today)
+            if (item) result.push(item)
+        }
 
-        outorgas.forEach(out => {
-            if (!out.data_renovacao) return
-            const refDate = new Date(out.data_renovacao)
-            refDate.setHours(0, 0, 0, 0)
-            const diasRestantes = Math.floor((refDate.getTime() - today.getTime()) / 86400000)
-            if (diasRestantes >= 0 && diasRestantes <= 180) {
-                result.push({
-                    id: out.id, tipo: 'Outorga', razao_social: out.razao_social,
-                    cnpj: out.cnpj, tipo_documento: out.tipo, validade: out.validade,
-                    data_renovacao: out.data_renovacao, dias_restantes: diasRestantes,
-                    numero_outorga: out.numero_outorga
-                })
-            }
-        })
+        for (const out of outorgas) {
+            const item = toRelatorioItem(out, 'Outorga', today)
+            if (item) result.push(item)
+        }
 
         return result.sort((a, b) => a.dias_restantes - b.dias_restantes)
     }, [licencas, outorgas])
 
-    // Contagem por prazo (cumulativo: 0 a N dias)
+    // ── Contagem cumulativa por prazo (0 a N dias) ──
     const prazoCounts = useMemo(() => {
         const counts: Record<PrazoOption, number> = { '30': 0, '60': 0, '120': 0, '180': 0 }
-        for (const key of Object.keys(counts) as PrazoOption[]) {
-            const limit = prazoConfig[key].dias
+        for (const key of PRAZO_KEYS) {
+            const limit = PRAZO_CONFIG[key].dias
             counts[key] = allItems.filter(i => i.dias_restantes <= limit).length
         }
         return counts
     }, [allItems])
 
-    // Itens filtrados pelo prazo selecionado (tela)
+    // ── Itens filtrados pelo prazo selecionado ──
     const items = useMemo((): RelatorioItem[] => {
-        const limit = prazoConfig[prazo].dias
+        const limit = PRAZO_CONFIG[prazo].dias
         return allItems.filter(i => i.dias_restantes <= limit)
     }, [allItems, prazo])
 
-    // Filtrar por busca (razão social ou CNPJ)
+    // ── Busca por razão social, CNPJ (com e sem pontuação), cidade ──
     const filtered = useMemo(() => {
         if (!search) return items
         const s = search.toLowerCase()
@@ -105,7 +130,9 @@ export default function Relatorios() {
         return items.filter(item =>
             item.razao_social.toLowerCase().includes(s) ||
             (item.cnpj && item.cnpj.toLowerCase().includes(s)) ||
-            (sCnpj.length > 0 && (item.cnpj || '').replace(/\D/g, '').includes(sCnpj))
+            (sCnpj.length > 0 && (item.cnpj || '').replace(/\D/g, '').includes(sCnpj)) ||
+            (item.cidade && item.cidade.toLowerCase().includes(s)) ||
+            (item.orgao && item.orgao.toLowerCase().includes(s))
         )
     }, [items, search])
 
@@ -118,14 +145,13 @@ export default function Relatorios() {
         const doc = new jsPDF('landscape')
         const pageW = doc.internal.pageSize.getWidth()
         const pageH = doc.internal.pageSize.getHeight()
-        const prazoDias = prazoConfig[prazo].dias
-        const prazoLabel = prazoConfig[prazo].label
+        const prazoDias = PRAZO_CONFIG[prazo].dias
+        const prazoLabel = PRAZO_CONFIG[prazo].label
 
-        // --- Header elegante ---
+        // --- Header ---
         doc.setFillColor(16, 185, 129)
         doc.rect(0, 0, pageW, 42, 'F')
 
-        // Faixa decorativa inferior
         doc.setFillColor(13, 148, 103)
         doc.rect(0, 38, pageW, 4, 'F')
 
@@ -141,7 +167,7 @@ export default function Relatorios() {
         doc.setFontSize(9)
         doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 15, 34)
 
-        // Badge de total à direita
+        // Badge de total
         const totalText = `${filtered.length} alerta${filtered.length !== 1 ? 's' : ''}`
         const tw = doc.getTextWidth(totalText) + 12
         doc.setFillColor(255, 255, 255)
@@ -164,8 +190,7 @@ export default function Relatorios() {
         const boxStartX = 15
         const boxY = summaryY + 4
 
-        const prazoKeys: PrazoOption[] = ['30', '60', '120', '180']
-        prazoKeys.forEach((key, idx) => {
+        PRAZO_KEYS.forEach((key, idx) => {
             const x = boxStartX + idx * (boxW + boxGap)
             const isSelected = key === prazo
             if (isSelected) {
@@ -178,18 +203,20 @@ export default function Relatorios() {
             doc.roundedRect(x, boxY, boxW, boxH, 3, 3, 'F')
             doc.setFontSize(10)
             doc.setFont('helvetica', 'bold')
-            doc.text(`${prazoConfig[key].dias} dias`, x + 4, boxY + 7)
+            doc.text(`${PRAZO_CONFIG[key].dias} dias`, x + 4, boxY + 7)
             doc.setFontSize(8)
             doc.setFont('helvetica', 'normal')
-            doc.text(`${prazoCounts[key]} alerta${prazoCounts[key] !== 1 ? 's' : ''} · ${prazoConfig[key].label}`, x + 4, boxY + 13)
+            doc.text(`${prazoCounts[key]} alerta${prazoCounts[key] !== 1 ? 's' : ''} · ${PRAZO_CONFIG[key].label}`, x + 4, boxY + 13)
         })
 
-        // --- Tabela detalhada ---
+        // --- Tabela ---
         const tableData = filtered.map(item => [
             item.tipo,
             item.razao_social,
             item.cnpj || '—',
+            item.cidade || '—',
             item.tipo_documento,
+            item.orgao || '—',
             item.processo || item.numero_outorga || '—',
             formatDate(item.data_renovacao),
             formatDate(item.validade),
@@ -197,25 +224,26 @@ export default function Relatorios() {
         ])
 
         autoTable(doc, {
-            head: [['Tipo', 'Razão Social', 'CNPJ', 'Documento', 'Processo/Nº', 'Renovação', 'Validade', 'Dias p/ Renov.']],
+            head: [['Tipo', 'Razão Social', 'CNPJ', 'Cidade', 'Documento', 'Órgão', 'Processo/Nº', 'Renovação', 'Validade', 'Dias']],
             body: tableData,
             startY: boxY + boxH + 10,
-            styles: { fontSize: 7.5, cellPadding: 2.5, lineColor: [230, 230, 230], lineWidth: 0.2 },
-            headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+            styles: { fontSize: 7, cellPadding: 2, lineColor: [230, 230, 230], lineWidth: 0.2 },
+            headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold', fontSize: 7.5 },
             alternateRowStyles: { fillColor: [250, 250, 250] },
             columnStyles: {
-                0: { cellWidth: 22 },
-                1: { cellWidth: 56 },
-                2: { cellWidth: 32 },
-                3: { cellWidth: 32 },
-                4: { cellWidth: 30 },
+                0: { cellWidth: 18 },
+                1: { cellWidth: 46 },
+                2: { cellWidth: 28 },
+                3: { cellWidth: 24 },
+                4: { cellWidth: 22 },
                 5: { cellWidth: 24 },
-                6: { cellWidth: 24 },
-                7: { cellWidth: 20, halign: 'center', fontStyle: 'bold' }
+                6: { cellWidth: 26 },
+                7: { cellWidth: 20 },
+                8: { cellWidth: 20 },
+                9: { cellWidth: 14, halign: 'center', fontStyle: 'bold' }
             },
             didParseCell: (data: any) => {
-                // Colorir a coluna "Dias" conforme urgência
-                if (data.section === 'body' && data.column.index === 7) {
+                if (data.section === 'body' && data.column.index === 9) {
                     const dias = parseInt(data.cell.raw as string)
                     if (dias <= 30) {
                         data.cell.styles.textColor = [220, 38, 38]
@@ -269,13 +297,13 @@ export default function Relatorios() {
                     {/* Busca */}
                     <div>
                         <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-                            Buscar (Razão Social ou CNPJ)
+                            Buscar (Razão Social, CNPJ, Cidade ou Órgão)
                         </label>
                         <div className="relative">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                             <input
                                 type="text"
-                                placeholder="Digite razão social ou CNPJ..."
+                                placeholder="Digite razão social, CNPJ, cidade..."
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
                                 className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
@@ -286,10 +314,10 @@ export default function Relatorios() {
                     {/* Prazo */}
                     <div>
                         <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-                            Filtrar por prazo
+                            Filtrar por prazo de renovação
                         </label>
                         <div className="grid grid-cols-4 gap-2">
-                            {(Object.keys(prazoConfig) as PrazoOption[]).map(key => (
+                            {PRAZO_KEYS.map(key => (
                                 <button
                                     key={key}
                                     onClick={() => setPrazo(key)}
@@ -299,8 +327,8 @@ export default function Relatorios() {
                                             : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10'
                                     }`}
                                 >
-                                    <div>{prazoConfig[key].dias} dias</div>
-                                    <div className="text-[10px] opacity-80">{prazoConfig[key].label}</div>
+                                    <div>{PRAZO_CONFIG[key].dias} dias</div>
+                                    <div className="text-[10px] opacity-80">{PRAZO_CONFIG[key].label}</div>
                                     <div className={`text-[10px] mt-1 font-semibold ${prazo === key ? 'text-emerald-100' : 'text-slate-400 dark:text-slate-500'}`}>
                                         {prazoCounts[key]} {prazoCounts[key] === 1 ? 'alerta' : 'alertas'}
                                     </div>
@@ -310,7 +338,7 @@ export default function Relatorios() {
                     </div>
                 </div>
 
-                {/* Stats */}
+                {/* Stats + ações */}
                 <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-100 dark:border-white/[0.06]">
                     <div className="flex items-center gap-2 text-sm">
                         <AlertCircle size={16} className="text-amber-500" />
@@ -361,7 +389,9 @@ export default function Relatorios() {
                                     <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Tipo</th>
                                     <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Razão Social</th>
                                     <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">CNPJ</th>
+                                    <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Cidade</th>
                                     <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Documento</th>
+                                    <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Órgão</th>
                                     <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Processo/Nº</th>
                                     <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Renovação</th>
                                     <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Validade</th>
@@ -387,8 +417,17 @@ export default function Relatorios() {
                                             </span>
                                         </td>
                                         <td className="px-4 py-3 text-sm font-medium">{item.razao_social}</td>
-                                        <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">{item.cnpj || '—'}</td>
+                                        <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400 font-mono text-xs">{item.cnpj || '—'}</td>
+                                        <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
+                                            {item.cidade ? (
+                                                <span className="inline-flex items-center gap-1">
+                                                    <MapPin size={12} className="text-slate-400" />
+                                                    {item.cidade}
+                                                </span>
+                                            ) : '—'}
+                                        </td>
                                         <td className="px-4 py-3 text-sm">{item.tipo_documento}</td>
+                                        <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">{item.orgao || '—'}</td>
                                         <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
                                             {item.processo || item.numero_outorga || '—'}
                                         </td>
