@@ -39,8 +39,10 @@ export default function Clientes() {
     const filtered = useMemo(() => {
         return clients.filter(c => {
             const s = search.toLowerCase()
+            const sCnpj = s.replace(/\D/g, '')
             return (c.razao_social?.toLowerCase().includes(s)) ||
                 (c.cnpj?.toLowerCase().includes(s)) ||
+                (sCnpj.length > 0 && (c.cnpj || '').replace(/\D/g, '').includes(sCnpj)) ||
                 (c.cidade?.toLowerCase().includes(s))
         })
     }, [clients, search])
