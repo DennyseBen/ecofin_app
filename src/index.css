@@ -543,3 +543,8 @@
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--neutral-bg); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+/* ═══ Header responsive ═══ */
+@media (min-width: 768px) {
+  .header-bar { padding: 18px 28px !important; gap: 20px !important; }
+}

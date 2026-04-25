@@ -43,12 +43,10 @@ export default function Header() {
     }
 
     return (
-        <header style={{
-            display: 'flex', alignItems: 'center', gap: 20, padding: '18px 28px',
+        <header className="header-bar" style={{
+            display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
             borderBottom: '1px solid var(--border)',
             background: 'var(--header-bg)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
             zIndex: 10, flexShrink: 0,
         }}>
             {/* Title area */}
@@ -67,8 +65,8 @@ export default function Header() {
             </div>
 
             {/* Search */}
-            <div style={{
-                display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', width: 280,
+            <div className="hidden md:flex" style={{
+                alignItems: 'center', gap: 8, padding: '8px 12px', width: 280,
                 background: 'var(--input-bg)', border: '1px solid var(--border)', borderRadius: 9,
                 fontSize: 13, color: 'var(--text-dim)', cursor: 'text', flexShrink: 0,
             }}>
@@ -180,9 +178,10 @@ export default function Header() {
 
             {/* Nova Licença CTA */}
             <button
+                className="hidden md:flex"
                 onClick={() => navigate('/licencas')}
                 style={{
-                    display: 'flex', alignItems: 'center', gap: 7, padding: '0 16px',
+                    alignItems: 'center', gap: 7, padding: '0 16px',
                     height: 36, flexShrink: 0,
                     background: `linear-gradient(180deg, var(--primary-bright), var(--primary))`,
                     color: 'var(--primary-ink)', border: 'none', borderRadius: 9,
