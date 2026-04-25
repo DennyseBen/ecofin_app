@@ -106,7 +106,10 @@ export default function Dashboard() {
         concluido: kanbanCards.filter(c => c.stage === 'concluido').length,
     }
 
-    const outorgasValidas = outorgas.filter(o => computeStatus(o) === 'Válida' || computeStatus(o) === 'Vencendo').length
+    const outorgasValidas = outorgas.filter(o => computeStatus(o) === 'Válida').length
+    const outorgasVencendo = outorgas.filter(o => computeStatus(o) === 'Vencendo').length
+    const outorgasVencidas = outorgas.filter(o => computeStatus(o) === 'Vencida').length
+    const outorgasAtivas = outorgasValidas + outorgasVencendo
 
     const getTypeColor = (tipo: string) => {
         const t = tipo.toUpperCase()
@@ -148,13 +151,6 @@ export default function Dashboard() {
             colorSoft: 'var(--amber-soft)', colorRing: 'var(--amber-ring)',
             path: '/notificacoes',
         },
-        {
-            label: 'Conformidade', value: stats.compliance_rate + '%', desc: 'Taxa de licenças válidas',
-            icon: Activity, color: 'var(--violet-fg)',
-            colorSoft: 'var(--violet-soft)', colorRing: 'var(--violet-ring)',
-            path: '/licencas',
-            delta: stats.compliance_rate >= 90 ? 'Excelente' : undefined,
-        },
     ]
 
     return (
@@ -193,8 +189,77 @@ export default function Dashboard() {
             </div>
 
             {/* KPI Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
                 {kpis.map(k => <KpiCard key={k.label} {...k} />)}
+            </div>
+
+            {/* Conformidade */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div className="card" style={{ padding: 20 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+                        <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--primary-soft)', border: '1px solid var(--primary-ring)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <ShieldCheck size={19} style={{ color: 'var(--primary-fg)' }} strokeWidth={2} />
+                        </div>
+                        <div>
+                            <div style={{ color: 'var(--text-bright)', fontSize: 14, fontWeight: 700 }}>Conformidade Licenças</div>
+                            <div style={{ color: 'var(--text-mute)', fontSize: 12, marginTop: 2 }}>{stats.licencas_validas} válidas de {stats.total_licencas} total</div>
+                        </div>
+                        <div style={{ marginLeft: 'auto', color: 'var(--primary-fg)', fontSize: 28, fontWeight: 800, letterSpacing: -1 }}>{stats.compliance_rate}%</div>
+                    </div>
+                    <Sparkbar value={stats.compliance_rate} color="var(--primary-bright)" />
+                    <div style={{ display: 'flex', gap: 12, marginTop: 14 }}>
+                        {[
+                            { label: 'Válidas', val: stats.licencas_validas, color: 'var(--primary-fg)', status: 'Válida' },
+                            { label: 'Vencendo', val: stats.vencendo_90_dias, color: 'var(--amber-fg)', status: 'Vencendo' },
+                            { label: 'Vencidas', val: stats.licencas_vencidas, color: 'var(--rose-fg)', status: 'Vencida' },
+                        ].map(s => (
+                            <div
+                                key={s.label}
+                                onClick={() => navigate(`/licencas?status=${encodeURIComponent(s.status)}`)}
+                                style={{ flex: 1, textAlign: 'center', padding: '8px', background: 'var(--row-alt)', borderRadius: 8, cursor: 'pointer', transition: 'opacity .15s' }}
+                                onMouseEnter={e => (e.currentTarget.style.opacity = '0.75')}
+                                onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+                            >
+                                <div style={{ color: s.color, fontSize: 18, fontWeight: 700 }}>{s.val}</div>
+                                <div style={{ color: 'var(--text-dim)', fontSize: 10.5, fontWeight: 500, marginTop: 2 }}>{s.label}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="card" style={{ padding: 20 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+                        <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--sky-soft)', border: '1px solid var(--sky-ring)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Activity size={19} style={{ color: 'var(--sky-fg)' }} strokeWidth={2} />
+                        </div>
+                        <div>
+                            <div style={{ color: 'var(--text-bright)', fontSize: 14, fontWeight: 700 }}>Conformidade Outorgas</div>
+                            <div style={{ color: 'var(--text-mute)', fontSize: 12, marginTop: 2 }}>{outorgasAtivas} ativas de {outorgas.length} total</div>
+                        </div>
+                        <div style={{ marginLeft: 'auto', color: 'var(--sky-fg)', fontSize: 28, fontWeight: 800, letterSpacing: -1 }}>
+                            {outorgas.length > 0 ? Math.round((outorgasAtivas / outorgas.length) * 100) : 0}%
+                        </div>
+                    </div>
+                    <Sparkbar value={outorgas.length > 0 ? Math.round((outorgasAtivas / outorgas.length) * 100) : 0} color="var(--sky-fg)" />
+                    <div style={{ display: 'flex', gap: 12, marginTop: 14 }}>
+                        {[
+                            { label: 'Válidas', val: outorgasValidas, color: 'var(--primary-fg)', status: 'Válida' },
+                            { label: 'Vencendo', val: outorgasVencendo, color: 'var(--amber-fg)', status: 'Vencendo' },
+                            { label: 'Vencidas', val: outorgasVencidas, color: 'var(--rose-fg)', status: 'Vencida' },
+                        ].map(s => (
+                            <div
+                                key={s.label}
+                                onClick={() => navigate(`/licencas?tab=outorgas&status=${encodeURIComponent(s.status)}`)}
+                                style={{ flex: 1, textAlign: 'center', padding: '8px', background: 'var(--row-alt)', borderRadius: 8, cursor: 'pointer', transition: 'opacity .15s' }}
+                                onMouseEnter={e => (e.currentTarget.style.opacity = '0.75')}
+                                onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+                            >
+                                <div style={{ color: s.color, fontSize: 18, fontWeight: 700 }}>{s.val}</div>
+                                <div style={{ color: 'var(--text-dim)', fontSize: 10.5, fontWeight: 500, marginTop: 2 }}>{s.label}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
 
             {/* Main content: types + expiring */}
@@ -333,62 +398,6 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Outorgas compliance row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <div className="card" style={{ padding: 20 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-                        <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--primary-soft)', border: '1px solid var(--primary-ring)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <ShieldCheck size={19} style={{ color: 'var(--primary-fg)' }} strokeWidth={2} />
-                        </div>
-                        <div>
-                            <div style={{ color: 'var(--text-bright)', fontSize: 14, fontWeight: 700 }}>Conformidade Licenças</div>
-                            <div style={{ color: 'var(--text-mute)', fontSize: 12, marginTop: 2 }}>{stats.licencas_validas} válidas de {stats.total_licencas} total</div>
-                        </div>
-                        <div style={{ marginLeft: 'auto', color: 'var(--primary-fg)', fontSize: 28, fontWeight: 800, letterSpacing: -1 }}>{stats.compliance_rate}%</div>
-                    </div>
-                    <Sparkbar value={stats.compliance_rate} color="var(--primary-bright)" />
-                    <div style={{ display: 'flex', gap: 12, marginTop: 14 }}>
-                        {[
-                            { label: 'Válidas', val: stats.licencas_validas, color: 'var(--primary-fg)' },
-                            { label: 'Vencendo', val: stats.vencendo_90_dias, color: 'var(--amber-fg)' },
-                            { label: 'Vencidas', val: stats.licencas_vencidas, color: 'var(--rose-fg)' },
-                        ].map(s => (
-                            <div key={s.label} style={{ flex: 1, textAlign: 'center', padding: '8px', background: 'var(--row-alt)', borderRadius: 8 }}>
-                                <div style={{ color: s.color, fontSize: 18, fontWeight: 700 }}>{s.val}</div>
-                                <div style={{ color: 'var(--text-dim)', fontSize: 10.5, fontWeight: 500, marginTop: 2 }}>{s.label}</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="card" style={{ padding: 20 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-                        <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--sky-soft)', border: '1px solid var(--sky-ring)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Activity size={19} style={{ color: 'var(--sky-fg)' }} strokeWidth={2} />
-                        </div>
-                        <div>
-                            <div style={{ color: 'var(--text-bright)', fontSize: 14, fontWeight: 700 }}>Conformidade Outorgas</div>
-                            <div style={{ color: 'var(--text-mute)', fontSize: 12, marginTop: 2 }}>{outorgasValidas} válidas de {outorgas.length} total</div>
-                        </div>
-                        <div style={{ marginLeft: 'auto', color: 'var(--sky-fg)', fontSize: 28, fontWeight: 800, letterSpacing: -1 }}>
-                            {outorgas.length > 0 ? Math.round((outorgasValidas / outorgas.length) * 100) : 0}%
-                        </div>
-                    </div>
-                    <Sparkbar value={outorgas.length > 0 ? Math.round((outorgasValidas / outorgas.length) * 100) : 0} color="var(--sky-fg)" />
-                    <div style={{ display: 'flex', gap: 12, marginTop: 14 }}>
-                        {[
-                            { label: 'Válidas', val: outorgasValidas, color: 'var(--primary-fg)' },
-                            { label: 'Vencendo', val: outorgas.filter(o => computeStatus(o) === 'Vencendo').length, color: 'var(--amber-fg)' },
-                            { label: 'Vencidas', val: outorgas.filter(o => computeStatus(o) === 'Vencida').length, color: 'var(--rose-fg)' },
-                        ].map(s => (
-                            <div key={s.label} style={{ flex: 1, textAlign: 'center', padding: '8px', background: 'var(--row-alt)', borderRadius: 8 }}>
-                                <div style={{ color: s.color, fontSize: 18, fontWeight: 700 }}>{s.val}</div>
-                                <div style={{ color: 'var(--text-dim)', fontSize: 10.5, fontWeight: 500, marginTop: 2 }}>{s.label}</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
         </div>
     )
 }
