@@ -1,10 +1,11 @@
 import { useState, useMemo, useCallback } from 'react'
-import { Search, Download, FileText, Calendar, Building2, AlertCircle, Printer, MapPin, Droplets, X } from 'lucide-react'
+import { Search, Download, FileText, Calendar, Building2, AlertCircle, Printer, MapPin, Droplets } from 'lucide-react'
 import { useSupabase } from '../hooks/useSupabase'
 import { useRealtime } from '../hooks/useRealtime'
 import { fetchAlertasLicencas, fetchAlertasOutorgas, fetchOutorgas, fetchLicencas } from '../lib/api'
 import { isInAlertZone, getDaysRemaining, getRenovacaoLeadDays } from '../lib/types'
 import type { Licenca, Outorga } from '../lib/types'
+import DateRangePicker from '../components/DateRangePicker'
 
 const formatDate = (d: string | null) => {
     if (!d) return '—'
@@ -414,36 +415,11 @@ export default function Relatorios() {
                         <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                             Filtrar por período de vencimento
                         </label>
-                        <div className="flex items-center gap-2">
-                            <div className="flex-1 relative">
-                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
-                                <input
-                                    type="date"
-                                    value={dateFrom}
-                                    onChange={e => setDateFrom(e.target.value)}
-                                    className="w-full pl-9 pr-3 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
-                                />
-                            </div>
-                            <span className="text-slate-400 text-sm font-semibold flex-shrink-0">até</span>
-                            <div className="flex-1 relative">
-                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
-                                <input
-                                    type="date"
-                                    value={dateTo}
-                                    onChange={e => setDateTo(e.target.value)}
-                                    className="w-full pl-9 pr-3 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
-                                />
-                            </div>
-                            {isDateMode && (
-                                <button
-                                    onClick={() => { setDateFrom(''); setDateTo('') }}
-                                    className="flex-shrink-0 p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-600 transition-colors"
-                                    title="Limpar período"
-                                >
-                                    <X size={16} />
-                                </button>
-                            )}
-                        </div>
+                        <DateRangePicker
+                            dateFrom={dateFrom}
+                            dateTo={dateTo}
+                            onChange={(from, to) => { setDateFrom(from); setDateTo(to) }}
+                        />
                         {isDateMode && (
                             <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1.5 font-semibold">
                                 Mostrando todas as licenças e outorgas que vencem neste período
