@@ -227,8 +227,11 @@ export default function Relatorios() {
     const [dateTo, setDateTo] = useState('')
     const [activeTab, setActiveTab] = useState<'relatorio' | 'graficos'>('relatorio')
     const [expandedChart, setExpandedChart] = useState<string | null>(null)
+    const [chartDateFrom, setChartDateFrom] = useState('')
+    const [chartDateTo, setChartDateTo] = useState('')
 
     const isDateMode = !!(dateFrom || dateTo)
+    const isChartDateMode = !!(chartDateFrom || chartDateTo)
 
     const { data: licencasAlerta, loading: loadingLic, refetch: refetchLic } = useSupabase(fetchAlertasLicencas, [])
     const { data: outorgasAlerta, loading: loadingOutA, refetch: refetchOutA } = useSupabase(fetchAlertasOutorgas, [])
@@ -336,16 +339,42 @@ export default function Relatorios() {
         )
     }, [regraFiltered, search])
 
-    // ── Dados para gráficos ──────────────────────────────────────────────────
+    // ── Dados para gráficos — com filtro de período independente ────────────
+    const chartFilteredLicencas = useMemo(() => {
+        if (!isChartDateMode) return todasLicencas
+        const from = chartDateFrom ? chartDateFrom : null
+        const to = chartDateTo ? chartDateTo : null
+        return todasLicencas.filter(lic => {
+            if (!lic.validade) return false
+            const val = lic.validade.split('T')[0]
+            if (from && val < from) return false
+            if (to && val > to) return false
+            return true
+        })
+    }, [todasLicencas, isChartDateMode, chartDateFrom, chartDateTo])
+
+    const chartFilteredOutorgas = useMemo(() => {
+        if (!isChartDateMode) return outorgasFull
+        const from = chartDateFrom ? chartDateFrom : null
+        const to = chartDateTo ? chartDateTo : null
+        return outorgasFull.filter(out => {
+            if (!out.validade) return false
+            const val = out.validade.split('T')[0]
+            if (from && val < from) return false
+            if (to && val > to) return false
+            return true
+        })
+    }, [outorgasFull, isChartDateMode, chartDateFrom, chartDateTo])
+
     const chartStatus = useMemo(() => {
         let validas = 0, vencendo = 0, vencidas = 0
-        for (const lic of todasLicencas) {
+        for (const lic of chartFilteredLicencas) {
             const s = computeStatus(lic)
             if (s === 'Válida') validas++
             else if (s === 'Vencendo') vencendo++
             else vencidas++
         }
-        for (const out of outorgasFull) {
+        for (const out of chartFilteredOutorgas) {
             const s = computeStatus(out)
             if (s === 'Válida') validas++
             else if (s === 'Vencendo') vencendo++
@@ -357,22 +386,40 @@ export default function Relatorios() {
             { name: 'Vencendo', value: vencendo, color: '#f59e0b', pct: Math.round(vencendo / total * 100) },
             { name: 'Vencidas', value: vencidas, color: '#f43f5e', pct: Math.round(vencidas / total * 100) },
         ]
-    }, [todasLicencas, outorgasFull])
+    }, [chartFilteredLicencas, chartFilteredOutorgas])
 
     const chartVencimentos = useMemo(() => {
         const months: Record<string, { licencas: number; outorgas: number }> = {}
-        const now = new Date()
-        for (let i = 0; i < 12; i++) {
-            const d = new Date(now.getFullYear(), now.getMonth() + i, 1)
-            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-            months[key] = { licencas: 0, outorgas: 0 }
+        // Com filtro: exibe os meses do período selecionado
+        // Sem filtro: exibe os próximos 12 meses a partir de hoje
+        if (isChartDateMode && (chartDateFrom || chartDateTo)) {
+            const start = chartDateFrom
+                ? new Date(chartDateFrom + 'T12:00:00')
+                : new Date()
+            const end = chartDateTo
+                ? new Date(chartDateTo + 'T12:00:00')
+                : new Date(start.getFullYear(), start.getMonth() + 12, 1)
+            let cur = new Date(start.getFullYear(), start.getMonth(), 1)
+            const endMonth = new Date(end.getFullYear(), end.getMonth(), 1)
+            while (cur <= endMonth) {
+                const key = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`
+                months[key] = { licencas: 0, outorgas: 0 }
+                cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1)
+            }
+        } else {
+            const now = new Date()
+            for (let i = 0; i < 12; i++) {
+                const d = new Date(now.getFullYear(), now.getMonth() + i, 1)
+                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+                months[key] = { licencas: 0, outorgas: 0 }
+            }
         }
-        for (const lic of todasLicencas) {
+        for (const lic of chartFilteredLicencas) {
             if (!lic.validade) continue
             const key = lic.validade.split('T')[0].slice(0, 7)
             if (months[key] !== undefined) months[key].licencas++
         }
-        for (const out of outorgasFull) {
+        for (const out of chartFilteredOutorgas) {
             if (!out.validade) continue
             const key = out.validade.split('T')[0].slice(0, 7)
             if (months[key] !== undefined) months[key].outorgas++
@@ -382,15 +429,15 @@ export default function Relatorios() {
             Licenças: v.licencas,
             Outorgas: v.outorgas,
         }))
-    }, [todasLicencas, outorgasFull])
+    }, [chartFilteredLicencas, chartFilteredOutorgas, isChartDateMode, chartDateFrom, chartDateTo])
 
     const chartTipos = useMemo(() => {
         const counts: Record<string, number> = {}
-        for (const lic of todasLicencas) {
+        for (const lic of chartFilteredLicencas) {
             const k = lic.tipo || 'Outros'
             counts[k] = (counts[k] || 0) + 1
         }
-        for (const out of outorgasFull) {
+        for (const out of chartFilteredOutorgas) {
             const k = out.tipo || 'Outorga'
             counts[k] = (counts[k] || 0) + 1
         }
@@ -398,20 +445,20 @@ export default function Relatorios() {
             .sort((a, b) => b[1] - a[1])
             .slice(0, 10)
             .map(([tipo, total]) => ({ tipo, total }))
-    }, [todasLicencas, outorgasFull])
+    }, [chartFilteredLicencas, chartFilteredOutorgas])
 
     const chartCidades = useMemo(() => {
         const counts: Record<string, number> = {}
-        for (const lic of todasLicencas) {
+        for (const lic of chartFilteredLicencas) {
             if (lic.cidade) counts[lic.cidade] = (counts[lic.cidade] || 0) + 1
         }
         return Object.entries(counts)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 10)
             .map(([cidade, total]) => ({ cidade, total }))
-    }, [todasLicencas])
+    }, [chartFilteredLicencas])
 
-    const totalCarteira = todasLicencas.length + outorgasFull.length
+    const totalCarteira = chartFilteredLicencas.length + chartFilteredOutorgas.length
     const complianceRate = totalCarteira > 0
         ? Math.round(chartStatus[0].value / totalCarteira * 100)
         : 0
@@ -798,6 +845,48 @@ export default function Relatorios() {
                         </div>
                     ) : (
                         <>
+                            {/* Filtro de período dos gráficos */}
+                            <div style={{
+                                background: 'var(--card-bg)', border: '1px solid var(--border)',
+                                borderRadius: 14, padding: '14px 18px',
+                                boxShadow: 'var(--card-shadow)',
+                                display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                                    <div style={{
+                                        width: 28, height: 28, borderRadius: 8,
+                                        background: 'var(--primary-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    }}>
+                                        <Calendar size={14} style={{ color: 'var(--primary-fg)' }} />
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>Filtrar período</div>
+                                        <div style={{ fontSize: 10.5, color: 'var(--text-dim)' }}>
+                                            {isChartDateMode ? 'Gráficos filtrados pelo período selecionado' : 'Exibindo toda a carteira'}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style={{ flex: 1, minWidth: 260, maxWidth: 400 }}>
+                                    <DateRangePicker
+                                        dateFrom={chartDateFrom}
+                                        dateTo={chartDateTo}
+                                        onChange={(from, to) => { setChartDateFrom(from); setChartDateTo(to) }}
+                                    />
+                                </div>
+                                {isChartDateMode && (
+                                    <div style={{
+                                        display: 'flex', alignItems: 'center', gap: 6,
+                                        padding: '5px 10px', borderRadius: 8,
+                                        background: 'var(--primary-soft)', border: '1px solid var(--primary-ring)',
+                                        fontSize: 11.5, fontWeight: 600, color: 'var(--primary-fg)',
+                                        flexShrink: 0,
+                                    }}>
+                                        <span style={{ width: 6, height: 6, borderRadius: 3, background: 'var(--primary-fg)', display: 'inline-block' }} />
+                                        {chartFilteredLicencas.length + chartFilteredOutorgas.length} registros no período
+                                    </div>
+                                )}
+                            </div>
+
                             {/* KPIs rápidos */}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
                                 {[
