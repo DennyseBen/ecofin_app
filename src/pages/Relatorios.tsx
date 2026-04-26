@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
-import { Search, Download, FileText, Calendar, Building2, AlertCircle, Printer, MapPin, Droplets, BarChart3, PieChartIcon, TrendingUp } from 'lucide-react'
+import { Search, Download, FileText, Calendar, Building2, AlertCircle, Printer, MapPin, Droplets, BarChart3, PieChartIcon, TrendingUp, Maximize2, X } from 'lucide-react'
 import { useSupabase } from '../hooks/useSupabase'
 import { useRealtime } from '../hooks/useRealtime'
 import { fetchAlertasLicencas, fetchAlertasOutorgas, fetchOutorgas, fetchLicencas } from '../lib/api'
@@ -122,40 +122,101 @@ function PieTooltip({ active, payload }: any) {
 }
 
 // ── Componente de Card de Gráfico ────────────────────────────────────────────
-function ChartCard({ title, subtitle, icon: Icon, children, stat, statLabel, statColor }: {
+function ChartCard({ title, subtitle, icon: Icon, children, stat, statLabel, statColor, chartId, expandedId, onToggle }: {
     title: string; subtitle: string; icon: React.ElementType
     children: React.ReactNode
     stat?: string | number; statLabel?: string; statColor?: string
+    chartId: string; expandedId: string | null; onToggle: (id: string | null) => void
 }) {
-    return (
-        <div style={{
-            background: 'var(--card-bg)', border: '1px solid var(--border)',
-            borderRadius: 16, padding: '20px 20px 16px',
-            boxShadow: 'var(--card-shadow)',
-            display: 'flex', flexDirection: 'column', gap: 12,
-        }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                        <div style={{
-                            width: 28, height: 28, borderRadius: 8,
-                            background: 'var(--primary-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}>
-                            <Icon size={14} style={{ color: 'var(--primary-fg)' }} />
-                        </div>
-                        <span style={{ color: 'var(--text-bright)', fontSize: 14, fontWeight: 700 }}>{title}</span>
+    const isExpanded = expandedId === chartId
+
+    const header = (large = false) => (
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+            <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                    <div style={{
+                        width: large ? 34 : 28, height: large ? 34 : 28, borderRadius: 8,
+                        background: 'var(--primary-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                        <Icon size={large ? 17 : 14} style={{ color: 'var(--primary-fg)' }} />
                     </div>
-                    <div style={{ color: 'var(--text-dim)', fontSize: 11.5, marginLeft: 36 }}>{subtitle}</div>
+                    <span style={{ color: 'var(--text-bright)', fontSize: large ? 17 : 14, fontWeight: 700 }}>{title}</span>
                 </div>
+                <div style={{ color: 'var(--text-dim)', fontSize: 12, marginLeft: large ? 42 : 36 }}>{subtitle}</div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
                 {stat !== undefined && (
                     <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: 22, fontWeight: 800, color: statColor || 'var(--primary-fg)', letterSpacing: -0.5 }}>{stat}</div>
+                        <div style={{ fontSize: large ? 28 : 22, fontWeight: 800, color: statColor || 'var(--primary-fg)', letterSpacing: -0.5 }}>{stat}</div>
                         {statLabel && <div style={{ fontSize: 10.5, color: 'var(--text-dim)', fontWeight: 500 }}>{statLabel}</div>}
                     </div>
                 )}
+                <button
+                    onClick={e => { e.stopPropagation(); onToggle(isExpanded ? null : chartId) }}
+                    title={isExpanded ? 'Fechar' : 'Expandir'}
+                    style={{
+                        width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+                        background: 'var(--neutral-bg)', border: '1px solid var(--border)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', color: 'var(--text-mute)',
+                    }}
+                >
+                    {isExpanded ? <X size={14} /> : <Maximize2 size={14} />}
+                </button>
             </div>
-            {children}
         </div>
+    )
+
+    return (
+        <>
+            {/* Card normal — sempre visível na grid */}
+            <div
+                onClick={() => onToggle(chartId)}
+                style={{
+                    background: 'var(--card-bg)', border: `1px solid ${isExpanded ? 'var(--primary)' : 'var(--border)'}`,
+                    borderRadius: 16, padding: '20px 20px 16px',
+                    boxShadow: isExpanded ? 'var(--card-shadow), 0 0 0 2px var(--primary-ring)' : 'var(--card-shadow)',
+                    display: 'flex', flexDirection: 'column', gap: 12,
+                    cursor: 'pointer', transition: 'border-color .15s, box-shadow .15s',
+                    opacity: isExpanded ? 0.4 : 1,
+                }}
+            >
+                {header(false)}
+                {children}
+            </div>
+
+            {/* Overlay expandido */}
+            {isExpanded && (
+                <div
+                    onClick={() => onToggle(null)}
+                    style={{
+                        position: 'fixed', inset: 0, zIndex: 200,
+                        background: 'rgba(0,0,0,0.70)',
+                        backdropFilter: 'blur(8px)',
+                        WebkitBackdropFilter: 'blur(8px)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        padding: 24,
+                    }}
+                >
+                    <div
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                            background: 'var(--surface)', border: '1px solid var(--border)',
+                            borderRadius: 20, padding: '24px 28px 20px',
+                            boxShadow: '0 32px 80px -20px rgba(0,0,0,0.7)',
+                            display: 'flex', flexDirection: 'column', gap: 16,
+                            width: '92vw', maxWidth: 1100,
+                            height: '82vh', maxHeight: 820,
+                        }}
+                    >
+                        {header(true)}
+                        <div style={{ flex: 1, minHeight: 0 }}>
+                            {children}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
     )
 }
 
@@ -165,6 +226,7 @@ export default function Relatorios() {
     const [dateFrom, setDateFrom] = useState('')
     const [dateTo, setDateTo] = useState('')
     const [activeTab, setActiveTab] = useState<'relatorio' | 'graficos'>('relatorio')
+    const [expandedChart, setExpandedChart] = useState<string | null>(null)
 
     const isDateMode = !!(dateFrom || dateTo)
 
@@ -770,8 +832,11 @@ export default function Relatorios() {
                                     stat={`${complianceRate}%`}
                                     statLabel="em conformidade"
                                     statColor="#10b981"
+                                    chartId="status"
+                                    expandedId={expandedChart}
+                                    onToggle={setExpandedChart}
                                 >
-                                    <div style={{ position: 'relative', height: 260 }}>
+                                    <div style={{ position: 'relative', height: '100%', minHeight: 260 }}>
                                         <ResponsiveContainer width="100%" height="100%">
                                             <PieChart>
                                                 <Pie
@@ -822,8 +887,11 @@ export default function Relatorios() {
                                     stat={chartVencimentos.reduce((s, m) => s + m.Licenças + m.Outorgas, 0)}
                                     statLabel="vencimentos mapeados"
                                     statColor="var(--primary-fg)"
+                                    chartId="vencimentos"
+                                    expandedId={expandedChart}
+                                    onToggle={setExpandedChart}
                                 >
-                                    <div style={{ height: 220 }}>
+                                    <div style={{ height: '100%', minHeight: 220 }}>
                                         <ResponsiveContainer width="100%" height="100%">
                                             <AreaChart data={chartVencimentos} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                                                 <defs>
@@ -856,8 +924,11 @@ export default function Relatorios() {
                                     stat={chartTipos.length > 0 ? chartTipos[0].tipo : '—'}
                                     statLabel="tipo mais comum"
                                     statColor="var(--primary-fg)"
+                                    chartId="tipos"
+                                    expandedId={expandedChart}
+                                    onToggle={setExpandedChart}
                                 >
-                                    <div style={{ height: 280 }}>
+                                    <div style={{ height: '100%', minHeight: 280 }}>
                                         <ResponsiveContainer width="100%" height="100%">
                                             <BarChart
                                                 data={chartTipos}
@@ -893,8 +964,11 @@ export default function Relatorios() {
                                     stat={chartCidades.length > 0 ? chartCidades[0].cidade : '—'}
                                     statLabel="cidade com mais licenças"
                                     statColor="var(--sky-fg)"
+                                    chartId="cidades"
+                                    expandedId={expandedChart}
+                                    onToggle={setExpandedChart}
                                 >
-                                    <div style={{ height: 280 }}>
+                                    <div style={{ height: '100%', minHeight: 280 }}>
                                         <ResponsiveContainer width="100%" height="100%">
                                             <BarChart
                                                 data={chartCidades}
