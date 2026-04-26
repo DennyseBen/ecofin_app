@@ -9,6 +9,7 @@ import { fetchLicencas, insertLicenca, updateLicenca, deleteLicenca, fetchClient
 import { computeStatus, statusBadgeClass, getDaysRemaining, isInAlertZone, TIPOS_LICENCA, TIPOS_OUTORGA, getRenovacaoLeadDays } from '../lib/types'
 import type { Licenca, Outorga, Cliente } from '../lib/types'
 import { importarDocumento } from '../lib/importLicenca'
+import DateRangePicker from '../components/DateRangePicker'
 
 const formatDate = (d: string | null) => {
     if (!d) return '—'
@@ -277,6 +278,8 @@ export default function Licencas() {
     const [filterStatus, setFilterStatus] = useState(searchParams.get('status') || 'all')
     const [filterRenovar, setFilterRenovar] = useState(false)
     const [filterDias, setFilterDias] = useState<number | null>(null)
+    const [dateFrom, setDateFrom] = useState('')
+    const [dateTo, setDateTo] = useState('')
     const [page, setPage] = useState(1)
     const PAGE_SIZE = 30
     const [selected, setSelected] = useState<Licenca | null>(null)
@@ -373,6 +376,15 @@ export default function Licencas() {
         return Array.from(new Set([...TIPOS_OUTORGA, ...outorgas.map(o => o.tipo).filter(Boolean)])).sort()
     }, [outorgas])
 
+    const matchPeriod = (validade: string | null) => {
+        if (!dateFrom && !dateTo) return true
+        if (!validade) return false
+        const val = validade.split('T')[0]
+        if (dateFrom && val < dateFrom) return false
+        if (dateTo && val > dateTo) return false
+        return true
+    }
+
     const filteredLicencas = useMemo(() => {
         return licencas.filter(c => {
             const s = search.toLowerCase()
@@ -388,9 +400,10 @@ export default function Licencas() {
             const matchStatus = filterStatus === 'all' || computed === filterStatus
             const matchRenovar = !filterRenovar || isInAlertZone(c)
             const matchDias = filterDias === null || (getDaysRemaining(c) !== null && getDaysRemaining(c)! <= filterDias)
-            return matchSearch && matchType && matchStatus && matchRenovar && matchDias
+            const matchDate = matchPeriod(c.validade)
+            return matchSearch && matchType && matchStatus && matchRenovar && matchDias && matchDate
         })
-    }, [licencas, search, filterType, filterStatus, filterRenovar, filterDias])
+    }, [licencas, search, filterType, filterStatus, filterRenovar, filterDias, dateFrom, dateTo])
 
     const filteredOutorgas = useMemo(() => {
         return outorgas.filter(o => {
@@ -405,9 +418,10 @@ export default function Licencas() {
             const matchStatus = filterStatus === 'all' || computeStatus(o) === filterStatus
             const matchRenovar = !filterRenovar || isInAlertZone(o)
             const matchDias = filterDias === null || (getDaysRemaining(o) !== null && getDaysRemaining(o)! <= filterDias)
-            return matchSearch && matchStatus && matchRenovar && matchDias
+            const matchDate = matchPeriod(o.validade)
+            return matchSearch && matchStatus && matchRenovar && matchDias && matchDate
         })
-    }, [outorgas, search, filterStatus, filterRenovar, filterDias])
+    }, [outorgas, search, filterStatus, filterRenovar, filterDias, dateFrom, dateTo])
 
     const activeFiltered = activeTab === 'Licenças' ? filteredLicencas : filteredOutorgas
     const totalPages = Math.ceil(activeFiltered.length / PAGE_SIZE)
@@ -415,7 +429,7 @@ export default function Licencas() {
 
     useEffect(() => {
         setPage(1)
-    }, [search, filterType, filterStatus, filterRenovar, filterDias, activeTab])
+    }, [search, filterType, filterStatus, filterRenovar, filterDias, dateFrom, dateTo, activeTab])
 
     const alertCount = useMemo(() => {
         return licencas.filter(isInAlertZone).length + outorgas.filter(isInAlertZone).length
@@ -585,35 +599,53 @@ export default function Licencas() {
             </div>
 
             {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative flex-1">
-                    <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300" />
-                    <input className="form-input pl-10" placeholder="Pesquisar por empresa, pasta ou CNPJ..." value={search} onChange={e => setSearch(e.target.value)} />
-                </div>
-                {activeTab === 'Licenças' && (
-                    <select className="form-select w-full sm:w-44" value={filterType} onChange={e => setFilterType(e.target.value)}>
-                        <option value="all">Todos Tipos</option>
-                        {tipos.map(t => <option key={t} value={t}>{t}</option>)}
+            <div className="flex flex-col gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="relative flex-1">
+                        <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300" />
+                        <input className="form-input pl-10" placeholder="Pesquisar por empresa, pasta ou CNPJ..." value={search} onChange={e => setSearch(e.target.value)} />
+                    </div>
+                    {activeTab === 'Licenças' && (
+                        <select className="form-select w-full sm:w-44" value={filterType} onChange={e => setFilterType(e.target.value)}>
+                            <option value="all">Todos Tipos</option>
+                            {tipos.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                    )}
+                    <select className="form-select w-full sm:w-40" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+                        <option value="all">Todos Status</option>
+                        <option value="Válida">Válida</option>
+                        <option value="Vencendo">Vencendo</option>
+                        <option value="Vencida">Vencida</option>
                     </select>
-                )}
-                <select className="form-select w-full sm:w-40" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-                    <option value="all">Todos Status</option>
-                    <option value="Válida">Válida</option>
-                    <option value="Vencendo">Vencendo</option>
-                    <option value="Vencida">Vencida</option>
-                </select>
-                <select
-                    className="form-select w-full sm:w-44"
-                    value={filterDias ?? ''}
-                    onChange={e => setFilterDias(e.target.value === '' ? null : Number(e.target.value))}
-                >
-                    <option value="">Todos os prazos</option>
-                    <option value="60">Vence em 60 dias</option>
-                    <option value="90">Vence em 90 dias</option>
-                    <option value="120">Vence em 120 dias</option>
-                    <option value="150">Vence em 150 dias</option>
-                    <option value="180">Vence em 180 dias</option>
-                </select>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+                    <div className="w-full sm:w-72">
+                        <DateRangePicker
+                            dateFrom={dateFrom}
+                            dateTo={dateTo}
+                            onChange={(from, to) => { setDateFrom(from); setDateTo(to); setFilterDias(null) }}
+                        />
+                    </div>
+                    {!dateFrom && !dateTo && (
+                        <select
+                            className="form-select w-full sm:w-44"
+                            value={filterDias ?? ''}
+                            onChange={e => setFilterDias(e.target.value === '' ? null : Number(e.target.value))}
+                        >
+                            <option value="">Todos os prazos</option>
+                            <option value="60">Vence em 60 dias</option>
+                            <option value="90">Vence em 90 dias</option>
+                            <option value="120">Vence em 120 dias</option>
+                            <option value="150">Vence em 150 dias</option>
+                            <option value="180">Vence em 180 dias</option>
+                        </select>
+                    )}
+                    {(dateFrom || dateTo) && (
+                        <span className="text-[11px] text-emerald-500 font-semibold">
+                            Filtrando por período de vencimento
+                        </span>
+                    )}
+                </div>
             </div>
 
             {/* Smart Banner */}
