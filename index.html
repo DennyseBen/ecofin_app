@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR" class="dark">
+<html lang="pt-BR" class="dark theme-moderno">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="/logo.jpeg" />
@@ -9,6 +9,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="description" content="EcoFin Manager - Sistema de Gestão de Licenciamento Ambiental" />
     <title>EcoFin Manager</title>
+    <!-- Aplica tema salvo ANTES da primeira pintura para evitar flash -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('ecofin-theme');
+          var valid = ['contemporaneo', 'moderno', 'galaxy'];
+          if (!valid.includes(t)) t = 'moderno';
+          document.documentElement.classList.remove('theme-contemporaneo', 'theme-moderno', 'theme-galaxy');
+          document.documentElement.classList.add('theme-' + t);
+          if (t === 'moderno' || t === 'galaxy') {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
