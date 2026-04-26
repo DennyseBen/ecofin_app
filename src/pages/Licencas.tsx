@@ -382,7 +382,7 @@ export default function Licencas() {
                 String(c.cnpj || '').toLowerCase().includes(s) ||
                 String(c.pasta || '').includes(s) ||
                 String(c.atividade_licenciada || '').toLowerCase().includes(s) ||
-                (sCnpj.length > 0 && cCnpj.startsWith(sCnpj.slice(0, 8)))
+                (sCnpj.length > 0 && cCnpj.startsWith(sCnpj))
             const matchType = filterType === 'all' || normalizeTipo(c.tipo) === filterType
             const computed = computeStatus(c)
             const matchStatus = filterStatus === 'all' || computed === filterStatus
@@ -401,7 +401,7 @@ export default function Licencas() {
                 String(o.cnpj || '').toLowerCase().includes(s) ||
                 String(o.tipo || '').toLowerCase().includes(s) ||
                 String(o.numero_outorga || '').toLowerCase().includes(s) ||
-                (sCnpj.length > 0 && oCnpj.startsWith(sCnpj.slice(0, 8)))
+                (sCnpj.length > 0 && oCnpj.startsWith(sCnpj))
             const matchStatus = filterStatus === 'all' || computeStatus(o) === filterStatus
             const matchRenovar = !filterRenovar || isInAlertZone(o)
             const matchDias = filterDias === null || (getDaysRemaining(o) !== null && getDaysRemaining(o)! <= filterDias)
@@ -652,6 +652,10 @@ export default function Licencas() {
                                     </div>
                                 </div>
                                 <h4 className="font-semibold text-sm truncate mb-0.5">{c.razao_social}</h4>
+                                <div className="flex items-center gap-2 mb-0.5">
+                                    {c.cnpj && <span className="text-[10px] text-slate-400 font-mono truncate">{c.cnpj}</span>}
+                                    {c.cidade && <span className="text-[10px] text-slate-500 truncate">· {c.cidade}</span>}
+                                </div>
                                 <p className="text-[11px] text-slate-400 truncate mb-3">{c.atividade_licenciada || 'Atividade não informada'}</p>
                                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-400">
                                     <span className="flex items-center gap-1"><Building2 size={11} /> {c.departamento || '—'}</span>

@@ -1,8 +1,8 @@
 import { useState, useMemo, useCallback } from 'react'
-import { Search, Download, FileText, Calendar, Building2, AlertCircle, Printer, MapPin, Droplets } from 'lucide-react'
+import { Search, Download, FileText, Calendar, Building2, AlertCircle, Printer, MapPin, Droplets, X } from 'lucide-react'
 import { useSupabase } from '../hooks/useSupabase'
 import { useRealtime } from '../hooks/useRealtime'
-import { fetchAlertasLicencas, fetchAlertasOutorgas, fetchOutorgas } from '../lib/api'
+import { fetchAlertasLicencas, fetchAlertasOutorgas, fetchOutorgas, fetchLicencas } from '../lib/api'
 import { isInAlertZone, getDaysRemaining, getRenovacaoLeadDays } from '../lib/types'
 import type { Licenca, Outorga } from '../lib/types'
 
@@ -84,63 +84,96 @@ function classifyRegra(tipo: string, kind: 'licenca' | 'outorga'): RegraId | nul
 export default function Relatorios() {
     const [search, setSearch] = useState('')
     const [activeRegra, setActiveRegra] = useState<RegraId | 'todos'>('todos')
+    const [dateFrom, setDateFrom] = useState('')
+    const [dateTo, setDateTo] = useState('')
+
+    const isDateMode = !!(dateFrom || dateTo)
 
     // Mesmas APIs que Notificações usa
     const { data: licencasAlerta, loading: loadingLic, refetch: refetchLic } = useSupabase(fetchAlertasLicencas, [])
     const { data: outorgasAlerta, loading: loadingOutA, refetch: refetchOutA } = useSupabase(fetchAlertasOutorgas, [])
     const { data: outorgasFull, loading: loadingOutF, refetch: refetchOutF } = useSupabase(fetchOutorgas, [])
+    const { data: todasLicencas, loading: loadingAll, refetch: refetchAll2 } = useSupabase(fetchLicencas, [])
 
-    const refetchAll = useCallback(() => { refetchLic(); refetchOutA(); refetchOutF() }, [refetchLic, refetchOutA, refetchOutF])
+    const refetchAll = useCallback(() => { refetchLic(); refetchOutA(); refetchOutF(); refetchAll2() }, [refetchLic, refetchOutA, refetchOutF, refetchAll2])
     useRealtime(['licencas', 'outorgas'], refetchAll)
 
-    const loading = loadingLic || loadingOutA || loadingOutF
+    const loading = loadingLic || loadingOutA || loadingOutF || loadingAll
 
-    // ── Construir itens usando isInAlertZone (mesma lógica de Notificações) ──
+    const toRelatorioItem = (lic: Licenca): RelatorioItem => ({
+        id: lic.id,
+        kind: 'licenca',
+        razao_social: lic.razao_social,
+        cnpj: lic.cnpj,
+        cidade: lic.cidade ?? null,
+        orgao: lic.departamento ?? null,
+        tipo_documento: lic.tipo,
+        validade: lic.validade,
+        data_renovacao: resolveRenovacao(lic.data_renovacao, lic.validade, lic.tipo),
+        dias_restantes: getDaysRemaining(lic),
+        processo: lic.processo ?? null,
+        numero_outorga: null,
+        regra: classifyRegra(lic.tipo, 'licenca'),
+    })
+
+    const toRelatorioItemOut = (out: Outorga): RelatorioItem => ({
+        id: out.id,
+        kind: 'outorga',
+        razao_social: out.razao_social,
+        cnpj: out.cnpj,
+        cidade: null,
+        orgao: out.orgao ?? null,
+        tipo_documento: out.tipo,
+        validade: out.validade,
+        data_renovacao: resolveRenovacao(out.data_renovacao, out.validade, out.tipo),
+        dias_restantes: getDaysRemaining(out),
+        processo: null,
+        numero_outorga: out.numero_outorga ?? null,
+        regra: 'outorgas',
+    })
+
+    // ── Construir itens ──────────────────────────────────────────────────────
     const allItems = useMemo((): RelatorioItem[] => {
         const result: RelatorioItem[] = []
 
-        // Licenças em zona de alerta (baseado em validade + tipo, como Notificações)
-        for (const lic of licencasAlerta) {
-            if (!isInAlertZone(lic)) continue
-            result.push({
-                id: lic.id,
-                kind: 'licenca',
-                razao_social: lic.razao_social,
-                cnpj: lic.cnpj,
-                cidade: lic.cidade ?? null,
-                orgao: lic.departamento ?? null,
-                tipo_documento: lic.tipo,
-                validade: lic.validade,
-                data_renovacao: resolveRenovacao(lic.data_renovacao, lic.validade, lic.tipo),
-                dias_restantes: getDaysRemaining(lic),
-                processo: lic.processo ?? null,
-                numero_outorga: null,
-                regra: classifyRegra(lic.tipo, 'licenca'),
-            })
+        if (isDateMode) {
+            // Modo período: mostra TODAS as licenças/outorgas no intervalo de datas
+            const from = dateFrom ? new Date(dateFrom + 'T00:00:00') : null
+            const to = dateTo ? new Date(dateTo + 'T23:59:59') : null
+
+            for (const lic of todasLicencas) {
+                if (!lic.validade) continue
+                const val = new Date(lic.validade.split('T')[0] + 'T00:00:00')
+                if (from && val < from) continue
+                if (to && val > to) continue
+                result.push(toRelatorioItem(lic))
+            }
+            for (const out of outorgasFull) {
+                if (!out.validade) continue
+                const val = new Date(out.validade.split('T')[0] + 'T00:00:00')
+                if (from && val < from) continue
+                if (to && val > to) continue
+                result.push(toRelatorioItemOut(out))
+            }
+        } else {
+            // Modo alerta: mesma lógica de Notificações
+            for (const lic of licencasAlerta) {
+                if (!isInAlertZone(lic)) continue
+                result.push(toRelatorioItem(lic))
+            }
+            for (const out of outorgasFull) {
+                if (!isInAlertZone(out)) continue
+                result.push(toRelatorioItemOut(out))
+            }
         }
 
-        // Outorgas em zona de alerta
-        for (const out of outorgasFull) {
-            if (!isInAlertZone(out)) continue
-            result.push({
-                id: out.id,
-                kind: 'outorga',
-                razao_social: out.razao_social,
-                cnpj: out.cnpj,
-                cidade: null,
-                orgao: out.orgao ?? null,
-                tipo_documento: out.tipo,
-                validade: out.validade,
-                data_renovacao: resolveRenovacao(out.data_renovacao, out.validade, out.tipo),
-                dias_restantes: getDaysRemaining(out),
-                processo: null,
-                numero_outorga: out.numero_outorga ?? null,
-                regra: 'outorgas',
-            })
-        }
-
-        return result.sort((a, b) => (a.dias_restantes ?? 999) - (b.dias_restantes ?? 999))
-    }, [licencasAlerta, outorgasFull])
+        return result.sort((a, b) => {
+            if (!a.validade && !b.validade) return 0
+            if (!a.validade) return 1
+            if (!b.validade) return -1
+            return a.validade.localeCompare(b.validade)
+        })
+    }, [licencasAlerta, outorgasFull, todasLicencas, isDateMode, dateFrom, dateTo])
 
     // ── Contagens por regra ──
     const regraCounts = useMemo(() => {
@@ -151,11 +184,12 @@ export default function Relatorios() {
         return counts
     }, [allItems])
 
-    // ── Filtro por regra selecionada ──
+    // ── Filtro por regra (apenas no modo alerta) ──
     const regraFiltered = useMemo((): RelatorioItem[] => {
+        if (isDateMode) return allItems
         if (activeRegra === 'todos') return allItems
         return allItems.filter(i => i.regra === activeRegra)
-    }, [allItems, activeRegra])
+    }, [allItems, activeRegra, isDateMode])
 
     // ── Busca por razão social, CNPJ, cidade ou órgão ──
     const filtered = useMemo(() => {
@@ -181,9 +215,15 @@ export default function Relatorios() {
         const pageW = doc.internal.pageSize.getWidth()
         const pageH = doc.internal.pageSize.getHeight()
 
-        const regraLabel = activeRegra === 'todos'
-            ? 'Todos os alertas'
-            : REGRAS.find(r => r.id === activeRegra)?.label ?? activeRegra
+        const fmtDatePdf = (d: string) => {
+            const [y, m, day] = d.split('-')
+            return `${day}/${m}/${y}`
+        }
+        const regraLabel = isDateMode
+            ? `Período: ${dateFrom ? fmtDatePdf(dateFrom) : '—'} a ${dateTo ? fmtDatePdf(dateTo) : '—'}`
+            : activeRegra === 'todos'
+                ? 'Todos os alertas'
+                : REGRAS.find(r => r.id === activeRegra)?.label ?? activeRegra
 
         // --- Header ---
         doc.setFillColor(16, 185, 129)
@@ -306,7 +346,9 @@ export default function Relatorios() {
             doc.text(`Página ${i} de ${totalPages}`, pageW - 40, pageH - 5)
         }
 
-        const suffix = activeRegra === 'todos' ? 'todos' : activeRegra
+        const suffix = isDateMode
+            ? `periodo_${dateFrom || 'inicio'}_${dateTo || 'fim'}`
+            : activeRegra === 'todos' ? 'todos' : activeRegra
         doc.save(`relatorio_renovacoes_${suffix}_${new Date().toISOString().split('T')[0]}.pdf`)
     }
 
@@ -367,50 +409,91 @@ export default function Relatorios() {
                         </div>
                     </div>
 
-                    {/* Regras de antecedência */}
+                    {/* Seletor de período */}
                     <div>
                         <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-                            Filtrar por regra de antecedência
+                            Filtrar por período de vencimento
                         </label>
-                        <div className="grid grid-cols-4 gap-2">
-                            {/* Botão "Todos" */}
-                            <button
-                                onClick={() => setActiveRegra('todos')}
-                                className={`px-3 py-3 rounded-2xl text-sm font-bold transition-all ${
-                                    activeRegra === 'todos'
-                                        ? 'bg-slate-700 text-white shadow-lg shadow-slate-700/30'
-                                        : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10'
-                                }`}
-                            >
-                                <div>Todos</div>
-                                <div className={`text-[10px] mt-1 font-semibold ${activeRegra === 'todos' ? 'text-slate-300' : 'text-slate-400'}`}>
-                                    {allItems.length} alertas
-                                </div>
-                            </button>
-
-                            {/* Botões por regra */}
-                            {REGRAS.map(regra => {
-                                const isActive = activeRegra === regra.id
-                                const cores = regraCorMap[regra.cor]
-                                return (
-                                    <button
-                                        key={regra.id}
-                                        onClick={() => setActiveRegra(isActive ? 'todos' : regra.id)}
-                                        className={`px-3 py-3 rounded-2xl text-sm font-bold transition-all ${
-                                            isActive ? cores.active : cores.inactive
-                                        }`}
-                                    >
-                                        <div>{regra.dias}d</div>
-                                        <div className="text-[10px] opacity-80">{regra.label}</div>
-                                        <div className={`text-[10px] mt-1 font-semibold ${isActive ? cores.count : 'text-slate-400 dark:text-slate-500'}`}>
-                                            {regraCounts[regra.id]} {regraCounts[regra.id] === 1 ? 'alerta' : 'alertas'}
-                                        </div>
-                                    </button>
-                                )
-                            })}
+                        <div className="flex items-center gap-2">
+                            <div className="flex-1 relative">
+                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
+                                <input
+                                    type="date"
+                                    value={dateFrom}
+                                    onChange={e => setDateFrom(e.target.value)}
+                                    className="w-full pl-9 pr-3 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
+                                />
+                            </div>
+                            <span className="text-slate-400 text-sm font-semibold flex-shrink-0">até</span>
+                            <div className="flex-1 relative">
+                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
+                                <input
+                                    type="date"
+                                    value={dateTo}
+                                    onChange={e => setDateTo(e.target.value)}
+                                    className="w-full pl-9 pr-3 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
+                                />
+                            </div>
+                            {isDateMode && (
+                                <button
+                                    onClick={() => { setDateFrom(''); setDateTo('') }}
+                                    className="flex-shrink-0 p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-600 transition-colors"
+                                    title="Limpar período"
+                                >
+                                    <X size={16} />
+                                </button>
+                            )}
                         </div>
+                        {isDateMode && (
+                            <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1.5 font-semibold">
+                                Mostrando todas as licenças e outorgas que vencem neste período
+                            </p>
+                        )}
                     </div>
                 </div>
+
+                {/* Regras de antecedência — visível apenas no modo alerta */}
+                {!isDateMode && (
+                <div className="mt-4">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                        Filtrar por regra de antecedência
+                    </label>
+                    <div className="grid grid-cols-4 gap-2">
+                        <button
+                            onClick={() => setActiveRegra('todos')}
+                            className={`px-3 py-3 rounded-2xl text-sm font-bold transition-all ${
+                                activeRegra === 'todos'
+                                    ? 'bg-slate-700 text-white shadow-lg shadow-slate-700/30'
+                                    : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10'
+                            }`}
+                        >
+                            <div>Todos</div>
+                            <div className={`text-[10px] mt-1 font-semibold ${activeRegra === 'todos' ? 'text-slate-300' : 'text-slate-400'}`}>
+                                {allItems.length} alertas
+                            </div>
+                        </button>
+                        {REGRAS.map(regra => {
+                            const isActive = activeRegra === regra.id
+                            const cores = regraCorMap[regra.cor]
+                            return (
+                                <button
+                                    key={regra.id}
+                                    onClick={() => setActiveRegra(isActive ? 'todos' : regra.id)}
+                                    className={`px-3 py-3 rounded-2xl text-sm font-bold transition-all ${
+                                        isActive ? cores.active : cores.inactive
+                                    }`}
+                                >
+                                    <div>{regra.dias}d</div>
+                                    <div className="text-[10px] opacity-80">{regra.label}</div>
+                                    <div className={`text-[10px] mt-1 font-semibold ${isActive ? cores.count : 'text-slate-400 dark:text-slate-500'}`}>
+                                        {regraCounts[regra.id]} {regraCounts[regra.id] === 1 ? 'alerta' : 'alertas'}
+                                    </div>
+                                </button>
+                            )
+                        })}
+                    </div>
+                </div>
+                )}
 
                 {/* Stats + ações */}
                 <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-100 dark:border-white/[0.06]">
@@ -418,7 +501,9 @@ export default function Relatorios() {
                         <AlertCircle size={16} className="text-amber-500" />
                         <span className="font-bold">{filtered.length}</span>
                         <span className="text-slate-500 dark:text-slate-400">
-                            {filtered.length === 1 ? 'alerta encontrado' : 'alertas encontrados'}
+                            {isDateMode
+                                ? (filtered.length === 1 ? 'licença/outorga no período' : 'licenças/outorgas no período')
+                                : (filtered.length === 1 ? 'alerta encontrado' : 'alertas encontrados')}
                         </span>
                     </div>
                     <div className="flex gap-2">
