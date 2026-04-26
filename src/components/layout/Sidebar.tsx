@@ -3,7 +3,7 @@ import { useTheme } from '../../contexts/ThemeContext'
 import { useAuth } from '../../contexts/AuthContext'
 import {
     LayoutDashboard, Users, FileText, Wallet, ClipboardList,
-    Settings, Bell, BarChart3, Menu, X, LogOut, Leaf,
+    Settings, Bell, BarChart3, Menu, X, LogOut,
     MoreHorizontal, Shield
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
@@ -134,24 +134,6 @@ export default function Sidebar() {
 
                 {/* Footer */}
                 <div style={{ padding: 16 }}>
-                    {/* PRO plan widget */}
-                    <div style={{
-                        padding: 14, borderRadius: 10, marginBottom: 12,
-                        background: 'var(--primary-soft)',
-                        border: '1px solid var(--primary-ring)',
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                            <Leaf size={13} style={{ color: 'var(--primary-fg)' }} />
-                            <div style={{ color: 'var(--primary-fg)', fontSize: 11.5, fontWeight: 700, letterSpacing: 0.3 }}>PLANO PRO</div>
-                        </div>
-                        <div style={{ color: 'var(--text-mute)', fontSize: 11.5, lineHeight: 1.5, marginBottom: 10 }}>
-                            Licenciamento ambiental completo
-                        </div>
-                        <div style={{ height: 4, background: 'var(--neutral-bg)', borderRadius: 4, overflow: 'hidden' }}>
-                            <div style={{ height: '100%', width: '86%', background: 'var(--primary-bright)', borderRadius: 4 }} />
-                        </div>
-                    </div>
-
                     {/* Theme selector */}
                     <div style={{
                         display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 4,
@@ -222,7 +204,7 @@ export default function Sidebar() {
 
                     <div style={{ textAlign: 'center', marginTop: 10 }}>
                         <p style={{ fontSize: 10, color: 'var(--text-dim)', lineHeight: 1.5 }}>
-                            Xlmart Stack · v1.2.0
+                            EcoFin Manager · v1.3.0
                         </p>
                     </div>
                 </div>
