@@ -55,6 +55,26 @@ const REGRAS: Regra[] = [
     },
 ]
 
+interface DrillItem {
+    id: number
+    kind: 'licenca' | 'outorga'
+    razao_social: string
+    cnpj: string | null
+    cidade: string | null
+    tipo: string
+    validade: string | null
+    dias_restantes: number | null
+}
+
+interface DrillState {
+    title: string
+    subtitle: string
+    color: string
+    items: DrillItem[]
+    searchValue?: string
+    dateRange?: { from: string; to: string }
+}
+
 interface RelatorioItem {
     id: number
     kind: 'licenca' | 'outorga'
@@ -229,6 +249,7 @@ export default function Relatorios() {
     const [expandedChart, setExpandedChart] = useState<string | null>(null)
     const [chartDateFrom, setChartDateFrom] = useState('')
     const [chartDateTo, setChartDateTo] = useState('')
+    const [drill, setDrill] = useState<DrillState | null>(null)
 
     const isDateMode = !!(dateFrom || dateTo)
     const isChartDateMode = !!(chartDateFrom || chartDateTo)
@@ -426,6 +447,7 @@ export default function Relatorios() {
         }
         return Object.entries(months).map(([key, v]) => ({
             mes: new Date(key + '-15').toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }),
+            _key: key,
             Licenças: v.licencas,
             Outorgas: v.outorgas,
         }))
@@ -457,6 +479,62 @@ export default function Relatorios() {
             .slice(0, 10)
             .map(([cidade, total]) => ({ cidade, total }))
     }, [chartFilteredLicencas])
+
+    // ── Drill-down helpers ───────────────────────────────────────────────────
+    const toDrillItem = (l: Licenca): DrillItem => ({
+        id: l.id, kind: 'licenca', razao_social: l.razao_social,
+        cnpj: l.cnpj, cidade: l.cidade ?? null, tipo: l.tipo,
+        validade: l.validade, dias_restantes: getDaysRemaining(l),
+    })
+    const toDrillItemOut = (o: Outorga): DrillItem => ({
+        id: o.id, kind: 'outorga', razao_social: o.razao_social,
+        cnpj: o.cnpj, cidade: null, tipo: o.tipo,
+        validade: o.validade, dias_restantes: getDaysRemaining(o),
+    })
+    const sortByValidade = (a: DrillItem, b: DrillItem) =>
+        (a.validade || '').localeCompare(b.validade || '')
+
+    const handleDrillStatus = useCallback((statusName: string) => {
+        const normalStatus = statusName === 'Válidas' ? 'Válida' : statusName === 'Vencendo' ? 'Vencendo' : 'Vencida'
+        const colorMap: Record<string, string> = { 'Válidas': '#10b981', 'Vencendo': '#f59e0b', 'Vencidas': '#f43f5e' }
+        const items = [
+            ...chartFilteredLicencas.filter(l => computeStatus(l) === normalStatus).map(toDrillItem),
+            ...chartFilteredOutorgas.filter(o => computeStatus(o) === normalStatus).map(toDrillItemOut),
+        ].sort(sortByValidade)
+        setDrill({ title: statusName, subtitle: 'filtrado por status', color: colorMap[statusName] || '#10b981', items })
+    }, [chartFilteredLicencas, chartFilteredOutorgas])
+
+    const handleDrillTipo = useCallback((tipo: string) => {
+        const items = [
+            ...chartFilteredLicencas.filter(l => l.tipo === tipo).map(toDrillItem),
+            ...chartFilteredOutorgas.filter(o => o.tipo === tipo).map(toDrillItemOut),
+        ].sort(sortByValidade)
+        setDrill({ title: tipo, subtitle: 'filtrado por tipo de documento', color: '#10b981', items, searchValue: tipo })
+    }, [chartFilteredLicencas, chartFilteredOutorgas])
+
+    const handleDrillCidade = useCallback((cidade: string) => {
+        const items = chartFilteredLicencas.filter(l => l.cidade === cidade).map(toDrillItem).sort(sortByValidade)
+        setDrill({ title: cidade, subtitle: 'filtrado por município', color: '#38bdf8', items, searchValue: cidade })
+    }, [chartFilteredLicencas])
+
+    const handleDrillMes = useCallback((key: string, label: string) => {
+        const [year, month] = key.split('-').map(Number)
+        const from = `${key}-01`
+        const to = `${key}-${String(new Date(year, month, 0).getDate()).padStart(2, '0')}`
+        const items = [
+            ...chartFilteredLicencas.filter(l => {
+                if (!l.validade) return false
+                const v = l.validade.split('T')[0]
+                return v >= from && v <= to
+            }).map(toDrillItem),
+            ...chartFilteredOutorgas.filter(o => {
+                if (!o.validade) return false
+                const v = o.validade.split('T')[0]
+                return v >= from && v <= to
+            }).map(toDrillItemOut),
+        ].sort(sortByValidade)
+        setDrill({ title: label, subtitle: 'vencimentos neste mês', color: '#10b981', items, dateRange: { from, to } })
+    }, [chartFilteredLicencas, chartFilteredOutorgas])
 
     const totalCarteira = chartFilteredLicencas.length + chartFilteredOutorgas.length
     const complianceRate = totalCarteira > 0
@@ -937,6 +1015,8 @@ export default function Relatorios() {
                                                     paddingAngle={3}
                                                     dataKey="value"
                                                     strokeWidth={0}
+                                                    onClick={(entry: any) => handleDrillStatus(entry.name)}
+                                                    style={{ cursor: 'pointer' }}
                                                 >
                                                     {chartStatus.map((entry, index) => (
                                                         <Cell key={index} fill={entry.color} />
@@ -982,7 +1062,20 @@ export default function Relatorios() {
                                 >
                                     <div style={{ height: '100%', minHeight: 220 }}>
                                         <ResponsiveContainer width="100%" height="100%">
-                                            <AreaChart data={chartVencimentos} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                                            <AreaChart
+                                                    data={chartVencimentos}
+                                                    margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
+                                                    style={{ cursor: 'pointer' }}
+                                                    onClick={(data: any) => {
+                                                        if (data?.activePayload?.[0]) {
+                                                            const label = data.activeLabel
+                                                            const found = chartVencimentos.find(m => m.mes === label)
+                                                            if (found?._key && (found.Licenças + found.Outorgas) > 0) {
+                                                                handleDrillMes(found._key, label)
+                                                            }
+                                                        }
+                                                    }}
+                                                >
                                                 <defs>
                                                     <linearGradient id="gradLic" x1="0" y1="0" x2="0" y2="1">
                                                         <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
@@ -1024,6 +1117,12 @@ export default function Relatorios() {
                                                 layout="vertical"
                                                 margin={{ top: 0, right: 30, left: 0, bottom: 0 }}
                                                 barSize={14}
+                                                style={{ cursor: 'pointer' }}
+                                                onClick={(data: any) => {
+                                                    if (data?.activePayload?.[0]) {
+                                                        handleDrillTipo(data.activePayload[0].payload.tipo)
+                                                    }
+                                                }}
                                             >
                                                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" strokeOpacity={0.4} horizontal={false} />
                                                 <XAxis type="number" tick={{ fill: 'var(--text-dim)', fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
@@ -1063,6 +1162,12 @@ export default function Relatorios() {
                                                 data={chartCidades}
                                                 margin={{ top: 0, right: 10, left: -20, bottom: 40 }}
                                                 barSize={26}
+                                                style={{ cursor: 'pointer' }}
+                                                onClick={(data: any) => {
+                                                    if (data?.activePayload?.[0]) {
+                                                        handleDrillCidade(data.activePayload[0].payload.cidade)
+                                                    }
+                                                }}
                                             >
                                                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" strokeOpacity={0.4} vertical={false} />
                                                 <XAxis
@@ -1086,6 +1191,143 @@ export default function Relatorios() {
                                 </ChartCard>
 
                             </div>
+
+                            {/* ── Painel de drill-down ── */}
+                            {drill && (
+                                <div className="animate-slide-up" style={{
+                                    background: 'var(--surface)', border: '1px solid var(--border)',
+                                    borderRadius: 16, overflow: 'hidden',
+                                    boxShadow: 'var(--card-shadow)',
+                                }}>
+                                    {/* Header */}
+                                    <div style={{
+                                        display: 'flex', alignItems: 'center', gap: 12,
+                                        padding: '14px 20px', borderBottom: '1px solid var(--border)',
+                                        background: 'var(--row-head)',
+                                    }}>
+                                        <span style={{
+                                            width: 10, height: 10, borderRadius: 5,
+                                            background: drill.color, flexShrink: 0, display: 'inline-block',
+                                        }} />
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <span style={{ fontWeight: 700, color: 'var(--text-bright)', fontSize: 14 }}>{drill.title}</span>
+                                            <span style={{ color: 'var(--text-dim)', fontSize: 12, marginLeft: 8 }}>{drill.subtitle}</span>
+                                        </div>
+                                        <span style={{
+                                            padding: '3px 10px', borderRadius: 20, flexShrink: 0,
+                                            background: drill.color + '22', color: drill.color,
+                                            fontSize: 12, fontWeight: 700,
+                                        }}>{drill.items.length} registros</span>
+                                        {(drill.searchValue || drill.dateRange) && (
+                                            <button
+                                                onClick={() => {
+                                                    if (drill.dateRange) {
+                                                        setDateFrom(drill.dateRange.from)
+                                                        setDateTo(drill.dateRange.to)
+                                                    } else if (drill.searchValue) {
+                                                        setSearch(drill.searchValue)
+                                                    }
+                                                    setActiveTab('relatorio')
+                                                    setDrill(null)
+                                                }}
+                                                style={{
+                                                    display: 'flex', alignItems: 'center', gap: 6,
+                                                    padding: '6px 14px', borderRadius: 8, flexShrink: 0,
+                                                    background: 'var(--primary)', color: 'var(--primary-ink)',
+                                                    border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                                                    fontSize: 12, fontWeight: 700,
+                                                }}
+                                            >
+                                                Ver no Relatório →
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => setDrill(null)}
+                                            style={{
+                                                width: 28, height: 28, borderRadius: 7, flexShrink: 0,
+                                                background: 'var(--neutral-bg)', border: '1px solid var(--border)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                cursor: 'pointer', color: 'var(--text-mute)',
+                                            }}
+                                        >
+                                            <X size={13} />
+                                        </button>
+                                    </div>
+
+                                    {/* Tabela */}
+                                    {drill.items.length === 0 ? (
+                                        <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--text-dim)', fontSize: 13 }}>
+                                            Nenhum registro encontrado para este filtro.
+                                        </div>
+                                    ) : (
+                                        <div style={{ overflowX: 'auto', maxHeight: 340, overflowY: 'auto' }}>
+                                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                                                <thead>
+                                                    <tr style={{ background: 'var(--row-head)', position: 'sticky', top: 0, zIndex: 1 }}>
+                                                        {['Tipo', 'Razão Social', 'CNPJ', 'Cidade', 'Vencimento', 'Dias'].map(h => (
+                                                            <th key={h} style={{
+                                                                padding: '9px 14px', textAlign: 'left',
+                                                                fontSize: 10.5, fontWeight: 700, letterSpacing: 0.8,
+                                                                textTransform: 'uppercase', color: 'var(--text-dim)',
+                                                                borderBottom: '1px solid var(--border)',
+                                                                whiteSpace: 'nowrap',
+                                                            }}>{h}</th>
+                                                        ))}
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {drill.items.slice(0, 60).map((item, i) => (
+                                                        <tr key={i} style={{
+                                                            borderBottom: '1px solid var(--divider)',
+                                                            background: i % 2 === 1 ? 'var(--row-alt)' : 'transparent',
+                                                        }}>
+                                                            <td style={{ padding: '8px 14px', whiteSpace: 'nowrap' }}>
+                                                                <span style={{
+                                                                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                                                                    padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                                                                    background: item.kind === 'licenca' ? 'rgba(99,102,241,0.12)' : 'rgba(6,182,212,0.12)',
+                                                                    color: item.kind === 'licenca' ? '#818cf8' : '#22d3ee',
+                                                                }}>
+                                                                    {item.kind === 'licenca' ? <FileText size={10} /> : <Droplets size={10} />}
+                                                                    {item.tipo}
+                                                                </span>
+                                                            </td>
+                                                            <td style={{ padding: '8px 14px', fontWeight: 600, color: 'var(--text)', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                {item.razao_social}
+                                                            </td>
+                                                            <td style={{ padding: '8px 14px', color: 'var(--text-mute)', fontFamily: 'monospace', fontSize: 11 }}>
+                                                                {item.cnpj || '—'}
+                                                            </td>
+                                                            <td style={{ padding: '8px 14px', color: 'var(--text-mute)' }}>
+                                                                {item.cidade || '—'}
+                                                            </td>
+                                                            <td style={{ padding: '8px 14px', color: 'var(--amber-fg)', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                                                                {formatDate(item.validade)}
+                                                            </td>
+                                                            <td style={{ padding: '8px 14px', whiteSpace: 'nowrap' }}>
+                                                                {item.dias_restantes !== null ? (
+                                                                    <span style={{
+                                                                        padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                                                                        background: item.dias_restantes <= 0 ? 'var(--rose-soft)' : item.dias_restantes <= 45 ? 'var(--amber-soft)' : 'var(--primary-soft)',
+                                                                        color: item.dias_restantes <= 0 ? 'var(--rose-fg)' : item.dias_restantes <= 45 ? 'var(--amber-fg)' : 'var(--primary-fg)',
+                                                                    }}>
+                                                                        {item.dias_restantes}d
+                                                                    </span>
+                                                                ) : '—'}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                            {drill.items.length > 60 && (
+                                                <div style={{ padding: '10px 16px', textAlign: 'center', color: 'var(--text-dim)', fontSize: 12, borderTop: '1px solid var(--border)' }}>
+                                                    Mostrando 60 de {drill.items.length} registros · Use "Ver no Relatório" para ver todos
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </>
                     )}
                 </>
