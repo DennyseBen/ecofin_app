@@ -47,7 +47,7 @@ export default function Header() {
             display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
             borderBottom: '1px solid var(--border)',
             background: 'var(--header-bg)',
-            zIndex: 10, flexShrink: 0,
+            flexShrink: 0,
         }}>
             {/* Title area */}
             <div style={{ flex: 1, minWidth: 0 }}>
