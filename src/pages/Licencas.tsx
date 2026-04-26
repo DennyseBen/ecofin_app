@@ -377,11 +377,14 @@ export default function Licencas() {
         return licencas.filter(c => {
             const s = search.toLowerCase()
             const sCnpj = s.replace(/\D/g, '')
+            const cCnpj = String(c.cnpj || '').replace(/\D/g, '')
+            const cnpjBase = sCnpj.length >= 8 ? sCnpj.slice(0, 8) : ''
             const matchSearch = String(c.razao_social || '').toLowerCase().includes(s) ||
                 String(c.cnpj || '').toLowerCase().includes(s) ||
                 String(c.pasta || '').includes(s) ||
                 String(c.atividade_licenciada || '').toLowerCase().includes(s) ||
-                (sCnpj.length > 0 && String(c.cnpj || '').replace(/\D/g, '').includes(sCnpj))
+                (sCnpj.length > 0 && cCnpj.includes(sCnpj)) ||
+                (cnpjBase.length > 0 && cCnpj.startsWith(cnpjBase))
             const matchType = filterType === 'all' || normalizeTipo(c.tipo) === filterType
             const computed = computeStatus(c)
             const matchStatus = filterStatus === 'all' || computed === filterStatus
@@ -395,11 +398,14 @@ export default function Licencas() {
         return outorgas.filter(o => {
             const s = search.toLowerCase()
             const sCnpj = s.replace(/\D/g, '')
+            const oCnpj = String(o.cnpj || '').replace(/\D/g, '')
+            const cnpjBase = sCnpj.length >= 8 ? sCnpj.slice(0, 8) : ''
             const matchSearch = String(o.razao_social || '').toLowerCase().includes(s) ||
                 String(o.cnpj || '').toLowerCase().includes(s) ||
                 String(o.tipo || '').toLowerCase().includes(s) ||
                 String(o.numero_outorga || '').toLowerCase().includes(s) ||
-                (sCnpj.length > 0 && String(o.cnpj || '').replace(/\D/g, '').includes(sCnpj))
+                (sCnpj.length > 0 && oCnpj.includes(sCnpj)) ||
+                (cnpjBase.length > 0 && oCnpj.startsWith(cnpjBase))
             const matchStatus = filterStatus === 'all' || computeStatus(o) === filterStatus
             const matchRenovar = !filterRenovar || isInAlertZone(o)
             const matchDias = filterDias === null || (getDaysRemaining(o) !== null && getDaysRemaining(o)! <= filterDias)
