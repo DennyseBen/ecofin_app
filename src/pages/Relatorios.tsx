@@ -210,7 +210,7 @@ function ChartCard({ title, subtitle, icon: Icon, children, stat, statLabel, sta
                 <div
                     onClick={() => onToggle(null)}
                     style={{
-                        position: 'fixed', inset: 0, zIndex: 200,
+                        position: 'fixed', inset: 0, zIndex: 9999,
                         background: 'rgba(0,0,0,0.70)',
                         backdropFilter: 'blur(8px)',
                         WebkitBackdropFilter: 'blur(8px)',
@@ -662,7 +662,7 @@ export default function Relatorios() {
     return (
         <div className="space-y-6 animate-fade-in">
             {/* Header */}
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div>
                     <h1 className="text-3xl font-black flex items-center gap-3">
                         <FileText className="text-emerald-500" size={32} />
@@ -944,7 +944,7 @@ export default function Relatorios() {
                                         </div>
                                     </div>
                                 </div>
-                                <div style={{ flex: 1, minWidth: 260, maxWidth: 400 }}>
+                                <div style={{ flex: 1, minWidth: 200, maxWidth: 400 }}>
                                     <DateRangePicker
                                         dateFrom={chartDateFrom}
                                         dateTo={chartDateTo}
@@ -989,7 +989,7 @@ export default function Relatorios() {
                             </div>
 
                             {/* Grid de gráficos */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))', gap: 16 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(460px, 100%), 1fr))', gap: 16 }}>
 
                                 {/* ── Gráfico 1: Donut — Saúde da Carteira ── */}
                                 <ChartCard

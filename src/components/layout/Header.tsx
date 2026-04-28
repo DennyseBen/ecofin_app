@@ -44,11 +44,14 @@ export default function Header() {
 
     return (
         <header className="header-bar" style={{
-            display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
+            display: 'flex', alignItems: 'center', gap: 12,
+            padding: '12px 16px 12px 16px',
             borderBottom: '1px solid var(--border)',
             background: 'var(--header-bg)',
             flexShrink: 0,
         }}>
+            {/* Espaçador para o botão hambúrguer no mobile */}
+            <div className="md:hidden" style={{ width: 44, flexShrink: 0 }} />
             {/* Title area */}
             <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-dim)', fontSize: 11.5, fontWeight: 500, marginBottom: 3 }}>

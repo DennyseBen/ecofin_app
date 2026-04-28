@@ -101,7 +101,32 @@
       "Bash(git rm:*)",
       "Bash(git reset:*)",
       "Bash(git restore:*)",
-      "Bash(curl -s -w \"\\\\nStatus: %{http_code}\\\\n\" -I https://ecofinmanager.onoticial.com.br/)"
+      "Bash(curl -s -w \"\\\\nStatus: %{http_code}\\\\n\" -I https://ecofinmanager.onoticial.com.br/)",
+      "Bash(export PATH=\"/c/Program Files/nodejs:$PATH\")",
+      "Bash(where ffmpeg *)",
+      "Bash(ffmpeg -version)",
+      "Bash(pip install *)",
+      "Bash(python)",
+      "Read(//c/Users/Administrator/Downloads/**)",
+      "Bash(python -c \"import whisper; print\\('whisper ok'\\)\")",
+      "Bash(python -c ' *)",
+      "Bash(python -c \"import imageio_ffmpeg; print\\('ffmpeg path:', imageio_ffmpeg.get_ffmpeg_exe\\(\\)\\)\")",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "mcp__Claude_Preview__preview_start",
+      "mcp__31a942a8-f1d5-4155-a127-ace89044172e__list_projects",
+      "mcp__31a942a8-f1d5-4155-a127-ace89044172e__execute_sql",
+      "Bash(git checkout *)",
+      "Bash(git merge *)",
+      "mcp__45075d90-ab0d-4c2b-9fe8-6d3cb94eb34e__list_deployments",
+      "mcp__45075d90-ab0d-4c2b-9fe8-6d3cb94eb34e__list_teams",
+      "Bash(git fetch *)",
+      "mcp__45075d90-ab0d-4c2b-9fe8-6d3cb94eb34e__get_deployment_build_logs",
+      "mcp__45075d90-ab0d-4c2b-9fe8-6d3cb94eb34e__deploy_to_vercel",
+      "Bash(where vercel *)",
+      "mcp__45075d90-ab0d-4c2b-9fe8-6d3cb94eb34e__list_projects",
+      "Bash(node -e \"require\\('react-day-picker'\\); console.log\\('ok'\\)\")",
+      "Bash(git branch *)",
+      "Bash(npx vite *)"
     ]
   }
 }
