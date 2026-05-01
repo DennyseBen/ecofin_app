@@ -280,6 +280,7 @@ export default function Licencas() {
     const [filterDias, setFilterDias] = useState<number | null>(null)
     const [dateFrom, setDateFrom] = useState('')
     const [dateTo, setDateTo] = useState('')
+    const [filterRiaa, setFilterRiaa] = useState('')
     const [page, setPage] = useState(1)
     const PAGE_SIZE = 30
     const [selected, setSelected] = useState<Licenca | null>(null)
@@ -401,9 +402,10 @@ export default function Licencas() {
             const matchRenovar = !filterRenovar || isInAlertZone(c)
             const matchDias = filterDias === null || (getDaysRemaining(c) !== null && getDaysRemaining(c)! <= filterDias)
             const matchDate = matchPeriod(c.validade)
-            return matchSearch && matchType && matchStatus && matchRenovar && matchDias && matchDate
+            const matchRiaa = !filterRiaa || (c.data_riaa && c.data_riaa.startsWith(filterRiaa))
+            return matchSearch && matchType && matchStatus && matchRenovar && matchDias && matchDate && matchRiaa
         })
-    }, [licencas, search, filterType, filterStatus, filterRenovar, filterDias, dateFrom, dateTo])
+    }, [licencas, search, filterType, filterStatus, filterRenovar, filterDias, dateFrom, dateTo, filterRiaa])
 
     const filteredOutorgas = useMemo(() => {
         return outorgas.filter(o => {
@@ -419,9 +421,10 @@ export default function Licencas() {
             const matchRenovar = !filterRenovar || isInAlertZone(o)
             const matchDias = filterDias === null || (getDaysRemaining(o) !== null && getDaysRemaining(o)! <= filterDias)
             const matchDate = matchPeriod(o.validade)
-            return matchSearch && matchStatus && matchRenovar && matchDias && matchDate
+            const matchRiaa = !filterRiaa || (o.data_riaa && o.data_riaa.startsWith(filterRiaa))
+            return matchSearch && matchStatus && matchRenovar && matchDias && matchDate && matchRiaa
         })
-    }, [outorgas, search, filterStatus, filterRenovar, filterDias, dateFrom, dateTo])
+    }, [outorgas, search, filterStatus, filterRenovar, filterDias, dateFrom, dateTo, filterRiaa])
 
     const activeFiltered = activeTab === 'Licenças' ? filteredLicencas : filteredOutorgas
     const totalPages = Math.ceil(activeFiltered.length / PAGE_SIZE)
@@ -429,7 +432,7 @@ export default function Licencas() {
 
     useEffect(() => {
         setPage(1)
-    }, [search, filterType, filterStatus, filterRenovar, filterDias, dateFrom, dateTo, activeTab])
+    }, [search, filterType, filterStatus, filterRenovar, filterDias, dateFrom, dateTo, filterRiaa, activeTab])
 
     const alertCount = useMemo(() => {
         return licencas.filter(isInAlertZone).length + outorgas.filter(isInAlertZone).length
@@ -645,6 +648,19 @@ export default function Licencas() {
                             Filtrando por período de vencimento
                         </span>
                     )}
+                    <select
+                        className="form-select w-full sm:w-48"
+                        value={filterRiaa}
+                        onChange={e => setFilterRiaa(e.target.value)}
+                    >
+                        <option value="">RIAA — Todos os meses</option>
+                        {Array.from({ length: 24 }, (_, i) => {
+                            const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 6 + i)
+                            const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+                            const label = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+                            return <option key={val} value={val}>{label.charAt(0).toUpperCase() + label.slice(1)}</option>
+                        })}
+                    </select>
                 </div>
             </div>
 

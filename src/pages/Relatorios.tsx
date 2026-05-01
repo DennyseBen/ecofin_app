@@ -85,6 +85,7 @@ interface RelatorioItem {
     tipo_documento: string
     validade: string | null
     data_renovacao: string | null
+    data_riaa: string | null
     dias_restantes: number | null
     processo: string | null
     numero_outorga: string | null
@@ -242,6 +243,7 @@ function ChartCard({ title, subtitle, icon: Icon, children, stat, statLabel, sta
 
 export default function Relatorios() {
     const [search, setSearch] = useState('')
+    const [filterRiaa, setFilterRiaa] = useState('')
     const [activeRegra, setActiveRegra] = useState<RegraId | 'todos'>('todos')
     const [dateFrom, setDateFrom] = useState('')
     const [dateTo, setDateTo] = useState('')
@@ -274,6 +276,7 @@ export default function Relatorios() {
         tipo_documento: lic.tipo,
         validade: lic.validade,
         data_renovacao: resolveRenovacao(lic.data_renovacao, lic.validade, lic.tipo),
+        data_riaa: lic.data_riaa ?? null,
         dias_restantes: getDaysRemaining(lic),
         processo: lic.processo ?? null,
         numero_outorga: null,
@@ -290,6 +293,7 @@ export default function Relatorios() {
         tipo_documento: out.tipo,
         validade: out.validade,
         data_renovacao: resolveRenovacao(out.data_renovacao, out.validade, out.tipo),
+        data_riaa: out.data_riaa ?? null,
         dias_restantes: getDaysRemaining(out),
         processo: null,
         numero_outorga: out.numero_outorga ?? null,
@@ -348,17 +352,21 @@ export default function Relatorios() {
     }, [allItems, activeRegra, isDateMode])
 
     const filtered = useMemo(() => {
-        if (!search) return regraFiltered
+        let result = regraFiltered
+        if (filterRiaa) {
+            result = result.filter(item => item.data_riaa && item.data_riaa.startsWith(filterRiaa))
+        }
+        if (!search) return result
         const s = search.toLowerCase()
         const sCnpj = s.replace(/\D/g, '')
-        return regraFiltered.filter(item =>
+        return result.filter(item =>
             item.razao_social.toLowerCase().includes(s) ||
             (item.cnpj && item.cnpj.toLowerCase().includes(s)) ||
             (sCnpj.length > 0 && (item.cnpj || '').replace(/\D/g, '').includes(sCnpj)) ||
             (item.cidade && item.cidade.toLowerCase().includes(s)) ||
             (item.orgao && item.orgao.toLowerCase().includes(s))
         )
-    }, [regraFiltered, search])
+    }, [regraFiltered, search, filterRiaa])
 
     // ── Dados para gráficos — com filtro de período independente ────────────
     const chartFilteredLicencas = useMemo(() => {
@@ -748,6 +756,25 @@ export default function Relatorios() {
                                     </p>
                                 )}
                             </div>
+                        </div>
+
+                        <div className="mt-4">
+                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                                Buscar por RIAA (mês)
+                            </label>
+                            <select
+                                className="form-select w-full sm:w-64"
+                                value={filterRiaa}
+                                onChange={e => setFilterRiaa(e.target.value)}
+                            >
+                                <option value="">Todos os meses</option>
+                                {Array.from({ length: 24 }, (_, i) => {
+                                    const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 6 + i)
+                                    const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+                                    const label = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+                                    return <option key={val} value={val}>{label.charAt(0).toUpperCase() + label.slice(1)}</option>
+                                })}
+                            </select>
                         </div>
 
                         {!isDateMode && (
