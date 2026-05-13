@@ -31,7 +31,7 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
-      // Limpa SW e cache agressivamente a cada deploy - v5
+      // Limpa SW e cache agressivamente a cada deploy - v6
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(regs => {
           regs.forEach(r => r.unregister());
