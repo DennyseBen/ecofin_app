@@ -413,7 +413,12 @@ export default function Licencas() {
             const s = search.toLowerCase()
             const sCnpj = s.replace(/\D/g, '')
             const oCnpj = String(o.cnpj || '').replace(/\D/g, '')
-            const cidadeOutorga = clientes.find(cl => cl.cnpj && o.cnpj && cl.cnpj === o.cnpj)?.cidade || ''
+            // Cidade da outorga: prioriza licença com mesmo CNPJ (filial-específico),
+            // depois cliente com mesmo CNPJ. Evita herdar a cidade da matriz para filiais.
+            const cidadeOutorga =
+                licencas.find(l => l.cnpj && o.cnpj && l.cnpj === o.cnpj && l.cidade)?.cidade ||
+                clientes.find(cl => cl.cnpj && o.cnpj && cl.cnpj === o.cnpj)?.cidade ||
+                ''
             const matchSearch = String(o.razao_social || '').toLowerCase().includes(s) ||
                 String(o.cnpj || '').toLowerCase().includes(s) ||
                 String(o.tipo || '').toLowerCase().includes(s) ||
@@ -427,7 +432,7 @@ export default function Licencas() {
             const matchRiaa = !filterRiaa || (o.data_riaa && o.data_riaa.startsWith(filterRiaa))
             return matchSearch && matchStatus && matchRenovar && matchDias && matchDate && matchRiaa
         })
-    }, [outorgas, clientes, search, filterStatus, filterRenovar, filterDias, dateFrom, dateTo, filterRiaa])
+    }, [outorgas, clientes, licencas, search, filterStatus, filterRenovar, filterDias, dateFrom, dateTo, filterRiaa])
 
     const activeFiltered = activeTab === 'Licenças' ? filteredLicencas : filteredOutorgas
     const totalPages = Math.ceil(activeFiltered.length / PAGE_SIZE)
@@ -442,21 +447,34 @@ export default function Licencas() {
     }, [licencas, outorgas])
 
     // Auto-fill from CNPJ or Razao Social
+    // IMPORTANT: cidade/bairro são específicos da filial (CNPJ). Razão social bate em múltiplas filiais
+    // (ex: MIX MATEUS tem vários CNPJs em cidades diferentes), então NUNCA preenche cidade/bairro
+    // pelo match de razão social — só pelo CNPJ exato.
     useEffect(() => {
         if (!form.razao_social && !form.cnpj) return
-        // Prioritize CNPJ match (branch-specific) before razao_social (too broad for multi-branch companies)
-        const match =
-            (form.cnpj ? clientes.find(c => c.cnpj && c.cnpj === form.cnpj) : null) ||
-            (form.razao_social ? clientes.find(c => c.razao_social === form.razao_social) : null)
-        if (match) {
+        const matchByCnpj = form.cnpj ? clientes.find(c => c.cnpj && c.cnpj === form.cnpj) : null
+        if (matchByCnpj) {
             setForm((prev: any) => ({
                 ...prev,
-                razao_social: match.razao_social,
-                cnpj: match.cnpj || prev.cnpj,
+                razao_social: matchByCnpj.razao_social,
+                cnpj: matchByCnpj.cnpj || prev.cnpj,
                 ...(activeTab === 'Licenças' && {
-                    cidade: match.cidade || prev.cidade,
-                    bairro: match.bairro || prev.bairro,
-                    grupo: match.grupo || prev.grupo,
+                    cidade: matchByCnpj.cidade || prev.cidade,
+                    bairro: matchByCnpj.bairro || prev.bairro,
+                    grupo: matchByCnpj.grupo || prev.grupo,
+                }),
+            }))
+            return
+        }
+        // Fallback por razão social: só preenche CNPJ e grupo. NUNCA cidade/bairro (são por filial).
+        const matchByRazao = form.razao_social ? clientes.find(c => c.razao_social === form.razao_social) : null
+        if (matchByRazao) {
+            setForm((prev: any) => ({
+                ...prev,
+                razao_social: matchByRazao.razao_social,
+                cnpj: prev.cnpj || matchByRazao.cnpj || '',
+                ...(activeTab === 'Licenças' && {
+                    grupo: matchByRazao.grupo || prev.grupo,
                 }),
             }))
         }
