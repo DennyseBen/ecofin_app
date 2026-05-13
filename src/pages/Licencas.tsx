@@ -395,6 +395,7 @@ export default function Licencas() {
                 String(c.cnpj || '').toLowerCase().includes(s) ||
                 String(c.pasta || '').includes(s) ||
                 String(c.atividade_licenciada || '').toLowerCase().includes(s) ||
+                String(c.cidade || '').toLowerCase().includes(s) ||
                 (sCnpj.length > 0 && cCnpj.startsWith(sCnpj))
             const matchType = filterType === 'all' || normalizeTipo(c.tipo) === filterType
             const computed = computeStatus(c)
@@ -412,10 +413,12 @@ export default function Licencas() {
             const s = search.toLowerCase()
             const sCnpj = s.replace(/\D/g, '')
             const oCnpj = String(o.cnpj || '').replace(/\D/g, '')
+            const cidadeOutorga = clientes.find(cl => cl.cnpj && o.cnpj && cl.cnpj === o.cnpj)?.cidade || ''
             const matchSearch = String(o.razao_social || '').toLowerCase().includes(s) ||
                 String(o.cnpj || '').toLowerCase().includes(s) ||
                 String(o.tipo || '').toLowerCase().includes(s) ||
                 String(o.numero_outorga || '').toLowerCase().includes(s) ||
+                cidadeOutorga.toLowerCase().includes(s) ||
                 (sCnpj.length > 0 && oCnpj.startsWith(sCnpj))
             const matchStatus = filterStatus === 'all' || computeStatus(o) === filterStatus
             const matchRenovar = !filterRenovar || isInAlertZone(o)
@@ -424,7 +427,7 @@ export default function Licencas() {
             const matchRiaa = !filterRiaa || (o.data_riaa && o.data_riaa.startsWith(filterRiaa))
             return matchSearch && matchStatus && matchRenovar && matchDias && matchDate && matchRiaa
         })
-    }, [outorgas, search, filterStatus, filterRenovar, filterDias, dateFrom, dateTo, filterRiaa])
+    }, [outorgas, clientes, search, filterStatus, filterRenovar, filterDias, dateFrom, dateTo, filterRiaa])
 
     const activeFiltered = activeTab === 'Licenças' ? filteredLicencas : filteredOutorgas
     const totalPages = Math.ceil(activeFiltered.length / PAGE_SIZE)
@@ -606,7 +609,7 @@ export default function Licencas() {
                 <div className="flex flex-col sm:flex-row gap-2">
                     <div className="relative flex-1">
                         <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300" />
-                        <input className="form-input pl-10" placeholder="Pesquisar por empresa, pasta ou CNPJ..." value={search} onChange={e => setSearch(e.target.value)} />
+                        <input className="form-input pl-10" placeholder="Pesquisar por empresa, pasta, CNPJ ou cidade..." value={search} onChange={e => setSearch(e.target.value)} />
                     </div>
                     {activeTab === 'Licenças' && (
                         <select className="form-select w-full sm:w-44" value={filterType} onChange={e => setFilterType(e.target.value)}>
