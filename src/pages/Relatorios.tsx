@@ -103,7 +103,7 @@ function classifyRegra(tipo: string, kind: 'licenca' | 'outorga'): RegraId | nul
     return 'padrao'
 }
 
-// ── Custom Tooltip para recharts ────────────────────────────────────────────
+// ── Custom Tooltip para recharts ──────────────────────────────────────────────
 function ChartTooltip({ active, payload, label }: any) {
     if (!active || !payload?.length) return null
     return (
@@ -288,7 +288,7 @@ export default function Relatorios() {
         kind: 'outorga',
         razao_social: out.razao_social,
         cnpj: out.cnpj,
-        cidade: null,
+        cidade: todasLicencas.find(l => l.cnpj && out.cnpj && l.cnpj === out.cnpj)?.cidade ?? null,
         orgao: out.orgao ?? null,
         tipo_documento: out.tipo,
         validade: out.validade,
@@ -368,7 +368,7 @@ export default function Relatorios() {
         )
     }, [regraFiltered, search, filterRiaa])
 
-    // ── Dados para gráficos — com filtro de período independente ────────────
+    // ── Dados para gráficos — com filtro de período independente ────────────────────────
     const chartFilteredLicencas = useMemo(() => {
         if (!isChartDateMode) return todasLicencas
         const from = chartDateFrom ? chartDateFrom : null
@@ -419,8 +419,6 @@ export default function Relatorios() {
 
     const chartVencimentos = useMemo(() => {
         const months: Record<string, { licencas: number; outorgas: number }> = {}
-        // Com filtro: exibe os meses do período selecionado
-        // Sem filtro: exibe os próximos 12 meses a partir de hoje
         if (isChartDateMode && (chartDateFrom || chartDateTo)) {
             const start = chartDateFrom
                 ? new Date(chartDateFrom + 'T12:00:00')
@@ -488,7 +486,7 @@ export default function Relatorios() {
             .map(([cidade, total]) => ({ cidade, total }))
     }, [chartFilteredLicencas])
 
-    // ── Drill-down helpers ───────────────────────────────────────────────────
+    // ── Drill-down helpers ────────────────────────────────────────────────────────
     const toDrillItem = (l: Licenca): DrillItem => ({
         id: l.id, kind: 'licenca', razao_social: l.razao_social,
         cnpj: l.cnpj, cidade: l.cidade ?? null, tipo: l.tipo,
@@ -549,7 +547,7 @@ export default function Relatorios() {
         ? Math.round(chartStatus[0].value / totalCarteira * 100)
         : 0
 
-    // ── PDF ────────────────────────────────────────────────────────────────
+    // ── PDF ───────────────────────────────────────────────────────────────────────
     const generatePDF = async () => {
         const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
             import('jspdf'),
